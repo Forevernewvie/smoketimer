@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/data/latest.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
@@ -97,22 +99,56 @@ class FlutterNotificationService implements NotificationService {
       return;
     }
 
+    var scheduleMode = AndroidScheduleMode.exactAllowWhileIdle;
+    final androidPlugin = _plugin
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
+    if (androidPlugin != null) {
+      final canScheduleExact = await androidPlugin
+          .canScheduleExactNotifications();
+      if (canScheduleExact == false) {
+        scheduleMode = AndroidScheduleMode.inexactAllowWhileIdle;
+      }
+    }
+
     for (final alert in alerts) {
       final details = _notificationDetails(
         vibrationEnabled: vibrationEnabled,
         soundType: soundType,
       );
 
-      await _plugin.zonedSchedule(
-        alert.id,
-        alert.title,
-        alert.body,
-        tz.TZDateTime.from(alert.at, tz.local),
-        details,
-        uiLocalNotificationDateInterpretation:
-            UILocalNotificationDateInterpretation.absoluteTime,
-        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      );
+      try {
+        await _plugin.zonedSchedule(
+          alert.id,
+          alert.title,
+          alert.body,
+          tz.TZDateTime.from(alert.at, tz.local),
+          details,
+          uiLocalNotificationDateInterpretation:
+              UILocalNotificationDateInterpretation.absoluteTime,
+          androidScheduleMode: scheduleMode,
+        );
+      } on PlatformException catch (e) {
+        // Android 12+ may disallow exact alarms unless user grants special access.
+        // In that case, fall back to inexact scheduling so the app still works.
+        if (e.code == 'exact_alarms_not_permitted' &&
+            scheduleMode != AndroidScheduleMode.inexactAllowWhileIdle) {
+          scheduleMode = AndroidScheduleMode.inexactAllowWhileIdle;
+          await _plugin.zonedSchedule(
+            alert.id,
+            alert.title,
+            alert.body,
+            tz.TZDateTime.from(alert.at, tz.local),
+            details,
+            uiLocalNotificationDateInterpretation:
+                UILocalNotificationDateInterpretation.absoluteTime,
+            androidScheduleMode: scheduleMode,
+          );
+          continue;
+        }
+        rethrow;
+      }
     }
   }
 
@@ -128,6 +164,22 @@ class FlutterNotificationService implements NotificationService {
       vibrationEnabled: vibrationEnabled,
       soundType: soundType,
     );
+
+    if (kDebugMode) {
+      final androidPlugin = _plugin
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >();
+      if (androidPlugin != null) {
+        final enabled = await androidPlugin.areNotificationsEnabled();
+        final canExact = await androidPlugin.canScheduleExactNotifications();
+        debugPrint(
+          '[notifications] enabled=$enabled canScheduleExact=$canExact tz=${tz.local.name}',
+        );
+      }
+      final pending = await _plugin.pendingNotificationRequests();
+      debugPrint('[notifications] pending=${pending.length}');
+    }
 
     await _plugin.show(900001, title, body, details);
   }
