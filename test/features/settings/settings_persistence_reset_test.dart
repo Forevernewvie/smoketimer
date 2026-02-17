@@ -50,6 +50,9 @@ void main() {
     await pumpApp(tester, container);
     expect(find.byType(Step1Screen), findsOneWidget);
 
+    await tester.tap(find.text('04 Settings'));
+    await tester.pumpAndSettle();
+
     await tester.ensureVisible(find.text('데이터 초기화'));
     await tester.tap(find.text('데이터 초기화'));
     await tester.pumpAndSettle();

@@ -8,9 +8,12 @@ import 'package:smoke_timer/presentation/state/app_config.dart';
 import 'package:smoke_timer/presentation/state/app_providers.dart';
 import 'package:smoke_timer/services/notification_service.dart';
 
-void setTestViewport(WidgetTester tester) {
+void setTestViewport(
+  WidgetTester tester, {
+  Size size = const Size(1200, 2200),
+}) {
   tester.view.devicePixelRatio = 1.0;
-  tester.view.physicalSize = const Size(1200, 2200);
+  tester.view.physicalSize = size;
   addTearDown(tester.view.resetPhysicalSize);
   addTearDown(tester.view.resetDevicePixelRatio);
 }
