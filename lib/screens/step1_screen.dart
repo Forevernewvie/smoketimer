@@ -11,7 +11,7 @@ import '../services/smoking_stats_service.dart';
 import '../services/time_formatter.dart';
 import '../widgets/pen_design_widgets.dart';
 
-class Step1Screen extends ConsumerWidget {
+class Step1Screen extends ConsumerStatefulWidget {
   const Step1Screen({super.key});
 
   static const routeName = '/step1';
@@ -27,7 +27,17 @@ class Step1Screen extends ConsumerWidget {
   };
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<Step1Screen> createState() => _Step1ScreenState();
+}
+
+class _Step1ScreenState extends ConsumerState<Step1Screen> {
+  int _tabIndex = 0;
+
+  static const _pagePadding = EdgeInsets.fromLTRB(24, 24, 24, 24);
+  static const _maxContentWidth = 520.0;
+
+  @override
+  Widget build(BuildContext context) {
     final state = ref.watch(appControllerProvider);
     final controller = ref.read(appControllerProvider.notifier);
 
@@ -83,77 +93,114 @@ class Step1Screen extends ConsumerWidget {
     );
 
     return Scaffold(
-      backgroundColor: const Color(0xFFE9EDF3),
-      appBar: const FrameRouteAppBar(
-        title: 'cOnQP · Step 1',
-        currentRoute: routeName,
-      ),
+      backgroundColor: const Color(0xFFF7F9FC),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _HomeCard(
-                  elapsedMinutes: elapsedMinutes,
-                  intervalMinutes: state.settings.intervalMinutes,
-                  ringProgress: ringProgress,
-                  todayCount: todayCount,
-                  nextAlertText: nextAlertText,
-                  onAddRecord: controller.addSmokingRecord,
-                  onUndoRecord: controller.undoLastRecord,
-                ),
-                const SizedBox(width: 24),
-                _RecordCard(
-                  period: state.recordPeriod,
-                  records: periodRecords,
-                  totalCount: totalCount,
-                  averageInterval: averageInterval,
-                  maxInterval: maxInterval,
-                  use24Hour: state.settings.use24Hour,
-                  onPeriodChanged: controller.setRecordPeriod,
-                ),
-                const SizedBox(width: 24),
-                _AlertCard(
-                  repeatEnabled: state.settings.repeatEnabled,
-                  intervalMinutes: state.settings.intervalMinutes,
-                  preAlertMinutes: state.settings.preAlertMinutes,
-                  rangeText: rangeText,
-                  activeWeekdays: state.settings.activeWeekdays,
-                  onToggleRepeat: controller.toggleRepeatEnabled,
-                  onCycleInterval: controller.cycleIntervalMinutes,
-                  onCyclePreAlert: controller.cyclePreAlertMinutes,
-                  onPickRange: () => _pickAllowedWindow(context, ref, state),
-                  onToggleWeekday: controller.toggleWeekday,
-                  onSendTest: controller.sendTestNotification,
-                ),
-                const SizedBox(width: 24),
-                _SettingsCard(
-                  use24Hour: state.settings.use24Hour,
-                  ringReferenceLabel: state.settings.ringReferenceLabel,
-                  vibrationEnabled: state.settings.vibrationEnabled,
-                  soundTypeLabel: state.settings.soundTypeLabel,
-                  onToggle24Hour: controller.toggleUse24Hour,
-                  onCycleRingReference: controller.cycleRingReference,
-                  onToggleVibration: controller.toggleVibration,
-                  onCycleSoundType: controller.cycleSoundType,
-                  onResetData: () => _confirmReset(context, ref),
-                ),
-              ],
+        child: IndexedStack(
+          index: _tabIndex,
+          children: [
+            _scrollableTab(
+              key: const PageStorageKey('tab_home'),
+              child: _HomeCard(
+                elapsedMinutes: elapsedMinutes,
+                intervalMinutes: state.settings.intervalMinutes,
+                ringProgress: ringProgress,
+                todayCount: todayCount,
+                nextAlertText: nextAlertText,
+                onAddRecord: controller.addSmokingRecord,
+                onUndoRecord: controller.undoLastRecord,
+              ),
             ),
+            _scrollableTab(
+              key: const PageStorageKey('tab_record'),
+              child: _RecordCard(
+                period: state.recordPeriod,
+                records: periodRecords,
+                totalCount: totalCount,
+                averageInterval: averageInterval,
+                maxInterval: maxInterval,
+                use24Hour: state.settings.use24Hour,
+                onPeriodChanged: controller.setRecordPeriod,
+              ),
+            ),
+            _scrollableTab(
+              key: const PageStorageKey('tab_alert'),
+              child: _AlertCard(
+                repeatEnabled: state.settings.repeatEnabled,
+                intervalMinutes: state.settings.intervalMinutes,
+                preAlertMinutes: state.settings.preAlertMinutes,
+                rangeText: rangeText,
+                activeWeekdays: state.settings.activeWeekdays,
+                onToggleRepeat: controller.toggleRepeatEnabled,
+                onCycleInterval: controller.cycleIntervalMinutes,
+                onCyclePreAlert: controller.cyclePreAlertMinutes,
+                onPickRange: () => _pickAllowedWindow(context, state),
+                onToggleWeekday: controller.toggleWeekday,
+                onSendTest: controller.sendTestNotification,
+              ),
+            ),
+            _scrollableTab(
+              key: const PageStorageKey('tab_settings'),
+              child: _SettingsCard(
+                use24Hour: state.settings.use24Hour,
+                ringReferenceLabel: state.settings.ringReferenceLabel,
+                vibrationEnabled: state.settings.vibrationEnabled,
+                soundTypeLabel: state.settings.soundTypeLabel,
+                onToggle24Hour: controller.toggleUse24Hour,
+                onCycleRingReference: controller.cycleRingReference,
+                onToggleVibration: controller.toggleVibration,
+                onCycleSoundType: controller.cycleSoundType,
+                onResetData: () => _confirmReset(context),
+              ),
+            ),
+          ],
+        ),
+      ),
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _tabIndex,
+        onDestinationSelected: (value) {
+          setState(() => _tabIndex = value);
+        },
+        destinations: const [
+          NavigationDestination(
+            icon: Icon(Icons.timer_outlined),
+            selectedIcon: Icon(Icons.timer_rounded),
+            label: '01 Home',
           ),
+          NavigationDestination(
+            icon: Icon(Icons.receipt_long_outlined),
+            selectedIcon: Icon(Icons.receipt_long_rounded),
+            label: '02 Record',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.notifications_none_outlined),
+            selectedIcon: Icon(Icons.notifications_rounded),
+            label: '03 Alert',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.settings_outlined),
+            selectedIcon: Icon(Icons.settings_rounded),
+            label: '04 Settings',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _scrollableTab({required Key key, required Widget child}) {
+    return SingleChildScrollView(
+      key: key,
+      padding: _pagePadding,
+      child: Align(
+        alignment: Alignment.topCenter,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: _maxContentWidth),
+          child: child,
         ),
       ),
     );
   }
 
-  Future<void> _pickAllowedWindow(
-    BuildContext context,
-    WidgetRef ref,
-    AppState state,
-  ) async {
+  Future<void> _pickAllowedWindow(BuildContext context, AppState state) async {
     final use24Hour = state.settings.use24Hour;
     final startInitial = _toTimeOfDay(state.settings.allowedStartMinutes);
 
@@ -229,7 +276,7 @@ class Step1Screen extends ConsumerWidget {
         );
   }
 
-  Future<void> _confirmReset(BuildContext context, WidgetRef ref) async {
+  Future<void> _confirmReset(BuildContext context) async {
     final shouldReset = await showDialog<bool>(
       context: context,
       builder: (context) {
@@ -282,170 +329,168 @@ class _HomeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return PhoneShell(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(
-            height: 30,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Text(
-                  '흡연 타이머',
-                  style: TextStyle(
-                    color: Color(0xFF111827),
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                  ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SizedBox(
+          height: 30,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text(
+                '흡연 타이머',
+                style: TextStyle(
+                  color: Color(0xFF111827),
+                  fontSize: 20,
+                  fontWeight: FontWeight.w700,
                 ),
-                Icon(
-                  Icons.notifications_none_rounded,
-                  size: 20,
-                  color: Color(0xFF94A3B8),
-                ),
-              ],
-            ),
+              ),
+              Icon(
+                Icons.notifications_none_rounded,
+                size: 20,
+                color: Color(0xFF94A3B8),
+              ),
+            ],
           ),
-          const SizedBox(height: 16),
-          SurfaceCard(
-            padding: const EdgeInsets.all(18),
-            child: Column(
-              children: [
-                SizedBox(
-                  height: 210,
-                  child: Stack(
-                    children: [
-                      Positioned(
-                        left: 62,
-                        top: 28,
-                        child: RingGauge(
-                          size: 156,
-                          strokeWidth: 10,
-                          sweepAngle: ringProgress * 2 * pi,
-                          value: '$elapsedMinutes',
-                          label: '분 경과',
+        ),
+        const SizedBox(height: 16),
+        SurfaceCard(
+          padding: const EdgeInsets.all(18),
+          child: Column(
+            children: [
+              SizedBox(
+                height: 210,
+                child: Stack(
+                  children: [
+                    Positioned(
+                      left: 62,
+                      top: 28,
+                      child: RingGauge(
+                        size: 156,
+                        strokeWidth: 10,
+                        sweepAngle: ringProgress * 2 * pi,
+                        value: '$elapsedMinutes',
+                        label: '분 경과',
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Text(
+                '설정 간격 ${intervalMinutes.toString()}분',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Color(0xFF64748B),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 14),
+              PrimaryButton(
+                text: '지금 흡연 기록',
+                onTap: () async {
+                  await onAddRecord();
+                },
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        SurfaceCard(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              const SizedBox(
+                height: 22,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Text(
+                      '오늘 흡연',
+                      style: TextStyle(
+                        color: Color(0xFF475569),
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    Icon(
+                      Icons.smoking_rooms_rounded,
+                      size: 18,
+                      color: Color(0xFF94A3B8),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 10),
+              SizedBox(
+                height: 48,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Expanded(
+                      flex: 3,
+                      child: FittedBox(
+                        alignment: Alignment.centerLeft,
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          '${todayCount.toString()}개비',
+                          style: const TextStyle(
+                            color: Color(0xFF111827),
+                            fontSize: 32,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ),
-                    ],
-                  ),
-                ),
-                Text(
-                  '설정 간격 ${intervalMinutes.toString()}분',
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: Color(0xFF64748B),
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 14),
-                PrimaryButton(
-                  text: '지금 흡연 기록',
-                  onTap: () async {
-                    await onAddRecord();
-                  },
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          SurfaceCard(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              children: [
-                const SizedBox(
-                  height: 22,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Text(
-                        '오늘 흡연',
-                        style: TextStyle(
-                          color: Color(0xFF475569),
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      Icon(
-                        Icons.smoking_rooms_rounded,
-                        size: 18,
-                        color: Color(0xFF94A3B8),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 10),
-                SizedBox(
-                  height: 48,
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Expanded(
-                        flex: 3,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      flex: 5,
+                      child: Align(
+                        alignment: Alignment.centerRight,
                         child: FittedBox(
-                          alignment: Alignment.centerLeft,
                           fit: BoxFit.scaleDown,
-                          child: Text(
-                            '${todayCount.toString()}개비',
-                            style: const TextStyle(
-                              color: Color(0xFF111827),
-                              fontSize: 32,
-                              fontWeight: FontWeight.w700,
+                          child: SizedBox(
+                            height: 36,
+                            child: Row(
+                              children: [
+                                _ActionButton(
+                                  text: '되돌리기',
+                                  foreground: const Color(0xFF475569),
+                                  background: const Color(0xFFEEF2F7),
+                                  borderColor: const Color(0xFFD4DCE8),
+                                  onTap: onUndoRecord,
+                                ),
+                                const SizedBox(width: 8),
+                                _ActionButton(
+                                  text: '+1 추가',
+                                  foreground: Colors.white,
+                                  background: const Color(0xFF2563EB),
+                                  onTap: onAddRecord,
+                                ),
+                              ],
                             ),
                           ),
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        flex: 5,
-                        child: Align(
-                          alignment: Alignment.centerRight,
-                          child: FittedBox(
-                            fit: BoxFit.scaleDown,
-                            child: SizedBox(
-                              height: 36,
-                              child: Row(
-                                children: [
-                                  _ActionButton(
-                                    text: '되돌리기',
-                                    foreground: const Color(0xFF475569),
-                                    background: const Color(0xFFEEF2F7),
-                                    borderColor: const Color(0xFFD4DCE8),
-                                    onTap: onUndoRecord,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  _ActionButton(
-                                    text: '+1 추가',
-                                    foreground: Colors.white,
-                                    background: const Color(0xFF2563EB),
-                                    onTap: onAddRecord,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-          const SizedBox(height: 16),
-          Text(
-            nextAlertText,
-            style: const TextStyle(
-              color: Color(0xFF475569),
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-            ),
+        ),
+        const SizedBox(height: 16),
+        Text(
+          nextAlertText,
+          style: const TextStyle(
+            color: Color(0xFF475569),
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -513,87 +558,85 @@ class _RecordCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return PhoneShell(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            '기록',
-            style: TextStyle(
-              color: Color(0xFF111827),
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-            ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          '기록',
+          style: TextStyle(
+            color: Color(0xFF111827),
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
           ),
-          const SizedBox(height: 16),
-          SizedBox(
-            height: 42,
-            child: Row(
-              children: [
-                Expanded(
-                  child: _PeriodTab(
-                    text: '오늘',
-                    selected: period == RecordPeriod.today,
-                    onTap: () => onPeriodChanged(RecordPeriod.today),
-                  ),
+        ),
+        const SizedBox(height: 16),
+        SizedBox(
+          height: 42,
+          child: Row(
+            children: [
+              Expanded(
+                child: _PeriodTab(
+                  text: '오늘',
+                  selected: period == RecordPeriod.today,
+                  onTap: () => onPeriodChanged(RecordPeriod.today),
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _PeriodTab(
-                    text: '주간',
-                    selected: period == RecordPeriod.week,
-                    onTap: () => onPeriodChanged(RecordPeriod.week),
-                  ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _PeriodTab(
+                  text: '주간',
+                  selected: period == RecordPeriod.week,
+                  onTap: () => onPeriodChanged(RecordPeriod.week),
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _PeriodTab(
-                    text: '월간',
-                    selected: period == RecordPeriod.month,
-                    onTap: () => onPeriodChanged(RecordPeriod.month),
-                  ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _PeriodTab(
+                  text: '월간',
+                  selected: period == RecordPeriod.month,
+                  onTap: () => onPeriodChanged(RecordPeriod.month),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-          const SizedBox(height: 16),
-          SizedBox(
-            height: 90,
-            child: Row(
-              children: [
-                Expanded(
-                  child: _SummaryItem(
-                    label: '총 개비',
-                    value: '$totalCount',
-                    valueFontSize: 24,
-                  ),
+        ),
+        const SizedBox(height: 16),
+        SizedBox(
+          height: 90,
+          child: Row(
+            children: [
+              Expanded(
+                child: _SummaryItem(
+                  label: '총 개비',
+                  value: '$totalCount',
+                  valueFontSize: 24,
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _SummaryItem(
-                    label: '평균 간격',
-                    value: '${averageInterval.toString()}분',
-                    valueFontSize: 20,
-                  ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _SummaryItem(
+                  label: '평균 간격',
+                  value: '${averageInterval.toString()}분',
+                  valueFontSize: 20,
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: _SummaryItem(
-                    label: '최장 간격',
-                    value: '${maxInterval.toString()}분',
-                    valueFontSize: 20,
-                  ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: _SummaryItem(
+                  label: '최장 간격',
+                  value: '${maxInterval.toString()}분',
+                  valueFontSize: 20,
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-          const SizedBox(height: 16),
-          SurfaceCard(
-            cornerRadius: 16,
-            child: _RecordList(records: records, use24Hour: use24Hour),
-          ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 16),
+        SurfaceCard(
+          cornerRadius: 16,
+          child: _RecordList(records: records, use24Hour: use24Hour),
+        ),
+      ],
     );
   }
 }
@@ -802,174 +845,172 @@ class _AlertCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return PhoneShell(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            '알림 설정',
-            style: TextStyle(
-              color: Color(0xFF111827),
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-            ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          '알림 설정',
+          style: TextStyle(
+            color: Color(0xFF111827),
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
           ),
-          const SizedBox(height: 16),
-          SurfaceCard(
-            child: Column(
-              children: [
-                _SettingRow(
-                  height: 56,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 10,
-                  ),
-                  label: '반복 알림',
-                  labelStyle: const TextStyle(
-                    color: Color(0xFF111827),
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  trailing: TogglePill(isOn: repeatEnabled),
-                  onTap: onToggleRepeat,
+        ),
+        const SizedBox(height: 16),
+        SurfaceCard(
+          child: Column(
+            children: [
+              _SettingRow(
+                height: 56,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
                 ),
-                _SettingRow(
-                  height: 52,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 10,
-                  ),
-                  label: '간격',
-                  labelStyle: const TextStyle(
-                    color: Color(0xFF374151),
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                  ),
-                  value: '${intervalMinutes.toString()}분',
-                  withTopBorder: true,
-                  onTap: onCycleInterval,
+                label: '반복 알림',
+                labelStyle: const TextStyle(
+                  color: Color(0xFF111827),
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
                 ),
-                _SettingRow(
-                  height: 52,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 10,
-                  ),
-                  label: '미리 알림',
-                  labelStyle: const TextStyle(
-                    color: Color(0xFF374151),
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                  ),
-                  value: '${preAlertMinutes.toString()}분 전',
-                  withTopBorder: true,
-                  onTap: onCyclePreAlert,
+                trailing: TogglePill(isOn: repeatEnabled),
+                onTap: onToggleRepeat,
+              ),
+              _SettingRow(
+                height: 52,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
                 ),
-              ],
-            ),
+                label: '간격',
+                labelStyle: const TextStyle(
+                  color: Color(0xFF374151),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+                value: '${intervalMinutes.toString()}분',
+                withTopBorder: true,
+                onTap: onCycleInterval,
+              ),
+              _SettingRow(
+                height: 52,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
+                label: '미리 알림',
+                labelStyle: const TextStyle(
+                  color: Color(0xFF374151),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+                value: '${preAlertMinutes.toString()}분 전',
+                withTopBorder: true,
+                onTap: onCyclePreAlert,
+              ),
+            ],
           ),
-          const SizedBox(height: 16),
-          SurfaceCard(
-            padding: const EdgeInsets.all(14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                GestureDetector(
-                  onTap: () async {
-                    await onPickRange();
-                  },
-                  child: SizedBox(
-                    height: 24,
-                    child: Row(
-                      children: [
-                        const Text(
-                          '허용 시간대',
-                          style: TextStyle(
-                            color: Color(0xFF374151),
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            rangeText,
-                            textAlign: TextAlign.right,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: Color(0xFF111827),
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                const Text(
-                  '요일',
-                  style: TextStyle(
-                    color: Color(0xFF374151),
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                SizedBox(
-                  height: 32,
+        ),
+        const SizedBox(height: 16),
+        SurfaceCard(
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              GestureDetector(
+                onTap: () async {
+                  await onPickRange();
+                },
+                child: SizedBox(
+                  height: 24,
                   child: Row(
-                    children: Step1Screen._weekdayLabels.entries
-                        .map(
-                          (entry) => Expanded(
-                            child: Padding(
-                              padding: EdgeInsets.only(
-                                left: entry.key == DateTime.monday ? 0 : 3,
-                                right: entry.key == DateTime.sunday ? 0 : 3,
-                              ),
-                              child: GestureDetector(
-                                onTap: () async {
-                                  await onToggleWeekday(entry.key);
-                                },
-                                child: DayChip(
-                                  text: entry.value,
-                                  active: activeWeekdays.contains(entry.key),
-                                ),
+                    children: [
+                      const Text(
+                        '허용 시간대',
+                        style: TextStyle(
+                          color: Color(0xFF374151),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          rangeText,
+                          textAlign: TextAlign.right,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Color(0xFF111827),
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
+              const Text(
+                '요일',
+                style: TextStyle(
+                  color: Color(0xFF374151),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const SizedBox(height: 10),
+              SizedBox(
+                height: 32,
+                child: Row(
+                  children: Step1Screen._weekdayLabels.entries
+                      .map(
+                        (entry) => Expanded(
+                          child: Padding(
+                            padding: EdgeInsets.only(
+                              left: entry.key == DateTime.monday ? 0 : 3,
+                              right: entry.key == DateTime.sunday ? 0 : 3,
+                            ),
+                            child: GestureDetector(
+                              onTap: () async {
+                                await onToggleWeekday(entry.key);
+                              },
+                              child: DayChip(
+                                text: entry.value,
+                                active: activeWeekdays.contains(entry.key),
                               ),
                             ),
                           ),
-                        )
-                        .toList(growable: false),
-                  ),
+                        ),
+                      )
+                      .toList(growable: false),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-          const SizedBox(height: 16),
-          PrimaryButton(
-            text: '테스트 알림 보내기',
-            color: const Color(0xFF1F2937),
-            textStyle: const TextStyle(
-              color: Colors.white,
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-            ),
-            onTap: () async {
-              await onSendTest();
-            },
+        ),
+        const SizedBox(height: 16),
+        PrimaryButton(
+          text: '테스트 알림 보내기',
+          color: const Color(0xFF1F2937),
+          textStyle: const TextStyle(
+            color: Colors.white,
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
           ),
-          const SizedBox(height: 16),
-          const Text(
-            '알림 권한이 꺼져 있으면 시스템 설정에서 켜주세요.',
-            style: TextStyle(
-              color: Color(0xFF6B7280),
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-            ),
+          onTap: () async {
+            await onSendTest();
+          },
+        ),
+        const SizedBox(height: 16),
+        const Text(
+          '알림 권한이 꺼져 있으면 시스템 설정에서 켜주세요.',
+          style: TextStyle(
+            color: Color(0xFF6B7280),
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -999,106 +1040,104 @@ class _SettingsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return PhoneShell(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            '설정',
-            style: TextStyle(
-              color: Color(0xFF111827),
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-            ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          '설정',
+          style: TextStyle(
+            color: Color(0xFF111827),
+            fontSize: 20,
+            fontWeight: FontWeight.w700,
           ),
-          const SizedBox(height: 16),
-          SurfaceCard(
-            child: Column(
-              children: [
-                _SettingRow(
-                  height: 56,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 10,
-                  ),
-                  label: '24시간 표기',
-                  labelStyle: const TextStyle(
-                    color: Color(0xFF111827),
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                  ),
-                  trailing: TogglePill(isOn: use24Hour),
-                  onTap: onToggle24Hour,
+        ),
+        const SizedBox(height: 16),
+        SurfaceCard(
+          child: Column(
+            children: [
+              _SettingRow(
+                height: 56,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
                 ),
-                _SettingRow(
-                  height: 52,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 10,
-                  ),
-                  label: '홈 원형 기준',
-                  labelStyle: const TextStyle(
-                    color: Color(0xFF374151),
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                  ),
-                  value: ringReferenceLabel,
-                  withTopBorder: true,
-                  showChevron: true,
-                  onTap: onCycleRingReference,
+                label: '24시간 표기',
+                labelStyle: const TextStyle(
+                  color: Color(0xFF111827),
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
                 ),
-                _SettingRow(
-                  height: 52,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 10,
-                  ),
-                  label: '진동',
-                  labelStyle: const TextStyle(
-                    color: Color(0xFF374151),
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                  ),
-                  withTopBorder: true,
-                  trailing: TogglePill(isOn: vibrationEnabled),
-                  onTap: onToggleVibration,
-                ),
-                _SettingRow(
-                  height: 52,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 10,
-                  ),
-                  label: '소리',
-                  labelStyle: const TextStyle(
-                    color: Color(0xFF374151),
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                  ),
-                  value: soundTypeLabel,
-                  withTopBorder: true,
-                  showChevron: true,
-                  onTap: onCycleSoundType,
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-          SurfaceCard(
-            child: _SettingRow(
-              height: 52,
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              label: '데이터 초기화',
-              labelStyle: const TextStyle(
-                color: Color(0xFFDC2626),
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
+                trailing: TogglePill(isOn: use24Hour),
+                onTap: onToggle24Hour,
               ),
-              onTap: onResetData,
-            ),
+              _SettingRow(
+                height: 52,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
+                label: '홈 원형 기준',
+                labelStyle: const TextStyle(
+                  color: Color(0xFF374151),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+                value: ringReferenceLabel,
+                withTopBorder: true,
+                showChevron: true,
+                onTap: onCycleRingReference,
+              ),
+              _SettingRow(
+                height: 52,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
+                label: '진동',
+                labelStyle: const TextStyle(
+                  color: Color(0xFF374151),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+                withTopBorder: true,
+                trailing: TogglePill(isOn: vibrationEnabled),
+                onTap: onToggleVibration,
+              ),
+              _SettingRow(
+                height: 52,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
+                label: '소리',
+                labelStyle: const TextStyle(
+                  color: Color(0xFF374151),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+                value: soundTypeLabel,
+                withTopBorder: true,
+                showChevron: true,
+                onTap: onCycleSoundType,
+              ),
+            ],
           ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 16),
+        SurfaceCard(
+          child: _SettingRow(
+            height: 52,
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            label: '데이터 초기화',
+            labelStyle: const TextStyle(
+              color: Color(0xFFDC2626),
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+            ),
+            onTap: onResetData,
+          ),
+        ),
+      ],
     );
   }
 }
