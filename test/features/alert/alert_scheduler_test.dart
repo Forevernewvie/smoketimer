@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+
 import 'package:smoke_timer/domain/models/user_settings.dart';
 import 'package:smoke_timer/services/alert_scheduler.dart';
 
@@ -20,7 +21,7 @@ void main() {
     );
 
     test('buildUpcomingAlerts returns interval-based next notifications', () {
-      final now = DateTime(2026, 2, 17, 9, 0); // Tuesday
+      final now = DateTime(2026, 2, 17, 9, 0); // Tue
       final lastSmokingAt = DateTime(2026, 2, 17, 8, 30);
 
       final alerts = scheduler.buildUpcomingAlerts(
@@ -36,14 +37,21 @@ void main() {
     });
 
     test(
-      'alignToAllowedWindow moves out-of-range candidate to next valid slot',
+      'alignToAllowedWindow shifts early-morning candidate to start time',
       () {
-        final candidate = DateTime(2026, 2, 17, 0, 20); // Tuesday 00:20
+        final candidate = DateTime(2026, 2, 17, 0, 20); // Tue 00:20
         final aligned = scheduler.alignToAllowedWindow(candidate, settings);
 
         expect(aligned, DateTime(2026, 2, 17, 8, 0));
       },
     );
+
+    test('alignToAllowedWindow skips inactive weekdays (e.g., weekend)', () {
+      final candidate = DateTime(2026, 2, 21, 10, 0); // Sat
+      final aligned = scheduler.alignToAllowedWindow(candidate, settings);
+
+      expect(aligned, DateTime(2026, 2, 23, 8, 0)); // Mon 08:00
+    });
 
     test('returns empty when no active weekday exists', () {
       final emptyWeekdaySettings = settings.copyWith(activeWeekdays: <int>{});

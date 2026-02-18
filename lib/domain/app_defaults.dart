@@ -5,11 +5,23 @@ import 'models/user_settings.dart';
 class AppDefaults {
   const AppDefaults._();
 
+  /// Interval picker policy:
+  /// - Allowed range: 30 minutes .. 4 hours
+  /// - Slider granularity: 5 minutes (UX choice; adjust if product decides)
+  static const int minIntervalMinutes = 30;
+  static const int maxIntervalMinutes = 4 * 60;
+  static const int intervalStepMinutes = 5;
+
   static const int intervalMinutes = 45;
   static const int preAlertMinutes = 5;
   static const int allowedStartMinutes = 8 * 60;
   static const int allowedEndMinutes = 24 * 60;
   static const Set<int> activeWeekdays = {1, 2, 3, 4, 5};
+
+  /// Allowed notification window picker policy.
+  static const int allowedWindowMinMinutes = 0;
+  static const int allowedWindowMaxMinutes = 24 * 60;
+  static const int allowedWindowStepMinutes = 15;
 
   static const Duration splashDuration = Duration(milliseconds: 1200);
   static const int scheduleCount = 12;

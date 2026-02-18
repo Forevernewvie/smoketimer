@@ -32,9 +32,8 @@ class SmokeTimerApp extends ConsumerWidget {
       title: 'Smoke Timer UI',
       theme: ThemeData(
         useMaterial3: true,
-        scaffoldBackgroundColor: const Color(0xFFE9EDF3),
+        scaffoldBackgroundColor: const Color(0xFFF7F9FC),
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF2563EB)),
-        fontFamily: 'Inter',
       ),
       home: const RootStageScreen(),
       routes: {

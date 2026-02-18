@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../widgets/pen_design_widgets.dart';
-
 class Step0SplashScreen extends StatelessWidget {
   const Step0SplashScreen({super.key});
 
@@ -10,19 +8,14 @@ class Step0SplashScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFE9EDF3),
-      appBar: const FrameRouteAppBar(
-        title: 'DujVY · Step 0 Splash',
-        currentRoute: routeName,
-      ),
+      backgroundColor: const Color(0xFFF7F9FC),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: const SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [_SplashA3Card()],
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 520),
+              child: const _SplashA3Card(),
             ),
           ),
         ),
@@ -36,75 +29,135 @@ class _SplashA3Card extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return PhoneShell(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 92,
-            height: 92,
-            decoration: const BoxDecoration(
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const SizedBox(
+          width: 92,
+          height: 92,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
               color: Color(0xFF2563EB),
               shape: BoxShape.circle,
             ),
-            child: const Icon(
+            child: Icon(
               Icons.restart_alt_rounded,
               size: 28,
               color: Colors.white,
             ),
           ),
-          const SizedBox(height: 14),
-          const Text(
-            '흡연 타이머',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Color(0xFF111827),
-              fontSize: 24,
-              fontWeight: FontWeight.w700,
-            ),
+        ),
+        const SizedBox(height: 14),
+        const Text(
+          '흡연 타이머',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: Color(0xFF111827),
+            fontSize: 24,
+            fontWeight: FontWeight.w700,
           ),
-          const SizedBox(height: 14),
-          const Text(
-            '마지막 흡연 후 경과 시간 표시',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Color(0xFF64748B),
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-            ),
+        ),
+        const SizedBox(height: 14),
+        const Text(
+          '마지막 흡연 후 경과 시간 표시',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: Color(0xFF64748B),
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
           ),
-          const SizedBox(height: 14),
-          Container(
-            width: 120,
-            height: 6,
-            decoration: BoxDecoration(
-              color: const Color(0xFFD9E1EC),
-              borderRadius: BorderRadius.circular(999),
-            ),
-            child: Stack(
-              children: [
-                Container(
-                  width: 58,
-                  height: 6,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF2563EB),
-                    borderRadius: BorderRadius.circular(999),
+        ),
+        const SizedBox(height: 14),
+        const _AnimatedSplashLoadingBar(),
+        const SizedBox(height: 14),
+        const Text(
+          '시작 준비 중',
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: Color(0xFF94A3B8),
+            fontSize: 11,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _AnimatedSplashLoadingBar extends StatefulWidget {
+  const _AnimatedSplashLoadingBar();
+
+  static const trackWidth = 120.0;
+  static const barHeight = 6.0;
+  static const segmentWidth = 58.0;
+
+  @override
+  State<_AnimatedSplashLoadingBar> createState() =>
+      _AnimatedSplashLoadingBarState();
+}
+
+class _AnimatedSplashLoadingBarState extends State<_AnimatedSplashLoadingBar>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _t;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    )..repeat(reverse: true);
+    _t = CurvedAnimation(parent: _controller, curve: Curves.easeInOut);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: _AnimatedSplashLoadingBar.trackWidth,
+      height: _AnimatedSplashLoadingBar.barHeight,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: const Color(0xFFD9E1EC),
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final travel =
+                (constraints.maxWidth - _AnimatedSplashLoadingBar.segmentWidth)
+                    .clamp(0.0, double.infinity);
+
+            return AnimatedBuilder(
+              animation: _t,
+              builder: (context, child) {
+                return Transform.translate(
+                  offset: Offset(travel * _t.value, 0),
+                  child: child,
+                );
+              },
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: SizedBox(
+                  key: const Key('splash_loading_segment'),
+                  width: _AnimatedSplashLoadingBar.segmentWidth,
+                  height: _AnimatedSplashLoadingBar.barHeight,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF2563EB),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
                   ),
                 ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 14),
-          const Text(
-            '시작 준비 중',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: Color(0xFF94A3B8),
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
+              ),
+            );
+          },
+        ),
       ),
     );
   }

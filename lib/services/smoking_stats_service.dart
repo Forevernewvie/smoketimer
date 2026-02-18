@@ -43,6 +43,16 @@ class SmokingStatsService {
     return max(0, now.difference(ringBaseTime).inMinutes);
   }
 
+  static int elapsedSeconds({
+    required DateTime now,
+    required DateTime? ringBaseTime,
+  }) {
+    if (ringBaseTime == null) {
+      return 0;
+    }
+    return max(0, now.difference(ringBaseTime).inSeconds);
+  }
+
   static double ringProgress({
     required int elapsedMinutes,
     required int intervalMinutes,
@@ -51,6 +61,20 @@ class SmokingStatsService {
       return 0;
     }
     return (elapsedMinutes / intervalMinutes).clamp(0.0, 1.0);
+  }
+
+  static double ringProgressSeconds({
+    required int elapsedSeconds,
+    required int intervalMinutes,
+  }) {
+    if (intervalMinutes <= 0) {
+      return 0;
+    }
+    final totalSeconds = intervalMinutes * 60;
+    if (totalSeconds <= 0) {
+      return 0;
+    }
+    return (elapsedSeconds / totalSeconds).clamp(0.0, 1.0);
   }
 
   static List<SmokingRecord> recordsForPeriod(

@@ -50,16 +50,13 @@ class _Step0SmokerTimerScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFE9EDF3),
-      appBar: const FrameRouteAppBar(
-        title: 'KM1Jk · Step 0 Smoker Timer',
-        currentRoute: Step0SmokerTimerScreen.routeName,
-      ),
+      backgroundColor: const Color(0xFFF7F9FC),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
-          child: Center(
-            child: PhoneShell(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 520),
+            child: Padding(
+              padding: const EdgeInsets.all(24),
               child: PageView(
                 controller: _pageController,
                 onPageChanged: (index) {
@@ -126,85 +123,96 @@ class _OnboardingPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(
-          height: 24,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Text(
-                '${index + 1}/3',
-                style: const TextStyle(
-                  color: Color(0xFF1D4ED8),
-                  fontSize: 12,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: onSkipTap,
-                child: const Text(
-                  '건너뛰기',
-                  textAlign: TextAlign.right,
-                  style: TextStyle(
-                    color: Color(0xFF64748B),
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            child: IntrinsicHeight(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(
+                    height: 24,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Text(
+                          '${index + 1}/3',
+                          style: const TextStyle(
+                            color: Color(0xFF1D4ED8),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: onSkipTap,
+                          child: const Text(
+                            '건너뛰기',
+                            textAlign: TextAlign.right,
+                            style: TextStyle(
+                              color: Color(0xFF64748B),
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 16),
-        hero,
-        const SizedBox(height: 16),
-        Text(
-          title,
-          style: const TextStyle(
-            color: Color(0xFF111827),
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        const SizedBox(height: 16),
-        Text(
-          description,
-          style: const TextStyle(
-            color: Color(0xFF64748B),
-            fontSize: 13,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        const Spacer(),
-        SizedBox(
-          height: 44,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              PageDots(activeIndex: index),
-              SizedBox(
-                width: 112,
-                child: PrimaryButton(
-                  text: buttonText,
-                  height: 44,
-                  color: const Color(0xFF1D4ED8),
-                  textStyle: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
+                  const SizedBox(height: 16),
+                  hero,
+                  const SizedBox(height: 16),
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      color: Color(0xFF111827),
+                      fontSize: 20,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
-                  onTap: onButtonTap,
-                ),
+                  const SizedBox(height: 16),
+                  Text(
+                    description,
+                    style: const TextStyle(
+                      color: Color(0xFF64748B),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const Spacer(),
+                  SizedBox(
+                    height: 44,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        PageDots(activeIndex: index),
+                        SizedBox(
+                          width: 112,
+                          child: PrimaryButton(
+                            text: buttonText,
+                            height: 44,
+                            color: const Color(0xFF1D4ED8),
+                            textStyle: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            onTap: onButtonTap,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
-      ],
+        );
+      },
     );
   }
 }
@@ -218,30 +226,24 @@ class _RingHero extends StatelessWidget {
       padding: EdgeInsets.zero,
       child: SizedBox(
         height: 250,
-        child: Stack(
-          children: const [
-            Positioned(
-              left: 70,
-              top: 44,
-              child: RingGauge(
-                size: 140,
-                strokeWidth: 10,
-                sweepAngle: 5.12,
-                value: '37',
-                label: '분 경과',
-                valueStyle: TextStyle(
-                  color: Color(0xFF111827),
-                  fontSize: 30,
-                  fontWeight: FontWeight.w700,
-                ),
-                labelStyle: TextStyle(
-                  color: Color(0xFF64748B),
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
+        child: const Center(
+          child: RingGauge(
+            size: 140,
+            strokeWidth: 10,
+            sweepAngle: 5.12,
+            value: '37',
+            label: '분 경과',
+            valueStyle: TextStyle(
+              color: Color(0xFF111827),
+              fontSize: 30,
+              fontWeight: FontWeight.w700,
             ),
-          ],
+            labelStyle: TextStyle(
+              color: Color(0xFF64748B),
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
         ),
       ),
     );
@@ -306,8 +308,10 @@ class _SummaryHero extends StatelessWidget {
     return SurfaceCard(
       padding: const EdgeInsets.all(16),
       child: const SizedBox(
+        width: double.infinity,
         height: 250,
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             SizedBox(
