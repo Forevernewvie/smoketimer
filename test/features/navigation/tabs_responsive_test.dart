@@ -44,12 +44,17 @@ void main() {
         expect(find.text('기록'), findsOneWidget);
         expect(tester.takeException(), isNull);
 
-        await tester.tap(find.text('Alert'));
+        await tester.tap(find.text('Settings'));
         await tester.pumpAndSettle();
-        expect(find.text('알림 설정'), findsOneWidget);
+        expect(find.text('설정'), findsOneWidget);
         expect(tester.takeException(), isNull);
 
-        await tester.tap(find.text('Settings'));
+        await tester.tap(find.text('알림 설정'));
+        await tester.pumpAndSettle();
+        expect(find.text('테스트 알림 보내기'), findsOneWidget);
+        expect(tester.takeException(), isNull);
+
+        await tester.pageBack();
         await tester.pumpAndSettle();
         expect(find.text('설정'), findsOneWidget);
         expect(tester.takeException(), isNull);

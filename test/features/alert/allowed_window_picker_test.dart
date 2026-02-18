@@ -27,7 +27,10 @@ void main() {
     await tester.tap(find.text('건너뛰기'));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Alert'));
+    await tester.tap(find.text('Settings'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('알림 설정'));
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('허용 시간대'));
@@ -70,7 +73,10 @@ void main() {
     await tester.tap(find.text('건너뛰기'));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Alert'));
+    await tester.tap(find.text('Settings'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('알림 설정'));
     await tester.pumpAndSettle();
 
     await tester.tap(find.text('허용 시간대'));

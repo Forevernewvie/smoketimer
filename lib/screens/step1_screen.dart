@@ -116,6 +116,7 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
                 nextAlertText: nextAlertText,
                 onAddRecord: controller.addSmokingRecord,
                 onUndoRecord: controller.undoLastRecord,
+                onOpenAlertSettings: () => _openAlertSettings(context),
               ),
             ),
             _scrollableTab(
@@ -131,38 +132,20 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
               ),
             ),
             _scrollableTab(
-              key: const PageStorageKey('tab_alert'),
-              child: _AlertCard(
-                repeatEnabled: state.settings.repeatEnabled,
-                intervalMinutes: state.settings.intervalMinutes,
-                preAlertMinutes: state.settings.preAlertMinutes,
-                rangeText: rangeText,
-                activeWeekdays: state.settings.activeWeekdays,
-                onToggleRepeat: controller.toggleRepeatEnabled,
-                onPickInterval: () async {
-                  await _pickIntervalMinutes(
-                    context,
-                    initialMinutes: state.settings.intervalMinutes,
-                    onSelected: controller.setIntervalMinutes,
-                  );
-                },
-                onCyclePreAlert: controller.cyclePreAlertMinutes,
-                onPickRange: () => _pickAllowedWindow(context, state),
-                onToggleWeekday: controller.toggleWeekday,
-                onSendTest: controller.sendTestNotification,
-              ),
-            ),
-            _scrollableTab(
               key: const PageStorageKey('tab_settings'),
               child: _SettingsCard(
                 use24Hour: state.settings.use24Hour,
                 ringReferenceLabel: state.settings.ringReferenceLabel,
                 vibrationEnabled: state.settings.vibrationEnabled,
                 soundTypeLabel: state.settings.soundTypeLabel,
+                alertSummary: state.settings.repeatEnabled
+                    ? '켜짐 · ${_formatIntervalLabel(state.settings.intervalMinutes)}'
+                    : '꺼짐',
                 onToggle24Hour: controller.toggleUse24Hour,
                 onCycleRingReference: controller.cycleRingReference,
                 onToggleVibration: controller.toggleVibration,
                 onCycleSoundType: controller.cycleSoundType,
+                onOpenAlertSettings: () => _openAlertSettings(context),
                 onResetData: () => _confirmReset(context),
               ),
             ),
@@ -186,11 +169,6 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
             label: 'Record',
           ),
           NavigationDestination(
-            icon: Icon(Icons.notifications_none_outlined),
-            selectedIcon: Icon(Icons.notifications_rounded),
-            label: 'Alert',
-          ),
-          NavigationDestination(
             icon: Icon(Icons.settings_outlined),
             selectedIcon: Icon(Icons.settings_rounded),
             label: 'Settings',
@@ -212,6 +190,109 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
         ),
       ),
     );
+  }
+
+  Future<void> _openAlertSettings(BuildContext context) async {
+    await Navigator.of(context).push<void>(
+      MaterialPageRoute(
+        builder: (routeContext) {
+        return Scaffold(
+          backgroundColor: const Color(0xFFF7F9FC),
+          body: SafeArea(
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
+                  child: Align(
+                    alignment: Alignment.topCenter,
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(
+                        maxWidth: _maxContentWidth,
+                      ),
+                      child: SizedBox(
+                        height: 44,
+                        child: Align(
+                          alignment: Alignment.centerLeft,
+                          child: IconButton(
+                            tooltip: '뒤로',
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(
+                              minWidth: 30,
+                              minHeight: 30,
+                            ),
+                            visualDensity: VisualDensity.compact,
+                            splashRadius: 18,
+                            onPressed: () =>
+                                Navigator.of(routeContext).pop(),
+                            icon: const Icon(
+                              Icons.arrow_back_ios_new_rounded,
+                              size: 20,
+                              color: Color(0xFF111827),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+                    child: Align(
+                      alignment: Alignment.topCenter,
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(
+                          maxWidth: _maxContentWidth,
+                        ),
+                        child: Consumer(
+                          builder: (context, ref, _) {
+                            final appState = ref.watch(appControllerProvider);
+                            final controller =
+                                ref.read(appControllerProvider.notifier);
+
+                            final rangeText = TimeFormatter.formatRange(
+                              startMinutes:
+                                  appState.settings.allowedStartMinutes,
+                              endMinutes: appState.settings.allowedEndMinutes,
+                              use24Hour: appState.settings.use24Hour,
+                            );
+
+                            return _AlertCard(
+                              repeatEnabled: appState.settings.repeatEnabled,
+                              intervalMinutes:
+                                  appState.settings.intervalMinutes,
+                              preAlertMinutes:
+                                  appState.settings.preAlertMinutes,
+                              rangeText: rangeText,
+                              activeWeekdays: appState.settings.activeWeekdays,
+                              onToggleRepeat: controller.toggleRepeatEnabled,
+                              onPickInterval: () async {
+                                await _pickIntervalMinutes(
+                                  context,
+                                  initialMinutes:
+                                      appState.settings.intervalMinutes,
+                                  onSelected: controller.setIntervalMinutes,
+                                );
+                              },
+                              onCyclePreAlert: controller.cyclePreAlertMinutes,
+                              onPickRange: () =>
+                                  _pickAllowedWindow(context, appState),
+                              onToggleWeekday: controller.toggleWeekday,
+                              onSendTest: controller.sendTestNotification,
+                            );
+                          },
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    ),
+  );
   }
 
   Future<void> _pickIntervalMinutes(
@@ -412,6 +493,7 @@ class _HomeCard extends StatelessWidget {
     required this.nextAlertText,
     required this.onAddRecord,
     required this.onUndoRecord,
+    required this.onOpenAlertSettings,
   });
 
   final bool hasRingBaseTime;
@@ -422,6 +504,7 @@ class _HomeCard extends StatelessWidget {
   final String nextAlertText;
   final Future<void> Function() onAddRecord;
   final Future<void> Function() onUndoRecord;
+  final Future<void> Function() onOpenAlertSettings;
 
   @override
   Widget build(BuildContext context) {
@@ -449,13 +532,13 @@ class _HomeCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const SizedBox(
+        SizedBox(
           height: 30,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text(
+              const Text(
                 '흡연 타이머',
                 style: TextStyle(
                   color: Color(0xFF111827),
@@ -463,10 +546,20 @@ class _HomeCard extends StatelessWidget {
                   fontWeight: FontWeight.w700,
                 ),
               ),
-              Icon(
-                Icons.notifications_none_rounded,
-                size: 20,
-                color: Color(0xFF94A3B8),
+              IconButton(
+                tooltip: '알림 설정',
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 30, minHeight: 30),
+                visualDensity: VisualDensity.compact,
+                splashRadius: 18,
+                onPressed: () async {
+                  await onOpenAlertSettings();
+                },
+                icon: const Icon(
+                  Icons.notifications_none_rounded,
+                  size: 20,
+                  color: Color(0xFF94A3B8),
+                ),
               ),
             ],
           ),
@@ -1124,10 +1217,12 @@ class _SettingsCard extends StatelessWidget {
     required this.ringReferenceLabel,
     required this.vibrationEnabled,
     required this.soundTypeLabel,
+    required this.alertSummary,
     required this.onToggle24Hour,
     required this.onCycleRingReference,
     required this.onToggleVibration,
     required this.onCycleSoundType,
+    required this.onOpenAlertSettings,
     required this.onResetData,
   });
 
@@ -1135,10 +1230,12 @@ class _SettingsCard extends StatelessWidget {
   final String ringReferenceLabel;
   final bool vibrationEnabled;
   final String soundTypeLabel;
+  final String alertSummary;
   final Future<void> Function() onToggle24Hour;
   final Future<void> Function() onCycleRingReference;
   final Future<void> Function() onToggleVibration;
   final Future<void> Function() onCycleSoundType;
+  final Future<void> Function() onOpenAlertSettings;
   final Future<void> Function() onResetData;
 
   @override
@@ -1152,6 +1249,22 @@ class _SettingsCard extends StatelessWidget {
             color: Color(0xFF111827),
             fontSize: 20,
             fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 16),
+        SurfaceCard(
+          child: _SettingRow(
+            height: 52,
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            label: '알림 설정',
+            labelStyle: const TextStyle(
+              color: Color(0xFF111827),
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+            ),
+            value: alertSummary,
+            showChevron: true,
+            onTap: onOpenAlertSettings,
           ),
         ),
         const SizedBox(height: 16),
