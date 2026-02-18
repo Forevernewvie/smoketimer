@@ -168,11 +168,18 @@ class AppController extends StateNotifier<AppState> {
     await _rescheduleNotifications();
   }
 
-  Future<void> toggleRepeatEnabled() async {
-    final updated = state.settings.copyWith(
-      repeatEnabled: !state.settings.repeatEnabled,
-    );
+  Future<bool> toggleRepeatEnabled() async {
+    final enabling = !state.settings.repeatEnabled;
+    if (enabling) {
+      final granted = await _notificationService.requestPermission();
+      if (!granted) {
+        return false;
+      }
+    }
+
+    final updated = state.settings.copyWith(repeatEnabled: enabling);
     await _updateSettings(updated);
+    return true;
   }
 
   Future<void> cycleIntervalMinutes() async {
@@ -236,13 +243,29 @@ class AppController extends StateNotifier<AppState> {
     await _updateSettings(updated);
   }
 
-  Future<void> sendTestNotification() async {
+  Future<bool> requestNotificationPermission() async {
+    final granted = await _notificationService.requestPermission();
+    if (granted) {
+      // Re-register schedules after permission is granted so users don't have to
+      // "toggle" any settings to start receiving alerts.
+      await _rescheduleNotifications();
+    }
+    return granted;
+  }
+
+  Future<bool> sendTestNotification() async {
+    final granted = await _notificationService.requestPermission();
+    if (!granted) {
+      return false;
+    }
+
     await _notificationService.showTest(
       title: '흡연 타이머 테스트',
       body: '테스트 알림이 정상 동작했습니다.',
       vibrationEnabled: state.settings.vibrationEnabled,
       soundType: state.settings.soundType,
     );
+    return true;
   }
 
   Future<void> toggleUse24Hour() async {

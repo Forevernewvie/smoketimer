@@ -192,8 +192,12 @@ class _RingGaugePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     // Draw both track and arc with the same deflated rect so they share
     // the exact same radius/stroke centerline (no visible gap).
-    final rect = Rect.fromLTWH(0, 0, size.width, size.height)
-        .deflate(strokeWidth / 2);
+    final rect = Rect.fromLTWH(
+      0,
+      0,
+      size.width,
+      size.height,
+    ).deflate(strokeWidth / 2);
 
     final trackPaint = Paint()
       ..style = PaintingStyle.stroke

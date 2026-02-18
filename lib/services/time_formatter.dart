@@ -8,6 +8,23 @@ class TimeFormatter {
     return format.format(value);
   }
 
+  static String formatDayAwareClock(
+    DateTime now,
+    DateTime value, {
+    required bool use24Hour,
+  }) {
+    final sameDay =
+        now.year == value.year &&
+        now.month == value.month &&
+        now.day == value.day;
+    final clock = formatClock(value, use24Hour: use24Hour);
+    if (sameDay) {
+      return clock;
+    }
+    final date = DateFormat('M/d').format(value);
+    return '$date $clock';
+  }
+
   static String formatMinutesToClock(int minutes, {required bool use24Hour}) {
     // Policy:
     // - 24:00 is only valid in 24-hour format.
