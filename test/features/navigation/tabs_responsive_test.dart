@@ -54,7 +54,7 @@ void main() {
         expect(find.text('테스트 알림 보내기'), findsOneWidget);
         expect(tester.takeException(), isNull);
 
-        await tester.pageBack();
+        await tester.tap(find.byIcon(Icons.arrow_back_ios_new_rounded));
         await tester.pumpAndSettle();
         expect(find.text('설정'), findsOneWidget);
         expect(tester.takeException(), isNull);

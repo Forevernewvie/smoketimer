@@ -89,15 +89,31 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
     );
     final maxInterval = SmokingStatsService.maxIntervalMinutes(periodRecords);
 
-    final nextAlertText = state.nextAlertAt == null
-        ? '알림 비활성화'
-        : '다음 알림까지 ${TimeFormatter.formatCountdown(state.now, state.nextAlertAt!)}';
+    final hasIntervalStats = periodRecords.length >= 2;
+    final averageIntervalText = hasIntervalStats
+        ? '${averageInterval.toString()}분'
+        : '-';
+    final maxIntervalText = hasIntervalStats
+        ? '${maxInterval.toString()}분'
+        : '-';
 
-    final rangeText = TimeFormatter.formatRange(
-      startMinutes: state.settings.allowedStartMinutes,
-      endMinutes: state.settings.allowedEndMinutes,
-      use24Hour: state.settings.use24Hour,
-    );
+    final nextAlertText = () {
+      if (!state.settings.repeatEnabled) {
+        return '알림 꺼짐';
+      }
+      if (lastSmokingAt == null) {
+        return '기록 후 알림이 시작돼요';
+      }
+      if (state.settings.activeWeekdays.isEmpty) {
+        return '알림 요일을 선택해주세요';
+      }
+      if (state.nextAlertAt == null) {
+        return '다음 알림 없음';
+      }
+
+      final prefix = state.settings.preAlertMinutes > 0 ? '미리 알림까지' : '다음 알림까지';
+      return '$prefix ${TimeFormatter.formatCountdown(state.now, state.nextAlertAt!)}';
+    }();
 
     return Scaffold(
       backgroundColor: const Color(0xFFF7F9FC),
@@ -125,8 +141,8 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
                 period: state.recordPeriod,
                 records: periodRecords,
                 totalCount: totalCount,
-                averageInterval: averageInterval,
-                maxInterval: maxInterval,
+                averageIntervalText: averageIntervalText,
+                maxIntervalText: maxIntervalText,
                 use24Hour: state.settings.use24Hour,
                 onPeriodChanged: controller.setRecordPeriod,
               ),
@@ -196,103 +212,176 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
     await Navigator.of(context).push<void>(
       MaterialPageRoute(
         builder: (routeContext) {
-        return Scaffold(
-          backgroundColor: const Color(0xFFF7F9FC),
-          body: SafeArea(
-            child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
-                  child: Align(
-                    alignment: Alignment.topCenter,
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(
-                        maxWidth: _maxContentWidth,
-                      ),
-                      child: SizedBox(
-                        height: 44,
-                        child: Align(
-                          alignment: Alignment.centerLeft,
-                          child: IconButton(
-                            tooltip: '뒤로',
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(
-                              minWidth: 30,
-                              minHeight: 30,
-                            ),
-                            visualDensity: VisualDensity.compact,
-                            splashRadius: 18,
-                            onPressed: () =>
-                                Navigator.of(routeContext).pop(),
-                            icon: const Icon(
-                              Icons.arrow_back_ios_new_rounded,
-                              size: 20,
-                              color: Color(0xFF111827),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+          return Scaffold(
+            backgroundColor: const Color(0xFFF7F9FC),
+            body: SafeArea(
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
                     child: Align(
                       alignment: Alignment.topCenter,
                       child: ConstrainedBox(
                         constraints: const BoxConstraints(
                           maxWidth: _maxContentWidth,
                         ),
-                        child: Consumer(
-                          builder: (context, ref, _) {
-                            final appState = ref.watch(appControllerProvider);
-                            final controller =
-                                ref.read(appControllerProvider.notifier);
-
-                            final rangeText = TimeFormatter.formatRange(
-                              startMinutes:
-                                  appState.settings.allowedStartMinutes,
-                              endMinutes: appState.settings.allowedEndMinutes,
-                              use24Hour: appState.settings.use24Hour,
-                            );
-
-                            return _AlertCard(
-                              repeatEnabled: appState.settings.repeatEnabled,
-                              intervalMinutes:
-                                  appState.settings.intervalMinutes,
-                              preAlertMinutes:
-                                  appState.settings.preAlertMinutes,
-                              rangeText: rangeText,
-                              activeWeekdays: appState.settings.activeWeekdays,
-                              onToggleRepeat: controller.toggleRepeatEnabled,
-                              onPickInterval: () async {
-                                await _pickIntervalMinutes(
-                                  context,
-                                  initialMinutes:
-                                      appState.settings.intervalMinutes,
-                                  onSelected: controller.setIntervalMinutes,
-                                );
-                              },
-                              onCyclePreAlert: controller.cyclePreAlertMinutes,
-                              onPickRange: () =>
-                                  _pickAllowedWindow(context, appState),
-                              onToggleWeekday: controller.toggleWeekday,
-                              onSendTest: controller.sendTestNotification,
-                            );
-                          },
+                        child: SizedBox(
+                          height: 44,
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: IconButton(
+                              tooltip: '뒤로',
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(
+                                minWidth: 30,
+                                minHeight: 30,
+                              ),
+                              visualDensity: VisualDensity.compact,
+                              splashRadius: 18,
+                              onPressed: () => Navigator.of(routeContext).pop(),
+                              icon: const Icon(
+                                Icons.arrow_back_ios_new_rounded,
+                                size: 20,
+                                color: Color(0xFF111827),
+                              ),
+                            ),
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-              ],
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+                      child: Align(
+                        alignment: Alignment.topCenter,
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(
+                            maxWidth: _maxContentWidth,
+                          ),
+                          child: Consumer(
+                            builder: (context, ref, _) {
+                              final appState = ref.watch(appControllerProvider);
+                              final controller = ref.read(
+                                appControllerProvider.notifier,
+                              );
+
+                              final rangeText = TimeFormatter.formatRange(
+                                startMinutes:
+                                    appState.settings.allowedStartMinutes,
+                                endMinutes: appState.settings.allowedEndMinutes,
+                                use24Hour: appState.settings.use24Hour,
+                              );
+
+                              final resolvedLastSmokingAt =
+                                  SmokingStatsService.resolveLastSmokingAt(
+                                    appState.meta.lastSmokingAt,
+                                    appState.records,
+                                  );
+
+                              final nextAlertPreviewText = () {
+                                if (!appState.settings.repeatEnabled) {
+                                  return '꺼짐';
+                                }
+                                if (resolvedLastSmokingAt == null) {
+                                  return '기록 후 시작';
+                                }
+                                if (appState.settings.activeWeekdays.isEmpty) {
+                                  return '요일 필요';
+                                }
+                                if (appState.nextAlertAt == null) {
+                                  return '없음';
+                                }
+
+                                final at = TimeFormatter.formatDayAwareClock(
+                                  appState.now,
+                                  appState.nextAlertAt!,
+                                  use24Hour: appState.settings.use24Hour,
+                                );
+                                final countdown = TimeFormatter.formatCountdown(
+                                  appState.now,
+                                  appState.nextAlertAt!,
+                                );
+                                return '$at · $countdown';
+                              }();
+
+                              return _AlertCard(
+                                repeatEnabled: appState.settings.repeatEnabled,
+                                intervalMinutes:
+                                    appState.settings.intervalMinutes,
+                                preAlertMinutes:
+                                    appState.settings.preAlertMinutes,
+                                rangeText: rangeText,
+                                nextAlertPreviewText: nextAlertPreviewText,
+                                activeWeekdays:
+                                    appState.settings.activeWeekdays,
+                                onToggleRepeat: () async {
+                                  final ok = await controller
+                                      .toggleRepeatEnabled();
+                                  if (!ok && context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          '알림 권한을 허용해야 반복 알림을 사용할 수 있어요.',
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                },
+                                onPickInterval: () async {
+                                  await _pickIntervalMinutes(
+                                    context,
+                                    initialMinutes:
+                                        appState.settings.intervalMinutes,
+                                    onSelected: controller.setIntervalMinutes,
+                                  );
+                                },
+                                onCyclePreAlert:
+                                    controller.cyclePreAlertMinutes,
+                                onPickRange: () =>
+                                    _pickAllowedWindow(context, appState),
+                                onToggleWeekday: controller.toggleWeekday,
+                                onRequestPermission: () async {
+                                  final ok = await controller
+                                      .requestNotificationPermission();
+                                  if (!context.mounted) {
+                                    return;
+                                  }
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        ok
+                                            ? '알림 권한이 허용되었습니다.'
+                                            : '알림 권한을 허용해주세요. (시스템 설정)',
+                                      ),
+                                    ),
+                                  );
+                                },
+                                onSendTest: () async {
+                                  final ok = await controller
+                                      .sendTestNotification();
+                                  if (!ok && context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text('알림 권한이 필요합니다. (시스템 설정)'),
+                                      ),
+                                    );
+                                  }
+                                },
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        );
-      },
-    ),
-  );
+          );
+        },
+      ),
+    );
   }
 
   Future<void> _pickIntervalMinutes(
@@ -746,8 +835,8 @@ class _RecordCard extends StatelessWidget {
     required this.period,
     required this.records,
     required this.totalCount,
-    required this.averageInterval,
-    required this.maxInterval,
+    required this.averageIntervalText,
+    required this.maxIntervalText,
     required this.use24Hour,
     required this.onPeriodChanged,
   });
@@ -755,8 +844,8 @@ class _RecordCard extends StatelessWidget {
   final RecordPeriod period;
   final List<SmokingRecord> records;
   final int totalCount;
-  final int averageInterval;
-  final int maxInterval;
+  final String averageIntervalText;
+  final String maxIntervalText;
   final bool use24Hour;
   final ValueChanged<RecordPeriod> onPeriodChanged;
 
@@ -820,7 +909,7 @@ class _RecordCard extends StatelessWidget {
               Expanded(
                 child: _SummaryItem(
                   label: '평균 간격',
-                  value: '${averageInterval.toString()}분',
+                  value: averageIntervalText,
                   valueFontSize: 20,
                 ),
               ),
@@ -828,7 +917,7 @@ class _RecordCard extends StatelessWidget {
               Expanded(
                 child: _SummaryItem(
                   label: '최장 간격',
-                  value: '${maxInterval.toString()}분',
+                  value: maxIntervalText,
                   valueFontSize: 20,
                 ),
               ),
@@ -952,7 +1041,8 @@ class _RecordList extends StatelessWidget {
       );
     }
 
-    final visible = records.take(3).toList();
+    const maxVisible = 20;
+    final visible = records.take(maxVisible).toList();
 
     return Column(
       children: List.generate(visible.length, (index) {
@@ -1026,12 +1116,14 @@ class _AlertCard extends StatelessWidget {
     required this.intervalMinutes,
     required this.preAlertMinutes,
     required this.rangeText,
+    required this.nextAlertPreviewText,
     required this.activeWeekdays,
     required this.onToggleRepeat,
     required this.onPickInterval,
     required this.onCyclePreAlert,
     required this.onPickRange,
     required this.onToggleWeekday,
+    required this.onRequestPermission,
     required this.onSendTest,
   });
 
@@ -1039,12 +1131,14 @@ class _AlertCard extends StatelessWidget {
   final int intervalMinutes;
   final int preAlertMinutes;
   final String rangeText;
+  final String nextAlertPreviewText;
   final Set<int> activeWeekdays;
   final Future<void> Function() onToggleRepeat;
   final Future<void> Function() onPickInterval;
   final Future<void> Function() onCyclePreAlert;
   final Future<void> Function() onPickRange;
   final Future<void> Function(int weekday) onToggleWeekday;
+  final Future<void> Function() onRequestPermission;
   final Future<void> Function() onSendTest;
 
   @override
@@ -1085,6 +1179,23 @@ class _AlertCard extends StatelessWidget {
                   horizontal: 14,
                   vertical: 10,
                 ),
+                label: '알림 권한',
+                labelStyle: const TextStyle(
+                  color: Color(0xFF374151),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+                value: '요청',
+                withTopBorder: true,
+                showChevron: true,
+                onTap: onRequestPermission,
+              ),
+              _SettingRow(
+                height: 52,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
                 label: '간격',
                 labelStyle: const TextStyle(
                   color: Color(0xFF374151),
@@ -1111,6 +1222,21 @@ class _AlertCard extends StatelessWidget {
                 value: '${preAlertMinutes.toString()}분 전',
                 withTopBorder: true,
                 onTap: onCyclePreAlert,
+              ),
+              _SettingRow(
+                height: 52,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
+                label: preAlertMinutes > 0 ? '미리 알림' : '다음 알림',
+                labelStyle: const TextStyle(
+                  color: Color(0xFF374151),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+                value: nextAlertPreviewText,
+                withTopBorder: true,
               ),
             ],
           ),

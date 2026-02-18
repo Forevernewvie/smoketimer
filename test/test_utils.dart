@@ -57,12 +57,20 @@ Future<void> pumpApp(WidgetTester tester, ProviderContainer container) async {
 class CapturingNotificationService implements NotificationService {
   int initializeCalls = 0;
   int cancelAllCalls = 0;
+  int permissionRequests = 0;
+  bool permissionGranted = true;
   final List<List<ScheduledAlert>> scheduledBatches = [];
   final List<Map<String, Object?>> shownTests = [];
 
   @override
   Future<void> initialize() async {
     initializeCalls += 1;
+  }
+
+  @override
+  Future<bool> requestPermission() async {
+    permissionRequests += 1;
+    return permissionGranted;
   }
 
   @override

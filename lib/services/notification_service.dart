@@ -22,6 +22,13 @@ class ScheduledAlert {
 abstract class NotificationService {
   Future<void> initialize();
 
+  /// Request notification permission.
+  ///
+  /// Policy: this should be called only as a result of explicit user actions
+  /// (e.g., enabling repeat alerts or tapping "test notification"), so the app
+  /// does not prompt unexpectedly at launch.
+  Future<bool> requestPermission();
+
   Future<void> scheduleAlerts({
     required List<ScheduledAlert> alerts,
     required bool vibrationEnabled,
@@ -71,19 +78,38 @@ class FlutterNotificationService implements NotificationService {
 
     await _plugin.initialize(initSettings);
 
-    await _plugin
-        .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin
-        >()
-        ?.requestNotificationsPermission();
-
-    await _plugin
-        .resolvePlatformSpecificImplementation<
-          IOSFlutterLocalNotificationsPlugin
-        >()
-        ?.requestPermissions(alert: true, badge: true, sound: true);
-
     _initialized = true;
+  }
+
+  @override
+  Future<bool> requestPermission() async {
+    await initialize();
+
+    // Platform-specific implementations may be null (e.g., unsupported
+    // platforms). In those cases, treat permission as "granted/not required".
+    if (defaultTargetPlatform == TargetPlatform.android) {
+      final android = _plugin
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >();
+      final granted = await android?.requestNotificationsPermission();
+      return granted ?? true;
+    }
+
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      final ios = _plugin
+          .resolvePlatformSpecificImplementation<
+            IOSFlutterLocalNotificationsPlugin
+          >();
+      final granted = await ios?.requestPermissions(
+        alert: true,
+        badge: true,
+        sound: true,
+      );
+      return granted ?? true;
+    }
+
+    return true;
   }
 
   @override
@@ -220,6 +246,9 @@ class NoopNotificationService implements NotificationService {
 
   @override
   Future<void> initialize() async {}
+
+  @override
+  Future<bool> requestPermission() async => true;
 
   @override
   Future<void> scheduleAlerts({

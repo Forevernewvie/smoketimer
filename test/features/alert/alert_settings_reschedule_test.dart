@@ -50,7 +50,8 @@ void main() {
     expect(notifications.scheduledBatches, isNotEmpty);
     expect(notifications.scheduledBatches.last.length, 3);
 
-    await controller.toggleRepeatEnabled();
+    final toggled = await controller.toggleRepeatEnabled();
+    expect(toggled, isTrue);
     expect(controller.state.settings.repeatEnabled, isFalse);
     expect(controller.state.nextAlertAt, isNull);
     expect(notifications.scheduledBatches.last, isEmpty);
