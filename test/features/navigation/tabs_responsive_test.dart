@@ -39,17 +39,17 @@ void main() {
         expect(find.text('흡연 타이머'), findsOneWidget);
         expect(tester.takeException(), isNull);
 
-        await tester.tap(find.text('02 Record'));
+        await tester.tap(find.text('Record'));
         await tester.pumpAndSettle();
         expect(find.text('기록'), findsOneWidget);
         expect(tester.takeException(), isNull);
 
-        await tester.tap(find.text('03 Alert'));
+        await tester.tap(find.text('Alert'));
         await tester.pumpAndSettle();
         expect(find.text('알림 설정'), findsOneWidget);
         expect(tester.takeException(), isNull);
 
-        await tester.tap(find.text('04 Settings'));
+        await tester.tap(find.text('Settings'));
         await tester.pumpAndSettle();
         expect(find.text('설정'), findsOneWidget);
         expect(tester.takeException(), isNull);

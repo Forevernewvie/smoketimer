@@ -226,30 +226,24 @@ class _RingHero extends StatelessWidget {
       padding: EdgeInsets.zero,
       child: SizedBox(
         height: 250,
-        child: Stack(
-          children: const [
-            Positioned(
-              left: 70,
-              top: 44,
-              child: RingGauge(
-                size: 140,
-                strokeWidth: 10,
-                sweepAngle: 5.12,
-                value: '37',
-                label: '분 경과',
-                valueStyle: TextStyle(
-                  color: Color(0xFF111827),
-                  fontSize: 30,
-                  fontWeight: FontWeight.w700,
-                ),
-                labelStyle: TextStyle(
-                  color: Color(0xFF64748B),
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
+        child: const Center(
+          child: RingGauge(
+            size: 140,
+            strokeWidth: 10,
+            sweepAngle: 5.12,
+            value: '37',
+            label: '분 경과',
+            valueStyle: TextStyle(
+              color: Color(0xFF111827),
+              fontSize: 30,
+              fontWeight: FontWeight.w700,
             ),
-          ],
+            labelStyle: TextStyle(
+              color: Color(0xFF64748B),
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
         ),
       ),
     );
@@ -314,8 +308,10 @@ class _SummaryHero extends StatelessWidget {
     return SurfaceCard(
       padding: const EdgeInsets.all(16),
       child: const SizedBox(
+        width: double.infinity,
         height: 250,
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             SizedBox(

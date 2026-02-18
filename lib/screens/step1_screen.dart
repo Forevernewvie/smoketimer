@@ -3,12 +3,14 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../domain/app_defaults.dart';
 import '../domain/models/record_period.dart';
 import '../domain/models/smoking_record.dart';
 import '../presentation/state/app_providers.dart';
 import '../presentation/state/app_state.dart';
 import '../services/smoking_stats_service.dart';
 import '../services/time_formatter.dart';
+import '../widgets/allowed_time_window_sheet.dart';
 import '../widgets/pen_design_widgets.dart';
 
 class Step1Screen extends ConsumerStatefulWidget {
@@ -52,13 +54,18 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
       settings: state.settings,
     );
 
+    final elapsedSeconds = SmokingStatsService.elapsedSeconds(
+      now: state.now,
+      ringBaseTime: ringBaseTime,
+    );
+
     final elapsedMinutes = SmokingStatsService.elapsedMinutes(
       now: state.now,
       ringBaseTime: ringBaseTime,
     );
 
-    final ringProgress = SmokingStatsService.ringProgress(
-      elapsedMinutes: elapsedMinutes,
+    final ringProgress = SmokingStatsService.ringProgressSeconds(
+      elapsedSeconds: elapsedSeconds,
       intervalMinutes: state.settings.intervalMinutes,
     );
 
@@ -101,6 +108,7 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
             _scrollableTab(
               key: const PageStorageKey('tab_home'),
               child: _HomeCard(
+                hasRingBaseTime: ringBaseTime != null,
                 elapsedMinutes: elapsedMinutes,
                 intervalMinutes: state.settings.intervalMinutes,
                 ringProgress: ringProgress,
@@ -131,7 +139,13 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
                 rangeText: rangeText,
                 activeWeekdays: state.settings.activeWeekdays,
                 onToggleRepeat: controller.toggleRepeatEnabled,
-                onCycleInterval: controller.cycleIntervalMinutes,
+                onPickInterval: () async {
+                  await _pickIntervalMinutes(
+                    context,
+                    initialMinutes: state.settings.intervalMinutes,
+                    onSelected: controller.setIntervalMinutes,
+                  );
+                },
                 onCyclePreAlert: controller.cyclePreAlertMinutes,
                 onPickRange: () => _pickAllowedWindow(context, state),
                 onToggleWeekday: controller.toggleWeekday,
@@ -164,22 +178,22 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
           NavigationDestination(
             icon: Icon(Icons.timer_outlined),
             selectedIcon: Icon(Icons.timer_rounded),
-            label: '01 Home',
+            label: 'Home',
           ),
           NavigationDestination(
             icon: Icon(Icons.receipt_long_outlined),
             selectedIcon: Icon(Icons.receipt_long_rounded),
-            label: '02 Record',
+            label: 'Record',
           ),
           NavigationDestination(
             icon: Icon(Icons.notifications_none_outlined),
             selectedIcon: Icon(Icons.notifications_rounded),
-            label: '03 Alert',
+            label: 'Alert',
           ),
           NavigationDestination(
             icon: Icon(Icons.settings_outlined),
             selectedIcon: Icon(Icons.settings_rounded),
-            label: '04 Settings',
+            label: 'Settings',
           ),
         ],
       ),
@@ -200,79 +214,162 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
     );
   }
 
-  Future<void> _pickAllowedWindow(BuildContext context, AppState state) async {
-    final use24Hour = state.settings.use24Hour;
-    final startInitial = _toTimeOfDay(state.settings.allowedStartMinutes);
+  Future<void> _pickIntervalMinutes(
+    BuildContext context, {
+    required int initialMinutes,
+    required Future<void> Function(int minutes) onSelected,
+  }) async {
+    final min = AppDefaults.minIntervalMinutes;
+    final max = AppDefaults.maxIntervalMinutes;
+    final step = AppDefaults.intervalStepMinutes;
 
-    final pickedStart = await showTimePicker(
+    int minutes = initialMinutes.clamp(min, max).toInt();
+
+    final picked = await showModalBottomSheet<int>(
       context: context,
-      initialTime: startInitial,
-      builder: (context, child) {
-        if (child == null) {
-          return const SizedBox.shrink();
-        }
-        return MediaQuery(
-          data: MediaQuery.of(
-            context,
-          ).copyWith(alwaysUse24HourFormat: use24Hour),
-          child: child,
+      showDragHandle: true,
+      useSafeArea: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            String label = _formatIntervalLabel(minutes);
+            return Padding(
+              padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    '간격',
+                    style: TextStyle(
+                      color: Color(0xFF111827),
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    '$label (${minutes.toString()}분)',
+                    style: const TextStyle(
+                      color: Color(0xFF475569),
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SliderTheme(
+                    data: SliderTheme.of(context).copyWith(
+                      activeTrackColor: const Color(0xFF2563EB),
+                      inactiveTrackColor: const Color(0xFFD9E1EC),
+                      thumbColor: const Color(0xFF2563EB),
+                      overlayColor: const Color(
+                        0xFF2563EB,
+                      ).withValues(alpha: 0.12),
+                    ),
+                    child: Slider(
+                      min: min.toDouble(),
+                      max: max.toDouble(),
+                      divisions: ((max - min) / step).round(),
+                      value: minutes.toDouble(),
+                      onChanged: (value) {
+                        final normalized = ((value / step).round() * step)
+                            .clamp(min, max);
+                        setModalState(() => minutes = normalized.toInt());
+                      },
+                    ),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        _formatIntervalLabel(min),
+                        style: const TextStyle(
+                          color: Color(0xFF94A3B8),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Text(
+                        _formatIntervalLabel(max),
+                        style: const TextStyle(
+                          color: Color(0xFF94A3B8),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  PrimaryButton(
+                    text: '적용',
+                    onTap: () {
+                      Navigator.of(context).pop(minutes);
+                    },
+                  ),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    width: double.infinity,
+                    child: TextButton(
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text(
+                        '취소',
+                        style: TextStyle(
+                          color: Color(0xFF64748B),
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
         );
       },
     );
 
-    if (pickedStart == null) {
+    if (picked == null || picked == initialMinutes) {
+      return;
+    }
+    await onSelected(picked);
+  }
+
+  static String _formatIntervalLabel(int minutes) {
+    final clamped = minutes.clamp(0, 24 * 60).toInt();
+    final hours = clamped ~/ 60;
+    final remain = clamped % 60;
+    if (hours <= 0) {
+      return '${clamped.toString()}분';
+    }
+    if (remain == 0) {
+      return '${hours.toString()}시간';
+    }
+    return '${hours.toString()}시간 ${remain.toString()}분';
+  }
+
+  Future<void> _pickAllowedWindow(BuildContext context, AppState state) async {
+    final picked = await showAllowedTimeWindowSheet(
+      context,
+      initialStartMinutes: state.settings.allowedStartMinutes,
+      initialEndMinutes: state.settings.allowedEndMinutes,
+      use24Hour: state.settings.use24Hour,
+    );
+    if (picked == null) {
       return;
     }
     if (!context.mounted) {
       return;
     }
 
-    final endInitial = _toTimeOfDay(
-      min(state.settings.allowedEndMinutes, 1439),
-    );
-
-    final pickedEnd = await showTimePicker(
-      context: context,
-      initialTime: endInitial,
-      builder: (context, child) {
-        if (child == null) {
-          return const SizedBox.shrink();
-        }
-        return MediaQuery(
-          data: MediaQuery.of(
-            context,
-          ).copyWith(alwaysUse24HourFormat: use24Hour),
-          child: child,
-        );
-      },
-    );
-
-    if (pickedEnd == null) {
-      return;
-    }
-
-    final startMinutes = pickedStart.hour * 60 + pickedStart.minute;
-    var endMinutes = pickedEnd.hour * 60 + pickedEnd.minute;
-
-    // TimePicker는 24:00을 직접 선택할 수 없으므로 00:00은 종료값 24:00으로 보정한다.
-    if (endMinutes == 0) {
-      endMinutes = 24 * 60;
-    }
-
-    if (endMinutes <= startMinutes) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('종료 시간은 시작 시간보다 커야 합니다.')));
-      }
-      return;
-    }
-
     await ref
         .read(appControllerProvider.notifier)
         .updateAllowedTimeWindow(
-          startMinutes: startMinutes,
-          endMinutes: endMinutes,
+          startMinutes: picked.startMinutes,
+          endMinutes: picked.endMinutes,
         );
   }
 
@@ -302,14 +399,12 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
     }
   }
 
-  static TimeOfDay _toTimeOfDay(int totalMinutes) {
-    final normalized = totalMinutes.clamp(0, 1439);
-    return TimeOfDay(hour: normalized ~/ 60, minute: normalized % 60);
-  }
+  // TimeOfDay helper removed: time window is now selected via RangeSlider sheet.
 }
 
 class _HomeCard extends StatelessWidget {
   const _HomeCard({
+    required this.hasRingBaseTime,
     required this.elapsedMinutes,
     required this.intervalMinutes,
     required this.ringProgress,
@@ -319,6 +414,7 @@ class _HomeCard extends StatelessWidget {
     required this.onUndoRecord,
   });
 
+  final bool hasRingBaseTime;
   final int elapsedMinutes;
   final int intervalMinutes;
   final double ringProgress;
@@ -329,6 +425,27 @@ class _HomeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Best-effort, user-facing ring meaning:
+    // - When there is a base time (usually last smoking), show minutes remaining
+    //   until the configured interval. This is the most actionable cue.
+    // - If the interval is already exceeded, show overtime minutes instead.
+    // - If no base time exists yet, fall back to "0분 경과" (waiting for first record).
+    final int ringValueMinutes;
+    final String ringLabel;
+    if (!hasRingBaseTime) {
+      ringValueMinutes = 0;
+      ringLabel = '분 경과';
+    } else if (intervalMinutes <= 0) {
+      ringValueMinutes = 0;
+      ringLabel = '분 남음';
+    } else if (elapsedMinutes <= intervalMinutes) {
+      ringValueMinutes = intervalMinutes - elapsedMinutes;
+      ringLabel = '분 남음';
+    } else {
+      ringValueMinutes = elapsedMinutes - intervalMinutes;
+      ringLabel = '분 초과';
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -361,20 +478,14 @@ class _HomeCard extends StatelessWidget {
             children: [
               SizedBox(
                 height: 210,
-                child: Stack(
-                  children: [
-                    Positioned(
-                      left: 62,
-                      top: 28,
-                      child: RingGauge(
-                        size: 156,
-                        strokeWidth: 10,
-                        sweepAngle: ringProgress * 2 * pi,
-                        value: '$elapsedMinutes',
-                        label: '분 경과',
-                      ),
-                    ),
-                  ],
+                child: Center(
+                  child: RingGauge(
+                    size: 156,
+                    strokeWidth: 10,
+                    sweepAngle: ringProgress * 2 * pi,
+                    value: ringValueMinutes.toString(),
+                    label: ringLabel,
+                  ),
                 ),
               ),
               Text(
@@ -824,7 +935,7 @@ class _AlertCard extends StatelessWidget {
     required this.rangeText,
     required this.activeWeekdays,
     required this.onToggleRepeat,
-    required this.onCycleInterval,
+    required this.onPickInterval,
     required this.onCyclePreAlert,
     required this.onPickRange,
     required this.onToggleWeekday,
@@ -837,7 +948,7 @@ class _AlertCard extends StatelessWidget {
   final String rangeText;
   final Set<int> activeWeekdays;
   final Future<void> Function() onToggleRepeat;
-  final Future<void> Function() onCycleInterval;
+  final Future<void> Function() onPickInterval;
   final Future<void> Function() onCyclePreAlert;
   final Future<void> Function() onPickRange;
   final Future<void> Function(int weekday) onToggleWeekday;
@@ -889,7 +1000,8 @@ class _AlertCard extends StatelessWidget {
                 ),
                 value: '${intervalMinutes.toString()}분',
                 withTopBorder: true,
-                onTap: onCycleInterval,
+                showChevron: true,
+                onTap: onPickInterval,
               ),
               _SettingRow(
                 height: 52,
@@ -912,77 +1024,68 @@ class _AlertCard extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         SurfaceCard(
-          padding: const EdgeInsets.all(14),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              GestureDetector(
-                onTap: () async {
-                  await onPickRange();
-                },
-                child: SizedBox(
-                  height: 24,
-                  child: Row(
-                    children: [
-                      const Text(
-                        '허용 시간대',
-                        style: TextStyle(
-                          color: Color(0xFF374151),
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          rangeText,
-                          textAlign: TextAlign.right,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: Color(0xFF111827),
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+              _SettingRow(
+                height: 52,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
                 ),
-              ),
-              const SizedBox(height: 10),
-              const Text(
-                '요일',
-                style: TextStyle(
+                label: '허용 시간대',
+                labelStyle: const TextStyle(
                   color: Color(0xFF374151),
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                 ),
+                value: rangeText,
+                showChevron: true,
+                onTap: onPickRange,
               ),
-              const SizedBox(height: 10),
-              SizedBox(
-                height: 32,
-                child: Row(
-                  children: Step1Screen._weekdayLabels.entries
-                      .map(
-                        (entry) => Expanded(
-                          child: Padding(
-                            padding: EdgeInsets.only(
-                              left: entry.key == DateTime.monday ? 0 : 3,
-                              right: entry.key == DateTime.sunday ? 0 : 3,
-                            ),
-                            child: GestureDetector(
-                              onTap: () async {
-                                await onToggleWeekday(entry.key);
-                              },
-                              child: DayChip(
-                                text: entry.value,
-                                active: activeWeekdays.contains(entry.key),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(14, 10, 14, 14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      '요일',
+                      style: TextStyle(
+                        color: Color(0xFF374151),
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    SizedBox(
+                      height: 32,
+                      child: Row(
+                        children: Step1Screen._weekdayLabels.entries
+                            .map(
+                              (entry) => Expanded(
+                                child: Padding(
+                                  padding: EdgeInsets.only(
+                                    left: entry.key == DateTime.monday ? 0 : 3,
+                                    right: entry.key == DateTime.sunday ? 0 : 3,
+                                  ),
+                                  child: GestureDetector(
+                                    onTap: () async {
+                                      await onToggleWeekday(entry.key);
+                                    },
+                                    child: DayChip(
+                                      text: entry.value,
+                                      active: activeWeekdays.contains(
+                                        entry.key,
+                                      ),
+                                    ),
+                                  ),
+                                ),
                               ),
-                            ),
-                          ),
-                        ),
-                      )
-                      .toList(growable: false),
+                            )
+                            .toList(growable: false),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],

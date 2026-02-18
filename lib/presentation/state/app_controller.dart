@@ -185,6 +185,19 @@ class AppController extends StateNotifier<AppState> {
     await _updateSettings(updated);
   }
 
+  Future<void> setIntervalMinutes(int minutes) async {
+    final normalized = minutes
+        .clamp(AppDefaults.minIntervalMinutes, AppDefaults.maxIntervalMinutes)
+        .toInt();
+
+    if (normalized == state.settings.intervalMinutes) {
+      return;
+    }
+
+    final updated = state.settings.copyWith(intervalMinutes: normalized);
+    await _updateSettings(updated);
+  }
+
   Future<void> cyclePreAlertMinutes() async {
     final current = state.settings.preAlertMinutes;
     final options = AppDefaults.preAlertOptions;

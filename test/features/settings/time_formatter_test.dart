@@ -9,7 +9,18 @@ void main() {
     expect(TimeFormatter.formatClock(value, use24Hour: true), '15:07');
 
     final twelveHour = TimeFormatter.formatClock(value, use24Hour: false);
-    expect(twelveHour.contains('03:07'), isTrue);
+    expect(twelveHour.contains('3:07'), isTrue);
     expect(twelveHour.contains('15:07'), isFalse);
+  });
+
+  test('TimeFormatter formats 24:00 consistently', () {
+    expect(TimeFormatter.formatMinutesToClock(1440, use24Hour: true), '24:00');
+
+    final twelveHour = TimeFormatter.formatMinutesToClock(
+      1440,
+      use24Hour: false,
+    );
+    expect(twelveHour.contains('12:00'), isTrue);
+    expect(twelveHour.contains('24:00'), isFalse);
   });
 }

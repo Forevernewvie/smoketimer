@@ -153,18 +153,11 @@ class RingGauge extends StatelessWidget {
       child: Stack(
         alignment: Alignment.center,
         children: [
-          Container(
-            width: size,
-            height: size,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: trackColor, width: strokeWidth),
-            ),
-          ),
           CustomPaint(
             size: Size.square(size),
-            painter: _ArcPainter(
-              color: arcColor,
+            painter: _RingGaugePainter(
+              trackColor: trackColor,
+              arcColor: arcColor,
               strokeWidth: strokeWidth,
               sweepAngle: sweepAngle,
             ),
@@ -182,32 +175,48 @@ class RingGauge extends StatelessWidget {
   }
 }
 
-class _ArcPainter extends CustomPainter {
-  const _ArcPainter({
-    required this.color,
+class _RingGaugePainter extends CustomPainter {
+  const _RingGaugePainter({
+    required this.trackColor,
+    required this.arcColor,
     required this.strokeWidth,
     required this.sweepAngle,
   });
 
-  final Color color;
+  final Color trackColor;
+  final Color arcColor;
   final double strokeWidth;
   final double sweepAngle;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final rect = Rect.fromLTWH(0, 0, size.width, size.height);
-    final paint = Paint()
+    // Draw both track and arc with the same deflated rect so they share
+    // the exact same radius/stroke centerline (no visible gap).
+    final rect = Rect.fromLTWH(0, 0, size.width, size.height)
+        .deflate(strokeWidth / 2);
+
+    final trackPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.butt
+      ..color = trackColor
+      ..isAntiAlias = true;
+
+    final arcPaint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = strokeWidth
       ..strokeCap = StrokeCap.round
-      ..color = color;
+      ..color = arcColor
+      ..isAntiAlias = true;
 
-    canvas.drawArc(rect, -math.pi / 2, sweepAngle, false, paint);
+    canvas.drawArc(rect, 0, math.pi * 2, false, trackPaint);
+    canvas.drawArc(rect, -math.pi / 2, sweepAngle, false, arcPaint);
   }
 
   @override
-  bool shouldRepaint(covariant _ArcPainter oldDelegate) {
-    return oldDelegate.color != color ||
+  bool shouldRepaint(covariant _RingGaugePainter oldDelegate) {
+    return oldDelegate.trackColor != trackColor ||
+        oldDelegate.arcColor != arcColor ||
         oldDelegate.strokeWidth != strokeWidth ||
         oldDelegate.sweepAngle != sweepAngle;
   }

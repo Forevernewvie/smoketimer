@@ -4,27 +4,31 @@ class TimeFormatter {
   const TimeFormatter._();
 
   static String formatClock(DateTime value, {required bool use24Hour}) {
-    final format = use24Hour ? DateFormat('HH:mm') : DateFormat('a hh:mm');
+    final format = use24Hour ? DateFormat('HH:mm') : DateFormat('a h:mm');
     return format.format(value);
   }
 
   static String formatMinutesToClock(int minutes, {required bool use24Hour}) {
-    if (minutes >= 1440) {
-      return '24:00';
-    }
+    // Policy:
+    // - 24:00 is only valid in 24-hour format.
+    // - In 12-hour format, represent "end of day" as 00:00 (midnight).
+    final isEndOfDay = minutes >= 1440;
 
-    final normalized = minutes.clamp(0, 1439);
+    final normalized = isEndOfDay ? 0 : minutes.clamp(0, 1439);
     final hour = normalized ~/ 60;
     final minute = normalized % 60;
 
     if (use24Hour) {
+      if (isEndOfDay) {
+        return '24:00';
+      }
       final hh = hour.toString().padLeft(2, '0');
       final mm = minute.toString().padLeft(2, '0');
       return '$hh:$mm';
     }
 
     final dt = DateTime(2026, 1, 1, hour, minute);
-    return DateFormat('a hh:mm').format(dt);
+    return DateFormat('a h:mm').format(dt);
   }
 
   static String formatRange({

@@ -29,10 +29,10 @@ class _SplashA3Card extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Column(
+    return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        SizedBox(
+        const SizedBox(
           width: 92,
           height: 92,
           child: DecoratedBox(
@@ -47,8 +47,8 @@ class _SplashA3Card extends StatelessWidget {
             ),
           ),
         ),
-        SizedBox(height: 14),
-        Text(
+        const SizedBox(height: 14),
+        const Text(
           '흡연 타이머',
           textAlign: TextAlign.center,
           style: TextStyle(
@@ -57,8 +57,8 @@ class _SplashA3Card extends StatelessWidget {
             fontWeight: FontWeight.w700,
           ),
         ),
-        SizedBox(height: 14),
-        Text(
+        const SizedBox(height: 14),
+        const Text(
           '마지막 흡연 후 경과 시간 표시',
           textAlign: TextAlign.center,
           style: TextStyle(
@@ -67,32 +67,10 @@ class _SplashA3Card extends StatelessWidget {
             fontWeight: FontWeight.w500,
           ),
         ),
-        SizedBox(height: 14),
-        SizedBox(
-          width: 120,
-          height: 6,
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              color: Color(0xFFD9E1EC),
-              borderRadius: BorderRadius.all(Radius.circular(999)),
-            ),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: SizedBox(
-                width: 58,
-                height: 6,
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: Color(0xFF2563EB),
-                    borderRadius: BorderRadius.all(Radius.circular(999)),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-        SizedBox(height: 14),
-        Text(
+        const SizedBox(height: 14),
+        const _AnimatedSplashLoadingBar(),
+        const SizedBox(height: 14),
+        const Text(
           '시작 준비 중',
           textAlign: TextAlign.center,
           style: TextStyle(
@@ -102,6 +80,85 @@ class _SplashA3Card extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _AnimatedSplashLoadingBar extends StatefulWidget {
+  const _AnimatedSplashLoadingBar();
+
+  static const trackWidth = 120.0;
+  static const barHeight = 6.0;
+  static const segmentWidth = 58.0;
+
+  @override
+  State<_AnimatedSplashLoadingBar> createState() =>
+      _AnimatedSplashLoadingBarState();
+}
+
+class _AnimatedSplashLoadingBarState extends State<_AnimatedSplashLoadingBar>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _t;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    )..repeat(reverse: true);
+    _t = CurvedAnimation(parent: _controller, curve: Curves.easeInOut);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: _AnimatedSplashLoadingBar.trackWidth,
+      height: _AnimatedSplashLoadingBar.barHeight,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: const Color(0xFFD9E1EC),
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final travel =
+                (constraints.maxWidth - _AnimatedSplashLoadingBar.segmentWidth)
+                    .clamp(0.0, double.infinity);
+
+            return AnimatedBuilder(
+              animation: _t,
+              builder: (context, child) {
+                return Transform.translate(
+                  offset: Offset(travel * _t.value, 0),
+                  child: child,
+                );
+              },
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: SizedBox(
+                  key: const Key('splash_loading_segment'),
+                  width: _AnimatedSplashLoadingBar.segmentWidth,
+                  height: _AnimatedSplashLoadingBar.barHeight,
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF2563EB),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
     );
   }
 }
