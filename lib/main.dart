@@ -46,13 +46,25 @@ class SmokeTimerApp extends ConsumerWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Smoke Timer UI',
+      themeMode: ThemeMode.system,
       theme: ThemeData(
         useMaterial3: true,
-        scaffoldBackgroundColor: SmokeUiPalette.background,
+        brightness: Brightness.light,
+        scaffoldBackgroundColor: SmokeUiTheme.light.background,
         colorScheme: ColorScheme.fromSeed(
           seedColor: SmokeUiPalette.accent,
           primary: SmokeUiPalette.accentDark,
           secondary: SmokeUiPalette.mint,
+        ),
+      ),
+      darkTheme: ThemeData(
+        useMaterial3: true,
+        brightness: Brightness.dark,
+        scaffoldBackgroundColor: SmokeUiTheme.dark.background,
+        colorScheme: const ColorScheme.dark(
+          primary: Color(0xFFFF8A3D),
+          secondary: Color(0xFF1D4ED8),
+          surface: Color(0xFF1B1F24),
         ),
       ),
       home: const RootStageScreen(),

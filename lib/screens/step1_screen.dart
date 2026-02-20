@@ -61,6 +61,7 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
 
   @override
   Widget build(BuildContext context) {
+    final ui = SmokeUiTheme.of(context);
     final state = ref.watch(appControllerProvider);
     final controller = ref.read(appControllerProvider.notifier);
 
@@ -188,7 +189,7 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
     }();
 
     return Scaffold(
-      backgroundColor: SmokeUiPalette.background,
+      backgroundColor: ui.background,
       body: SafeArea(
         child: IndexedStack(
           index: _tabIndex,
@@ -319,8 +320,9 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
     await Navigator.of(context).push<void>(
       MaterialPageRoute(
         builder: (routeContext) {
+          final routeUi = SmokeUiTheme.of(routeContext);
           return Scaffold(
-            backgroundColor: SmokeUiPalette.background,
+            backgroundColor: routeUi.background,
             body: SafeArea(
               child: Column(
                 children: [
@@ -346,10 +348,10 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
                               visualDensity: VisualDensity.compact,
                               splashRadius: 18,
                               onPressed: () => Navigator.of(routeContext).pop(),
-                              icon: const Icon(
+                              icon: Icon(
                                 Icons.arrow_back_ios_new_rounded,
                                 size: 20,
-                                color: Color(0xFF111827),
+                                color: routeUi.textPrimary,
                               ),
                             ),
                           ),
@@ -506,11 +508,12 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
       context: context,
       showDragHandle: true,
       useSafeArea: true,
-      backgroundColor: SmokeUiPalette.surface,
+      backgroundColor: SmokeUiTheme.of(context).surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (context) {
+        final ui = SmokeUiTheme.of(context);
         return StatefulBuilder(
           builder: (context, setModalState) {
             String label = _formatIntervalLabel(minutes);
@@ -521,10 +524,10 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       '간격',
                       style: TextStyle(
-                        color: SmokeUiPalette.textPrimary,
+                        color: ui.textPrimary,
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
                       ),
@@ -532,8 +535,8 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
                     const SizedBox(height: 6),
                     Text(
                       '$label (${minutes.toString()}분)',
-                      style: const TextStyle(
-                        color: SmokeUiPalette.textSecondary,
+                      style: TextStyle(
+                        color: ui.textSecondary,
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                       ),
@@ -542,7 +545,7 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
                     SliderTheme(
                       data: SliderTheme.of(context).copyWith(
                         activeTrackColor: SmokeUiPalette.accentDark,
-                        inactiveTrackColor: const Color(0xFFD9E1EC),
+                        inactiveTrackColor: ui.border,
                         thumbColor: SmokeUiPalette.accent,
                         overlayColor: SmokeUiPalette.accent.withValues(
                           alpha: 0.12,
@@ -565,16 +568,16 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
                       children: [
                         Text(
                           _formatIntervalLabel(min),
-                          style: const TextStyle(
-                            color: Color(0xFF94A3B8),
+                          style: TextStyle(
+                            color: ui.textMuted,
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
                         Text(
                           _formatIntervalLabel(max),
-                          style: const TextStyle(
-                            color: Color(0xFF94A3B8),
+                          style: TextStyle(
+                            color: ui.textMuted,
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
                           ),
@@ -593,10 +596,10 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
                       width: double.infinity,
                       child: TextButton(
                         onPressed: () => Navigator.of(context).pop(),
-                        child: const Text(
+                        child: Text(
                           '취소',
                           style: TextStyle(
-                            color: SmokeUiPalette.textSecondary,
+                            color: ui.textSecondary,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -730,23 +733,24 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
       context: context,
       showDragHandle: true,
       useSafeArea: true,
-      backgroundColor: SmokeUiPalette.surface,
+      backgroundColor: SmokeUiTheme.of(context).surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (context) {
+        final ui = SmokeUiTheme.of(context);
         return Padding(
           padding: const EdgeInsets.fromLTRB(12, 8, 12, 20),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Padding(
+              Padding(
                 padding: EdgeInsets.symmetric(horizontal: 12),
                 child: Text(
                   '통화',
                   style: TextStyle(
-                    color: Color(0xFF111827),
+                    color: ui.textPrimary,
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
                   ),
@@ -798,11 +802,12 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
       showDragHandle: true,
       useSafeArea: true,
       isScrollControlled: true,
-      backgroundColor: SmokeUiPalette.surface,
+      backgroundColor: SmokeUiTheme.of(context).surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       builder: (context) {
+        final ui = SmokeUiTheme.of(context);
         return Padding(
           padding: EdgeInsets.fromLTRB(
             24,
@@ -819,8 +824,8 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
                   children: [
                     Text(
                       title,
-                      style: const TextStyle(
-                        color: Color(0xFF111827),
+                      style: TextStyle(
+                        color: ui.textPrimary,
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
                       ),
@@ -828,8 +833,8 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
                     const SizedBox(height: 6),
                     Text(
                       helperText,
-                      style: const TextStyle(
-                        color: Color(0xFF64748B),
+                      style: TextStyle(
+                        color: ui.textSecondary,
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
                       ),
@@ -884,10 +889,10 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
                       width: double.infinity,
                       child: TextButton(
                         onPressed: () => Navigator.of(context).pop(),
-                        child: const Text(
+                        child: Text(
                           '취소',
                           style: TextStyle(
-                            color: Color(0xFF64748B),
+                            color: ui.textSecondary,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -968,6 +973,7 @@ class _HomeCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ui = SmokeUiTheme.of(context);
     // Best-effort, user-facing ring meaning:
     // - When there is a base time (usually last smoking), show minutes remaining
     //   until the configured interval. This is the most actionable cue.
@@ -1005,16 +1011,17 @@ class _HomeCard extends StatelessWidget {
                 '흡연 타이머',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: SmokeUiPalette.textPrimary,
-                  fontSize: 22,
+                style: TextStyle(
+                  color: ui.textPrimary,
+                  fontFamily: 'Sora',
+                  fontSize: 32,
                   fontWeight: FontWeight.w700,
                 ),
               ),
             ),
             const SizedBox(width: 12),
             Material(
-              color: SmokeUiPalette.accentSoft,
+              color: ui.surface,
               borderRadius: BorderRadius.circular(10),
               child: IconButton(
                 tooltip: '알림 설정',
@@ -1028,7 +1035,7 @@ class _HomeCard extends StatelessWidget {
                 icon: const Icon(
                   Icons.notifications_none_rounded,
                   size: 20,
-                  color: SmokeUiPalette.accentDark,
+                  color: Color(0xFF9CA3AF),
                 ),
               ),
             ),
@@ -1036,8 +1043,8 @@ class _HomeCard extends StatelessWidget {
         ),
         const SizedBox(height: 14),
         SurfaceCard(
-          color: SmokeUiPalette.backgroundElevated,
-          strokeColor: const Color(0xFFCFD6E2),
+          color: ui.surface,
+          strokeColor: ui.border,
           padding: const EdgeInsets.all(16),
           cornerRadius: 18,
           child: Column(
@@ -1048,16 +1055,18 @@ class _HomeCard extends StatelessWidget {
                   child: RingGauge(
                     size: 168,
                     strokeWidth: 10,
+                    trackColor: ui.ringTrack,
                     sweepAngle: ringProgress * 2 * pi,
                     value: ringValueMinutes.toString(),
                     label: ringLabel,
-                    valueStyle: const TextStyle(
-                      color: SmokeUiPalette.textPrimary,
+                    valueStyle: TextStyle(
+                      color: ui.textPrimary,
+                      fontFamily: 'Sora',
                       fontSize: 44,
                       fontWeight: FontWeight.w700,
                     ),
-                    labelStyle: const TextStyle(
-                      color: SmokeUiPalette.textSecondary,
+                    labelStyle: TextStyle(
+                      color: ui.textSecondary,
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
                     ),
@@ -1067,15 +1076,21 @@ class _HomeCard extends StatelessWidget {
               Text(
                 '설정 간격 ${intervalMinutes.toString()}분',
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: SmokeUiPalette.textSecondary,
+                style: TextStyle(
+                  color: ui.textSecondary,
                   fontSize: 12,
-                  fontWeight: FontWeight.w500,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
               const SizedBox(height: 12),
               PrimaryButton(
                 text: '지금 흡연 기록',
+                color: SmokeUiPalette.accent,
+                textStyle: const TextStyle(
+                  color: Colors.black,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                ),
                 onTap: () async {
                   await onAddRecord();
                 },
@@ -1089,14 +1104,14 @@ class _HomeCard extends StatelessWidget {
           cornerRadius: 16,
           child: Column(
             children: [
-              const Row(
+              Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Text(
                     '오늘 흡연',
                     style: TextStyle(
-                      color: SmokeUiPalette.textSecondary,
+                      color: ui.textSecondary,
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
                     ),
@@ -1104,7 +1119,7 @@ class _HomeCard extends StatelessWidget {
                   Icon(
                     Icons.smoking_rooms_rounded,
                     size: 18,
-                    color: SmokeUiPalette.accentDark,
+                    color: ui.textSecondary,
                   ),
                 ],
               ),
@@ -1114,8 +1129,9 @@ class _HomeCard extends StatelessWidget {
                   alignment: Alignment.centerLeft,
                   child: Text(
                     '${todayCount.toString()}개비',
-                    style: const TextStyle(
-                      color: SmokeUiPalette.textPrimary,
+                    style: TextStyle(
+                      color: ui.textPrimary,
+                      fontFamily: 'Sora',
                       fontSize: 32,
                       fontWeight: FontWeight.w700,
                     ),
@@ -1127,9 +1143,9 @@ class _HomeCard extends StatelessWidget {
                     Expanded(
                       child: _ActionButton(
                         text: '되돌리기',
-                        foreground: SmokeUiPalette.textSecondary,
-                        background: SmokeUiPalette.neutralSoft,
-                        borderColor: SmokeUiPalette.surfaceBorder,
+                        foreground: ui.textSecondary,
+                        background: ui.neutralSoft,
+                        borderColor: ui.border,
                         onTap: onUndoRecord,
                       ),
                     ),
@@ -1138,7 +1154,7 @@ class _HomeCard extends StatelessWidget {
                       child: _ActionButton(
                         text: '+1 추가',
                         foreground: Colors.white,
-                        background: SmokeUiPalette.accentDark,
+                        background: const Color(0xFF1D4ED8),
                         onTap: onAddRecord,
                       ),
                     ),
@@ -1153,8 +1169,9 @@ class _HomeCard extends StatelessWidget {
                         '${todayCount.toString()}개비',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: SmokeUiPalette.textPrimary,
+                        style: TextStyle(
+                          color: ui.textPrimary,
+                          fontFamily: 'Sora',
                           fontSize: 34,
                           fontWeight: FontWeight.w700,
                         ),
@@ -1163,16 +1180,16 @@ class _HomeCard extends StatelessWidget {
                     const SizedBox(width: 8),
                     _ActionButton(
                       text: '되돌리기',
-                      foreground: SmokeUiPalette.textSecondary,
-                      background: SmokeUiPalette.neutralSoft,
-                      borderColor: SmokeUiPalette.surfaceBorder,
+                      foreground: ui.textSecondary,
+                      background: ui.neutralSoft,
+                      borderColor: ui.border,
                       onTap: onUndoRecord,
                     ),
                     const SizedBox(width: 8),
                     _ActionButton(
                       text: '+1 추가',
                       foreground: Colors.white,
-                      background: SmokeUiPalette.accentDark,
+                      background: const Color(0xFF1D4ED8),
                       onTap: onAddRecord,
                     ),
                   ],
@@ -1188,21 +1205,21 @@ class _HomeCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 '지출 요약',
                 style: TextStyle(
-                  color: SmokeUiPalette.textPrimary,
+                  color: ui.textSecondary,
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
                 ),
               ),
               const SizedBox(height: 10),
               if (!isCostConfigured) ...[
-                const Text(
+                Text(
                   '가격 정보를 설정하면 지출을 계산할 수 있어요.',
                   key: Key('cost_empty_state_text'),
                   style: TextStyle(
-                    color: SmokeUiPalette.textSecondary,
+                    color: ui.textSecondary,
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
                   ),
@@ -1221,14 +1238,14 @@ class _HomeCard extends StatelessWidget {
                         vertical: 8,
                       ),
                       decoration: BoxDecoration(
-                        color: SmokeUiPalette.accentSoft,
+                        color: ui.neutralSoft,
                         borderRadius: BorderRadius.circular(9),
-                        border: Border.all(color: const Color(0xFFFBC59E)),
+                        border: Border.all(color: ui.border),
                       ),
-                      child: const Text(
+                      child: Text(
                         '가격 설정',
                         style: TextStyle(
-                          color: SmokeUiPalette.accentDark,
+                          color: ui.textPrimary,
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
                         ),
@@ -1291,8 +1308,8 @@ class _HomeCard extends StatelessWidget {
         const SizedBox(height: 14),
         Text(
           nextAlertText,
-          style: const TextStyle(
-            color: SmokeUiPalette.textSecondary,
+          style: TextStyle(
+            color: ui.textSecondary,
             fontSize: 13,
             fontWeight: FontWeight.w600,
           ),
@@ -1361,9 +1378,11 @@ class _SpendMetric extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ui = SmokeUiTheme.of(context);
     return SurfaceCard(
       cornerRadius: 10,
-      strokeColor: const Color(0xFFE5E7EB),
+      strokeColor: ui.border,
+      color: ui.surface,
       padding: const EdgeInsets.fromLTRB(8, 8, 8, 10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1372,8 +1391,8 @@ class _SpendMetric extends StatelessWidget {
             label,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              color: SmokeUiPalette.textSecondary,
+            style: TextStyle(
+              color: ui.textMuted,
               fontSize: 11,
               fontWeight: FontWeight.w500,
             ),
@@ -1383,8 +1402,8 @@ class _SpendMetric extends StatelessWidget {
             value,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              color: SmokeUiPalette.textPrimary,
+            style: TextStyle(
+              color: ui.textPrimary,
               fontSize: 13,
               fontWeight: FontWeight.w700,
             ),
@@ -1424,6 +1443,7 @@ class _RecordCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ui = SmokeUiTheme.of(context);
     final textScale = MediaQuery.textScalerOf(context).scale(1);
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -1432,12 +1452,13 @@ class _RecordCard extends StatelessWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               '기록',
               style: TextStyle(
-                color: SmokeUiPalette.textPrimary,
-                fontSize: 20,
+                color: ui.textPrimary,
+                fontSize: 32,
                 fontWeight: FontWeight.w700,
+                fontFamily: 'Sora',
               ),
             ),
             const SizedBox(height: 16),
@@ -1530,24 +1551,26 @@ class _RecordCard extends StatelessWidget {
             ],
             const SizedBox(height: 16),
             SurfaceCard(
+              color: ui.surface,
+              strokeColor: ui.border,
               padding: const EdgeInsets.all(12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     '비용 인사이트',
                     style: TextStyle(
-                      color: SmokeUiPalette.textPrimary,
+                      color: ui.textSecondary,
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                   const SizedBox(height: 10),
                   if (!isCostConfigured) ...[
-                    const Text(
+                    Text(
                       '가격 정보를 설정하면 지출 통계를 볼 수 있어요.',
                       style: TextStyle(
-                        color: SmokeUiPalette.textSecondary,
+                        color: ui.textSecondary,
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
                       ),
@@ -1565,14 +1588,14 @@ class _RecordCard extends StatelessWidget {
                             vertical: 8,
                           ),
                           decoration: BoxDecoration(
-                            color: SmokeUiPalette.accentSoft,
+                            color: ui.neutralSoft,
                             borderRadius: BorderRadius.circular(9),
-                            border: Border.all(color: const Color(0xFFFBC59E)),
+                            border: Border.all(color: ui.border),
                           ),
-                          child: const Text(
+                          child: Text(
                             '가격 설정',
                             style: TextStyle(
-                              color: SmokeUiPalette.accentDark,
+                              color: ui.textPrimary,
                               fontSize: 12,
                               fontWeight: FontWeight.w700,
                             ),
@@ -1644,6 +1667,8 @@ class _RecordCard extends StatelessWidget {
             const SizedBox(height: 16),
             SurfaceCard(
               cornerRadius: 16,
+              color: ui.surface,
+              strokeColor: ui.border,
               child: _RecordList(records: records, use24Hour: use24Hour),
             ),
           ],
@@ -1666,25 +1691,22 @@ class _PeriodTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ui = SmokeUiTheme.of(context);
     return GestureDetector(
       onTap: onTap,
       child: Container(
         constraints: const BoxConstraints(minHeight: 42),
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: selected
-              ? SmokeUiPalette.accentDark
-              : SmokeUiPalette.neutralSoft,
+          color: selected ? SmokeUiPalette.accentDark : ui.neutralSoft,
           borderRadius: BorderRadius.circular(11),
-          border: selected
-              ? null
-              : Border.all(color: SmokeUiPalette.surfaceBorder),
+          border: selected ? null : Border.all(color: ui.border),
         ),
         child: Text(
           text,
           textAlign: TextAlign.center,
           style: TextStyle(
-            color: selected ? Colors.white : SmokeUiPalette.textSecondary,
+            color: selected ? Colors.white : ui.textSecondary,
             fontSize: 13,
             fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
           ),
@@ -1707,9 +1729,11 @@ class _SummaryItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ui = SmokeUiTheme.of(context);
     return SurfaceCard(
       cornerRadius: 12,
-      strokeColor: const Color(0xFFE5E7EB),
+      strokeColor: ui.border,
+      color: ui.surface,
       padding: const EdgeInsets.all(10),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -1719,8 +1743,8 @@ class _SummaryItem extends StatelessWidget {
             label,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              color: SmokeUiPalette.textSecondary,
+            style: TextStyle(
+              color: ui.textMuted,
               fontSize: 12,
               fontWeight: FontWeight.w500,
             ),
@@ -1731,7 +1755,7 @@ class _SummaryItem extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              color: SmokeUiPalette.textPrimary,
+              color: ui.textPrimary,
               fontSize: valueFontSize,
               fontWeight: FontWeight.w700,
             ),
@@ -1750,14 +1774,15 @@ class _RecordList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ui = SmokeUiTheme.of(context);
     if (records.isEmpty) {
-      return const SizedBox(
+      return SizedBox(
         height: 144,
         child: Center(
           child: Text(
             '기록이 없습니다',
             style: TextStyle(
-              color: SmokeUiPalette.textSecondary,
+              color: ui.textSecondary,
               fontSize: 13,
               fontWeight: FontWeight.w500,
             ),
@@ -1800,12 +1825,13 @@ class _RecordListRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ui = SmokeUiTheme.of(context);
     return Container(
       constraints: const BoxConstraints(minHeight: 48),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         border: withTopBorder
-            ? const Border(top: BorderSide(color: Color(0xFFF0F2F5), width: 1))
+            ? Border(top: BorderSide(color: ui.border, width: 1))
             : null,
       ),
       child: Row(
@@ -1817,8 +1843,8 @@ class _RecordListRow extends StatelessWidget {
               time,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: SmokeUiPalette.textPrimary,
+              style: TextStyle(
+                color: ui.textPrimary,
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
               ),
@@ -1832,8 +1858,8 @@ class _RecordListRow extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.right,
-              style: const TextStyle(
-                color: SmokeUiPalette.textSecondary,
+              style: TextStyle(
+                color: ui.textSecondary,
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
               ),
@@ -1878,14 +1904,16 @@ class _AlertCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ui = SmokeUiTheme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           '알림 설정',
           style: TextStyle(
-            color: SmokeUiPalette.textPrimary,
-            fontSize: 20,
+            color: ui.textPrimary,
+            fontFamily: 'Sora',
+            fontSize: 32,
             fontWeight: FontWeight.w700,
           ),
         ),
@@ -1900,8 +1928,8 @@ class _AlertCard extends StatelessWidget {
                   vertical: 10,
                 ),
                 label: '반복 알림',
-                labelStyle: const TextStyle(
-                  color: SmokeUiPalette.textPrimary,
+                labelStyle: TextStyle(
+                  color: ui.textPrimary,
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
                 ),
@@ -1915,8 +1943,8 @@ class _AlertCard extends StatelessWidget {
                   vertical: 10,
                 ),
                 label: '알림 권한',
-                labelStyle: const TextStyle(
-                  color: SmokeUiPalette.textSecondary,
+                labelStyle: TextStyle(
+                  color: ui.textSecondary,
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                 ),
@@ -1932,8 +1960,8 @@ class _AlertCard extends StatelessWidget {
                   vertical: 10,
                 ),
                 label: '간격',
-                labelStyle: const TextStyle(
-                  color: SmokeUiPalette.textSecondary,
+                labelStyle: TextStyle(
+                  color: ui.textSecondary,
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                 ),
@@ -1949,8 +1977,8 @@ class _AlertCard extends StatelessWidget {
                   vertical: 10,
                 ),
                 label: '미리 알림',
-                labelStyle: const TextStyle(
-                  color: SmokeUiPalette.textSecondary,
+                labelStyle: TextStyle(
+                  color: ui.textSecondary,
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                 ),
@@ -1965,8 +1993,8 @@ class _AlertCard extends StatelessWidget {
                   vertical: 10,
                 ),
                 label: preAlertMinutes > 0 ? '미리 알림' : '다음 알림',
-                labelStyle: const TextStyle(
-                  color: SmokeUiPalette.textSecondary,
+                labelStyle: TextStyle(
+                  color: ui.textSecondary,
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                 ),
@@ -1988,8 +2016,8 @@ class _AlertCard extends StatelessWidget {
                   vertical: 10,
                 ),
                 label: '허용 시간대',
-                labelStyle: const TextStyle(
-                  color: SmokeUiPalette.textSecondary,
+                labelStyle: TextStyle(
+                  color: ui.textSecondary,
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                 ),
@@ -2002,10 +2030,10 @@ class _AlertCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       '요일',
                       style: TextStyle(
-                        color: SmokeUiPalette.textSecondary,
+                        color: ui.textSecondary,
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
                       ),
@@ -2048,21 +2076,21 @@ class _AlertCard extends StatelessWidget {
         const SizedBox(height: 16),
         PrimaryButton(
           text: '테스트 알림 보내기',
-          color: SmokeUiPalette.accentDark,
+          color: SmokeUiPalette.accent,
           textStyle: const TextStyle(
-            color: Colors.white,
+            color: Colors.black,
             fontSize: 14,
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.w700,
           ),
           onTap: () async {
             await onSendTest();
           },
         ),
         const SizedBox(height: 16),
-        const Text(
+        Text(
           '알림 권한이 꺼져 있으면 시스템 설정에서 켜주세요.',
           style: TextStyle(
-            color: SmokeUiPalette.textSecondary,
+            color: ui.textMuted,
             fontSize: 12,
             fontWeight: FontWeight.w500,
           ),
@@ -2115,14 +2143,16 @@ class _SettingsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ui = SmokeUiTheme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           '설정',
           style: TextStyle(
-            color: SmokeUiPalette.textPrimary,
-            fontSize: 20,
+            color: ui.textPrimary,
+            fontFamily: 'Sora',
+            fontSize: 32,
             fontWeight: FontWeight.w700,
           ),
         ),
@@ -2132,8 +2162,8 @@ class _SettingsCard extends StatelessWidget {
             height: 52,
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             label: '알림 설정',
-            labelStyle: const TextStyle(
-              color: SmokeUiPalette.textPrimary,
+            labelStyle: TextStyle(
+              color: ui.textPrimary,
               fontSize: 15,
               fontWeight: FontWeight.w600,
             ),
@@ -2155,8 +2185,8 @@ class _SettingsCard extends StatelessWidget {
                   vertical: 10,
                 ),
                 label: '갑당 가격',
-                labelStyle: const TextStyle(
-                  color: SmokeUiPalette.textSecondary,
+                labelStyle: TextStyle(
+                  color: ui.textSecondary,
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                 ),
@@ -2172,8 +2202,8 @@ class _SettingsCard extends StatelessWidget {
                   vertical: 10,
                 ),
                 label: '한 갑 개비 수',
-                labelStyle: const TextStyle(
-                  color: SmokeUiPalette.textSecondary,
+                labelStyle: TextStyle(
+                  color: ui.textSecondary,
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                 ),
@@ -2190,8 +2220,8 @@ class _SettingsCard extends StatelessWidget {
                   vertical: 10,
                 ),
                 label: '통화',
-                labelStyle: const TextStyle(
-                  color: SmokeUiPalette.textSecondary,
+                labelStyle: TextStyle(
+                  color: ui.textSecondary,
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                 ),
@@ -2201,12 +2231,12 @@ class _SettingsCard extends StatelessWidget {
                 onTap: onEditCurrency,
               ),
               if (!isCostConfigured)
-                const Padding(
+                Padding(
                   padding: EdgeInsets.fromLTRB(14, 4, 14, 12),
                   child: Text(
                     '가격 정보를 설정하면 지출을 계산할 수 있어요.',
                     style: TextStyle(
-                      color: SmokeUiPalette.textSecondary,
+                      color: ui.textSecondary,
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
                     ),
@@ -2226,8 +2256,8 @@ class _SettingsCard extends StatelessWidget {
                   vertical: 10,
                 ),
                 label: '24시간 표기',
-                labelStyle: const TextStyle(
-                  color: SmokeUiPalette.textPrimary,
+                labelStyle: TextStyle(
+                  color: ui.textPrimary,
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
                 ),
@@ -2241,8 +2271,8 @@ class _SettingsCard extends StatelessWidget {
                   vertical: 10,
                 ),
                 label: '홈 원형 기준',
-                labelStyle: const TextStyle(
-                  color: SmokeUiPalette.textSecondary,
+                labelStyle: TextStyle(
+                  color: ui.textSecondary,
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                 ),
@@ -2258,8 +2288,8 @@ class _SettingsCard extends StatelessWidget {
                   vertical: 10,
                 ),
                 label: '진동',
-                labelStyle: const TextStyle(
-                  color: SmokeUiPalette.textSecondary,
+                labelStyle: TextStyle(
+                  color: ui.textSecondary,
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                 ),
@@ -2274,8 +2304,8 @@ class _SettingsCard extends StatelessWidget {
                   vertical: 10,
                 ),
                 label: '소리',
-                labelStyle: const TextStyle(
-                  color: SmokeUiPalette.textSecondary,
+                labelStyle: TextStyle(
+                  color: ui.textSecondary,
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                 ),
@@ -2294,7 +2324,7 @@ class _SettingsCard extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             label: '데이터 초기화',
             labelStyle: const TextStyle(
-              color: SmokeUiPalette.risk,
+              color: Color(0xFFD95B57),
               fontSize: 14,
               fontWeight: FontWeight.w600,
             ),
@@ -2333,6 +2363,7 @@ class _SettingRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ui = SmokeUiTheme.of(context);
     final trailingWidgets = trailing == null
         ? const <Widget>[]
         : <Widget>[trailing!];
@@ -2343,7 +2374,7 @@ class _SettingRow extends StatelessWidget {
       padding: padding,
       decoration: BoxDecoration(
         border: withTopBorder
-            ? const Border(top: BorderSide(color: Color(0xFFF0F2F5), width: 1))
+            ? Border(top: BorderSide(color: ui.border, width: 1))
             : null,
       ),
       child: Row(
@@ -2364,8 +2395,8 @@ class _SettingRow extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.right,
-                style: const TextStyle(
-                  color: SmokeUiPalette.textPrimary,
+                style: TextStyle(
+                  color: ui.textPrimary,
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                 ),
@@ -2373,11 +2404,7 @@ class _SettingRow extends StatelessWidget {
             ),
           if (value != null && showChevron) const SizedBox(width: 8),
           if (showChevron)
-            const Icon(
-              Icons.chevron_right_rounded,
-              size: 14,
-              color: Color(0xFF94A3B8),
-            ),
+            Icon(Icons.chevron_right_rounded, size: 14, color: ui.textMuted),
           ...trailingWidgets,
         ],
       ),

@@ -34,11 +34,12 @@ Future<AllowedTimeWindow?> showAllowedTimeWindowSheet(
     context: context,
     showDragHandle: true,
     useSafeArea: true,
-    backgroundColor: SmokeUiPalette.surface,
+    backgroundColor: SmokeUiTheme.of(context).surface,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
     ),
     builder: (context) {
+      final ui = SmokeUiTheme.of(context);
       return StatefulBuilder(
         builder: (context, setModalState) {
           final preview = TimeFormatter.formatRange(
@@ -56,10 +57,10 @@ Future<AllowedTimeWindow?> showAllowedTimeWindowSheet(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
+                  Text(
                     '허용 시간대',
                     style: TextStyle(
-                      color: SmokeUiPalette.textPrimary,
+                      color: ui.textPrimary,
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
                     ),
@@ -67,8 +68,8 @@ Future<AllowedTimeWindow?> showAllowedTimeWindowSheet(
                   const SizedBox(height: 6),
                   Text(
                     preview,
-                    style: const TextStyle(
-                      color: SmokeUiPalette.textSecondary,
+                    style: TextStyle(
+                      color: ui.textSecondary,
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
                     ),
@@ -77,7 +78,7 @@ Future<AllowedTimeWindow?> showAllowedTimeWindowSheet(
                   SliderTheme(
                     data: SliderTheme.of(context).copyWith(
                       activeTrackColor: SmokeUiPalette.accentDark,
-                      inactiveTrackColor: const Color(0xFFD9E1EC),
+                      inactiveTrackColor: ui.border,
                       thumbColor: SmokeUiPalette.accent,
                       overlayColor: SmokeUiPalette.accent.withValues(
                         alpha: 0.12,
@@ -130,8 +131,8 @@ Future<AllowedTimeWindow?> showAllowedTimeWindowSheet(
                           min,
                           use24Hour: use24Hour,
                         ),
-                        style: const TextStyle(
-                          color: Color(0xFF94A3B8),
+                        style: TextStyle(
+                          color: ui.textMuted,
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                         ),
@@ -141,8 +142,8 @@ Future<AllowedTimeWindow?> showAllowedTimeWindowSheet(
                           max,
                           use24Hour: use24Hour,
                         ),
-                        style: const TextStyle(
-                          color: Color(0xFF94A3B8),
+                        style: TextStyle(
+                          color: ui.textMuted,
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
                         ),
@@ -184,10 +185,10 @@ Future<AllowedTimeWindow?> showAllowedTimeWindowSheet(
                     child: TextButton(
                       key: const Key('allowed_window_cancel'),
                       onPressed: () => Navigator.of(context).pop(),
-                      child: const Text(
+                      child: Text(
                         '취소',
                         style: TextStyle(
-                          color: SmokeUiPalette.textSecondary,
+                          color: ui.textSecondary,
                           fontWeight: FontWeight.w700,
                         ),
                       ),

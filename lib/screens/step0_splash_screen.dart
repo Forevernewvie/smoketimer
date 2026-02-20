@@ -9,8 +9,9 @@ class Step0SplashScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ui = SmokeUiTheme.of(context);
     return Scaffold(
-      backgroundColor: SmokeUiPalette.background,
+      backgroundColor: ui.background,
       body: SafeArea(
         child: Center(
           child: Padding(
@@ -31,6 +32,7 @@ class _SplashA3Card extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ui = SmokeUiTheme.of(context);
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -50,21 +52,21 @@ class _SplashA3Card extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 14),
-        const Text(
+        Text(
           '흡연 타이머',
           textAlign: TextAlign.center,
           style: TextStyle(
-            color: SmokeUiPalette.textPrimary,
+            color: ui.textPrimary,
             fontSize: 24,
             fontWeight: FontWeight.w700,
           ),
         ),
         const SizedBox(height: 14),
-        const Text(
+        Text(
           '마지막 흡연 후 경과 시간 표시',
           textAlign: TextAlign.center,
           style: TextStyle(
-            color: SmokeUiPalette.textSecondary,
+            color: ui.textSecondary,
             fontSize: 12,
             fontWeight: FontWeight.w500,
           ),
@@ -72,11 +74,11 @@ class _SplashA3Card extends StatelessWidget {
         const SizedBox(height: 14),
         const _AnimatedSplashLoadingBar(),
         const SizedBox(height: 14),
-        const Text(
+        Text(
           '시작 준비 중',
           textAlign: TextAlign.center,
           style: TextStyle(
-            color: SmokeUiPalette.textSecondary,
+            color: ui.textSecondary,
             fontSize: 11,
             fontWeight: FontWeight.w500,
           ),
@@ -121,12 +123,13 @@ class _AnimatedSplashLoadingBarState extends State<_AnimatedSplashLoadingBar>
 
   @override
   Widget build(BuildContext context) {
+    final ui = SmokeUiTheme.of(context);
     return SizedBox(
       width: _AnimatedSplashLoadingBar.trackWidth,
       height: _AnimatedSplashLoadingBar.barHeight,
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: const Color(0xFFD9E1EC),
+          color: ui.border,
           borderRadius: BorderRadius.circular(999),
         ),
         child: LayoutBuilder(

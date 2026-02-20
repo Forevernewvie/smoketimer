@@ -49,8 +49,9 @@ class _Step0SmokerTimerScreenState
 
   @override
   Widget build(BuildContext context) {
+    final ui = SmokeUiTheme.of(context);
     return Scaffold(
-      backgroundColor: SmokeUiPalette.background,
+      backgroundColor: ui.background,
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
@@ -72,6 +73,7 @@ class _Step0SmokerTimerScreenState
                     buttonText: '다음',
                     onButtonTap: _next,
                     onSkipTap: _skip,
+                    onStartTap: _skip,
                     hero: const _RingHero(),
                   ),
                   _OnboardingPage(
@@ -81,6 +83,7 @@ class _Step0SmokerTimerScreenState
                     buttonText: '다음',
                     onButtonTap: _next,
                     onSkipTap: _skip,
+                    onStartTap: _skip,
                     hero: const _BarHero(),
                   ),
                   _OnboardingPage(
@@ -90,6 +93,7 @@ class _Step0SmokerTimerScreenState
                     buttonText: '시작하기',
                     onButtonTap: _next,
                     onSkipTap: _skip,
+                    onStartTap: _skip,
                     hero: const _SummaryHero(),
                   ),
                 ],
@@ -110,6 +114,7 @@ class _OnboardingPage extends StatelessWidget {
     required this.buttonText,
     required this.onButtonTap,
     required this.onSkipTap,
+    required this.onStartTap,
     required this.hero,
   });
 
@@ -119,116 +124,158 @@ class _OnboardingPage extends StatelessWidget {
   final String buttonText;
   final VoidCallback onButtonTap;
   final VoidCallback onSkipTap;
+  final VoidCallback onStartTap;
   final Widget hero;
 
   @override
   Widget build(BuildContext context) {
+    final ui = SmokeUiTheme.of(context);
     final textScale = MediaQuery.textScalerOf(context).scale(1);
     return LayoutBuilder(
       builder: (context, constraints) {
-        return SingleChildScrollView(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(minHeight: constraints.maxHeight),
-            child: IntrinsicHeight(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      Text(
-                        '${index + 1}/3',
-                        style: const TextStyle(
-                          color: SmokeUiPalette.accent,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      GestureDetector(
-                        behavior: HitTestBehavior.opaque,
-                        onTap: onSkipTap,
-                        child: const Text(
-                          '건너뛰기',
-                          textAlign: TextAlign.right,
-                          style: TextStyle(
-                            color: SmokeUiPalette.textSecondary,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ),
-                    ],
+        final compact = constraints.maxHeight < 730 || textScale > 1.25;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(
+                  '${index + 1}/3',
+                  style: const TextStyle(
+                    color: Color(0xFF1D4ED8),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
                   ),
-                  const SizedBox(height: 16),
-                  hero,
-                  const SizedBox(height: 16),
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      color: SmokeUiPalette.textPrimary,
-                      fontSize: 22,
-                      fontWeight: FontWeight.w700,
+                ),
+                GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: onSkipTap,
+                  child: Text(
+                    '건너뛰기',
+                    textAlign: TextAlign.right,
+                    style: TextStyle(
+                      color: ui.textSecondary,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  Text(
-                    description,
-                    style: const TextStyle(
-                      color: SmokeUiPalette.textSecondary,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Expanded(
+              child: SingleChildScrollView(
+                physics: compact
+                    ? const BouncingScrollPhysics()
+                    : const NeverScrollableScrollPhysics(),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    hero,
+                    const SizedBox(height: 12),
+                    Text(
+                      title,
+                      style: TextStyle(
+                        color: ui.textPrimary,
+                        fontFamily: 'Sora',
+                        fontSize: 40 / textScale.clamp(1.0, 1.4).toDouble(),
+                        height: 1.05,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
-                  ),
-                  const Spacer(),
-                  const SizedBox(height: 20),
-                  if (constraints.maxWidth < 360 || textScale > 1.25) ...[
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: PageDots(activeIndex: index),
+                    const SizedBox(height: 10),
+                    Text(
+                      description,
+                      style: TextStyle(
+                        color: ui.textSecondary,
+                        fontSize: 14,
+                        height: 1.45,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                     const SizedBox(height: 12),
-                    PrimaryButton(
-                      text: buttonText,
-                      height: 44,
-                      color: SmokeUiPalette.accent,
-                      textStyle: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
-                      onTap: onButtonTap,
-                    ),
-                  ] else ...[
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        PageDots(activeIndex: index),
-                        ConstrainedBox(
-                          constraints: const BoxConstraints(
-                            minWidth: 112,
-                            maxWidth: 136,
-                          ),
-                          child: PrimaryButton(
-                            text: buttonText,
-                            height: 44,
-                            color: SmokeUiPalette.accent,
-                            textStyle: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w600,
+                    SurfaceCard(
+                      padding: const EdgeInsets.all(14),
+                      cornerRadius: 16,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            '• 빠른 기록(+1) / 되돌리기',
+                            style: TextStyle(
+                              color: ui.textSecondary,
+                              fontSize: 12,
                             ),
-                            onTap: onButtonTap,
                           ),
-                        ),
-                      ],
+                          const SizedBox(height: 8),
+                          Text(
+                            '• 기간별 기록 통계',
+                            style: TextStyle(
+                              color: ui.textSecondary,
+                              fontSize: 12,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            '• 로컬 알림 스케줄',
+                            style: TextStyle(
+                              color: ui.textSecondary,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
-                ],
+                ),
               ),
             ),
-          ),
+            const SizedBox(height: 10),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: PageDots(activeIndex: index),
+            ),
+            const SizedBox(height: 10),
+            PrimaryButton(
+              text: buttonText,
+              height: 44,
+              color: SmokeUiPalette.accent,
+              textStyle: const TextStyle(
+                color: Colors.black,
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+              ),
+              onTap: onButtonTap,
+            ),
+            const SizedBox(height: 10),
+            Material(
+              color: compact ? ui.surface : ui.surfaceAlt,
+              borderRadius: BorderRadius.circular(22),
+              child: InkWell(
+                borderRadius: BorderRadius.circular(22),
+                onTap: onStartTap,
+                child: Container(
+                  height: 44,
+                  width: double.infinity,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(22),
+                    border: Border.all(color: ui.border),
+                  ),
+                  child: Text(
+                    '앱 시작',
+                    style: TextStyle(
+                      color: ui.textPrimary,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
         );
       },
     );
@@ -240,26 +287,31 @@ class _RingHero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ui = SmokeUiTheme.of(context);
     return SurfaceCard(
-      padding: EdgeInsets.zero,
+      padding: const EdgeInsets.all(16),
+      strokeColor: ui.border,
+      color: ui.surface,
       child: SizedBox(
-        height: 250,
-        child: const Center(
+        height: 160,
+        child: Center(
           child: RingGauge(
-            size: 140,
+            size: 160,
             strokeWidth: 10,
-            sweepAngle: 5.12,
-            value: '37',
+            trackColor: ui.ringTrack,
+            sweepAngle: 4.6,
+            value: '42',
             label: '분 경과',
             valueStyle: TextStyle(
-              color: SmokeUiPalette.textPrimary,
-              fontSize: 30,
+              color: ui.textPrimary,
+              fontFamily: 'Sora',
+              fontSize: 44,
               fontWeight: FontWeight.w700,
             ),
             labelStyle: TextStyle(
-              color: SmokeUiPalette.textSecondary,
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
+              color: ui.textSecondary,
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
             ),
           ),
         ),
@@ -273,17 +325,20 @@ class _BarHero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ui = SmokeUiTheme.of(context);
     return SurfaceCard(
+      color: ui.surface,
+      strokeColor: ui.border,
       padding: const EdgeInsets.all(16),
       child: SizedBox(
-        height: 250,
+        height: 160,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               '오늘 평균 간격',
               style: TextStyle(
-                color: SmokeUiPalette.textPrimary,
+                color: ui.textPrimary,
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
               ),
@@ -306,7 +361,7 @@ class _BarHero extends StatelessWidget {
             const Text(
               '최근 7일 대비 +18분',
               style: TextStyle(
-                color: SmokeUiPalette.textSecondary,
+                color: Color(0xFF5A6472),
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
               ),
@@ -323,11 +378,14 @@ class _SummaryHero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ui = SmokeUiTheme.of(context);
     return SurfaceCard(
+      color: ui.surface,
+      strokeColor: ui.border,
       padding: const EdgeInsets.all(16),
-      child: const SizedBox(
+      child: SizedBox(
         width: double.infinity,
-        height: 250,
+        height: 160,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           mainAxisAlignment: MainAxisAlignment.center,
@@ -352,7 +410,7 @@ class _SummaryHero extends StatelessWidget {
               '오늘 누적 3회 기록',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: SmokeUiPalette.textPrimary,
+                color: ui.textPrimary,
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
               ),
@@ -362,7 +420,7 @@ class _SummaryHero extends StatelessWidget {
               '최근 기록: 오전 09:40',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: SmokeUiPalette.textSecondary,
+                color: ui.textSecondary,
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
               ),

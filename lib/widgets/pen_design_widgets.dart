@@ -19,12 +19,73 @@ class SmokeUiPalette {
   static const neutralSoft = Color(0xFFEEF2F7);
 }
 
+class SmokeUiTheme {
+  const SmokeUiTheme._({
+    required this.background,
+    required this.surface,
+    required this.surfaceAlt,
+    required this.border,
+    required this.textPrimary,
+    required this.textSecondary,
+    required this.textMuted,
+    required this.neutralSoft,
+    required this.criticalSoft,
+    required this.criticalBorder,
+    required this.ringTrack,
+  });
+
+  final Color background;
+  final Color surface;
+  final Color surfaceAlt;
+  final Color border;
+  final Color textPrimary;
+  final Color textSecondary;
+  final Color textMuted;
+  final Color neutralSoft;
+  final Color criticalSoft;
+  final Color criticalBorder;
+  final Color ringTrack;
+
+  static const SmokeUiTheme light = SmokeUiTheme._(
+    background: Color(0xFFF5F6F8),
+    surface: Color(0xFFFFFFFF),
+    surfaceAlt: Color(0xFFF8FAFC),
+    border: Color(0xFFD8DEE8),
+    textPrimary: Color(0xFF121417),
+    textSecondary: Color(0xFF5A6472),
+    textMuted: Color(0xFF6B7280),
+    neutralSoft: Color(0xFFEEF2F7),
+    criticalSoft: Color(0xFFFEE2E2),
+    criticalBorder: Color(0xFFFCA5A5),
+    ringTrack: Color(0xFFD8DEE8),
+  );
+
+  static const SmokeUiTheme dark = SmokeUiTheme._(
+    background: Color(0xFF111315),
+    surface: Color(0xFF1B1F24),
+    surfaceAlt: Color(0xFF192028),
+    border: Color(0xFF2D3540),
+    textPrimary: Color(0xFFF2F4F8),
+    textSecondary: Color(0xFFA2ACBA),
+    textMuted: Color(0xFF8994A3),
+    neutralSoft: Color(0xFF27313C),
+    criticalSoft: Color(0xFF3B1F23),
+    criticalBorder: Color(0xFF8A3A44),
+    ringTrack: Color(0xFF2D3540),
+  );
+
+  static SmokeUiTheme of(BuildContext context) {
+    final brightness = Theme.of(context).brightness;
+    return brightness == Brightness.dark ? dark : light;
+  }
+}
+
 class SurfaceCard extends StatelessWidget {
   const SurfaceCard({
     required this.child,
     this.padding,
-    this.color = SmokeUiPalette.surface,
-    this.strokeColor = SmokeUiPalette.surfaceBorder,
+    this.color,
+    this.strokeColor,
     this.strokeWidth = 1,
     this.cornerRadius = 16,
     super.key,
@@ -32,21 +93,24 @@ class SurfaceCard extends StatelessWidget {
 
   final Widget child;
   final EdgeInsetsGeometry? padding;
-  final Color color;
-  final Color strokeColor;
+  final Color? color;
+  final Color? strokeColor;
   final double strokeWidth;
   final double cornerRadius;
 
   @override
   Widget build(BuildContext context) {
+    final ui = SmokeUiTheme.of(context);
+    final resolvedColor = color ?? ui.surface;
+    final resolvedStroke = strokeColor ?? ui.border;
     final border = strokeWidth == 0
         ? Border.all(color: Colors.transparent, width: 0)
-        : Border.all(color: strokeColor, width: strokeWidth);
+        : Border.all(color: resolvedStroke, width: strokeWidth);
 
     return Container(
       padding: padding,
       decoration: BoxDecoration(
-        color: color,
+        color: resolvedColor,
         borderRadius: BorderRadius.circular(cornerRadius),
         border: border,
       ),
@@ -211,11 +275,12 @@ class TogglePill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ui = SmokeUiTheme.of(context);
     return Container(
       width: 44,
       height: 24,
       decoration: BoxDecoration(
-        color: isOn ? SmokeUiPalette.accent : const Color(0xFFD1D5DB),
+        color: isOn ? SmokeUiPalette.accent : ui.neutralSoft,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Stack(
@@ -248,18 +313,19 @@ class DayChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ui = SmokeUiTheme.of(context);
     return Container(
       height: 32,
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: active ? SmokeUiPalette.accentDark : SmokeUiPalette.neutralSoft,
+        color: active ? const Color(0xFF1D4ED8) : ui.neutralSoft,
         borderRadius: BorderRadius.circular(8),
-        border: active ? null : Border.all(color: SmokeUiPalette.surfaceBorder),
+        border: active ? null : Border.all(color: ui.border),
       ),
       child: Text(
         text,
         style: TextStyle(
-          color: active ? Colors.white : SmokeUiPalette.textSecondary,
+          color: active ? Colors.white : ui.textSecondary,
           fontSize: 13,
           fontWeight: FontWeight.w600,
         ),
