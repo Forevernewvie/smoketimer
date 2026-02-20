@@ -57,7 +57,7 @@ class _Step0SmokerTimerScreenState
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 520),
             child: Padding(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
               child: PageView(
                 controller: _pageController,
                 onPageChanged: (index) {
@@ -151,10 +151,10 @@ class _OnboardingPage extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final compact = constraints.maxHeight < 730 || textScale > 1.25;
-        final baseTitleSize = constraints.maxWidth < 360 ? 34.0 : 36.0;
+        final baseTitleSize = constraints.maxWidth < 360 ? 28.0 : 30.0;
         final scaledTitleSize =
             baseTitleSize / textScale.clamp(1.0, 1.35).toDouble();
-        final titleSize = scaledTitleSize.clamp(24.0, 36.0).toDouble();
+        final titleSize = scaledTitleSize.clamp(22.0, 30.0).toDouble();
         final accentColor = switch (index) {
           0 => const Color(0xFF1D4ED8),
           1 => SmokeUiPalette.accentDark,
@@ -190,7 +190,7 @@ class _OnboardingPage extends StatelessWidget {
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 14),
             Expanded(
               child: SingleChildScrollView(
                 physics: compact
@@ -200,7 +200,7 @@ class _OnboardingPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     hero,
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 14),
                     Text(
                       title,
                       style: TextStyle(
@@ -211,7 +211,7 @@ class _OnboardingPage extends StatelessWidget {
                         fontWeight: FontWeight.w700,
                       ),
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 12),
                     Text(
                       description,
                       style: TextStyle(
@@ -221,7 +221,7 @@ class _OnboardingPage extends StatelessWidget {
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 14),
                     SizedBox(
                       width: double.infinity,
                       child: SurfaceCard(
@@ -291,7 +291,7 @@ class _OnboardingPage extends StatelessWidget {
             const SizedBox(height: 10),
             PrimaryButton(
               text: buttonText,
-              height: 44,
+              height: 48,
               color: SmokeUiPalette.accent,
               textStyle: const TextStyle(
                 color: Colors.black,
@@ -303,16 +303,16 @@ class _OnboardingPage extends StatelessWidget {
             const SizedBox(height: 10),
             Material(
               color: compact ? ui.surface : ui.surfaceAlt,
-              borderRadius: BorderRadius.circular(22),
+              borderRadius: BorderRadius.circular(24),
               child: InkWell(
-                borderRadius: BorderRadius.circular(22),
+                borderRadius: BorderRadius.circular(24),
                 onTap: onStartTap,
                 child: Container(
-                  height: 44,
+                  height: 48,
                   width: double.infinity,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(22),
+                    borderRadius: BorderRadius.circular(24),
                     border: Border.all(color: ui.border),
                   ),
                   child: Text(
@@ -346,18 +346,19 @@ class _RingHero extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       strokeColor: ui.border,
       color: ui.surface,
+      cornerRadius: 18,
       child: SizedBox(
         height: 160,
         child: Center(
           child: SizedBox(
-            width: 116,
-            height: 116,
+            width: 160,
+            height: 160,
             child: Stack(
               alignment: Alignment.center,
               children: [
                 RingGauge(
-                  size: 116,
-                  strokeWidth: 8,
+                  size: 160,
+                  strokeWidth: 10,
                   trackColor: ui.ringTrack,
                   sweepAngle: 4.95,
                   value: ' ',
@@ -372,8 +373,8 @@ class _RingHero extends StatelessWidget {
                   ),
                 ),
                 Container(
-                  width: 74,
-                  height: 74,
+                  width: 122,
+                  height: 122,
                   decoration: BoxDecoration(
                     color: centerFill,
                     shape: BoxShape.circle,
@@ -389,7 +390,7 @@ class _RingHero extends StatelessWidget {
                           style: TextStyle(
                             color: Color(0xFFF8FAFC),
                             fontFamily: 'Sora',
-                            fontSize: 20,
+                            fontSize: 42,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -398,7 +399,7 @@ class _RingHero extends StatelessWidget {
                           '분 경과',
                           style: TextStyle(
                             color: Color(0xFFD0D7E2),
-                            fontSize: 10,
+                            fontSize: 11,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -425,6 +426,7 @@ class _BarHero extends StatelessWidget {
       color: ui.surface,
       strokeColor: ui.border,
       padding: const EdgeInsets.all(16),
+      cornerRadius: 18,
       child: SizedBox(
         height: 160,
         child: Column(
@@ -486,6 +488,7 @@ class _SummaryHero extends StatelessWidget {
       color: ui.surface,
       strokeColor: ui.border,
       padding: const EdgeInsets.all(16),
+      cornerRadius: 18,
       child: SizedBox(
         width: double.infinity,
         height: 160,

@@ -974,6 +974,9 @@ class _HomeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ui = SmokeUiTheme.of(context);
+    final ringCenterFill = Theme.of(context).brightness == Brightness.dark
+        ? const Color(0xFF0F1318)
+        : const Color(0xFF121417);
     // Best-effort, user-facing ring meaning:
     // - When there is a base time (usually last smoking), show minutes remaining
     //   until the configured interval. This is the most actionable cue.
@@ -1041,34 +1044,83 @@ class _HomeCard extends StatelessWidget {
             ),
           ],
         ),
+        const SizedBox(height: 4),
+        Text(
+          '마지막 기록 기준 경과/남은 시간을 표시합니다.',
+          style: TextStyle(
+            color: ui.textSecondary,
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
         const SizedBox(height: 14),
         SurfaceCard(
           color: ui.surface,
           strokeColor: ui.border,
           padding: const EdgeInsets.all(16),
-          cornerRadius: 18,
+          cornerRadius: 16,
           child: Column(
             children: [
               SizedBox(
-                height: 220,
+                height: 262,
                 child: Center(
-                  child: RingGauge(
-                    size: 168,
-                    strokeWidth: 10,
-                    trackColor: ui.ringTrack,
-                    sweepAngle: ringProgress * 2 * pi,
-                    value: ringValueMinutes.toString(),
-                    label: ringLabel,
-                    valueStyle: TextStyle(
-                      color: ui.textPrimary,
-                      fontFamily: 'Sora',
-                      fontSize: 44,
-                      fontWeight: FontWeight.w700,
-                    ),
-                    labelStyle: TextStyle(
-                      color: ui.textSecondary,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
+                  child: SizedBox(
+                    width: 250,
+                    height: 250,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        RingGauge(
+                          size: 250,
+                          strokeWidth: 10,
+                          trackColor: ui.ringTrack,
+                          sweepAngle: ringProgress * 2 * pi,
+                          value: ' ',
+                          label: ' ',
+                          valueStyle: const TextStyle(
+                            color: Colors.transparent,
+                            fontSize: 1,
+                          ),
+                          labelStyle: const TextStyle(
+                            color: Colors.transparent,
+                            fontSize: 1,
+                          ),
+                        ),
+                        Container(
+                          width: 162,
+                          height: 162,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: ringCenterFill,
+                          ),
+                          alignment: Alignment.center,
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  ringValueMinutes.toString(),
+                                  style: const TextStyle(
+                                    color: Color(0xFFF8FAFC),
+                                    fontFamily: 'Sora',
+                                    fontSize: 52,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                Text(
+                                  ringLabel,
+                                  style: const TextStyle(
+                                    color: Color(0xFFD0D7E2),
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -1448,7 +1500,7 @@ class _RecordCard extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final stackedSummaryCards =
-            constraints.maxWidth < 380 || textScale > 1.2;
+            constraints.maxWidth < 340 || textScale > 1.25;
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -1915,6 +1967,15 @@ class _AlertCard extends StatelessWidget {
             fontFamily: 'Sora',
             fontSize: 32,
             fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          '흡연 루틴에 맞는 로컬 알림 스케줄을 설정합니다.',
+          style: TextStyle(
+            color: ui.textSecondary,
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
           ),
         ),
         const SizedBox(height: 16),
