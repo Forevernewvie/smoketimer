@@ -1,13 +1,17 @@
 import 'package:intl/intl.dart';
 
+import '../domain/app_defaults.dart';
+
 class TimeFormatter {
   const TimeFormatter._();
 
+  /// Formats [value] into a clock string based on 12h/24h preference.
   static String formatClock(DateTime value, {required bool use24Hour}) {
     final format = use24Hour ? DateFormat('HH:mm') : DateFormat('a h:mm');
     return format.format(value);
   }
 
+  /// Formats time with date prefix when [value] is not the same day as [now].
   static String formatDayAwareClock(
     DateTime now,
     DateTime value, {
@@ -25,15 +29,18 @@ class TimeFormatter {
     return '$date $clock';
   }
 
+  /// Formats minute-of-day into user-facing clock text.
   static String formatMinutesToClock(int minutes, {required bool use24Hour}) {
     // Policy:
     // - 24:00 is only valid in 24-hour format.
     // - In 12-hour format, represent "end of day" as 00:00 (midnight).
-    final isEndOfDay = minutes >= 1440;
+    final isEndOfDay = minutes >= AppDefaults.minutesPerDay;
 
-    final normalized = isEndOfDay ? 0 : minutes.clamp(0, 1439);
-    final hour = normalized ~/ 60;
-    final minute = normalized % 60;
+    final normalized = isEndOfDay
+        ? 0
+        : minutes.clamp(0, AppDefaults.minutesPerDay - 1);
+    final hour = normalized ~/ AppDefaults.minutesPerHour;
+    final minute = normalized % AppDefaults.minutesPerHour;
 
     if (use24Hour) {
       if (isEndOfDay) {
@@ -48,6 +55,7 @@ class TimeFormatter {
     return DateFormat('a h:mm').format(dt);
   }
 
+  /// Formats start/end minute window into a single range string.
   static String formatRange({
     required int startMinutes,
     required int endMinutes,
@@ -57,6 +65,7 @@ class TimeFormatter {
         '${formatMinutesToClock(endMinutes, use24Hour: use24Hour)}';
   }
 
+  /// Formats remaining countdown time to `hh:mm` or `mm:ss`.
   static String formatCountdown(DateTime now, DateTime target) {
     final diff = target.difference(now);
     if (diff.isNegative) {
@@ -64,9 +73,11 @@ class TimeFormatter {
     }
 
     final totalSeconds = diff.inSeconds;
-    final hours = totalSeconds ~/ 3600;
-    final minutes = (totalSeconds % 3600) ~/ 60;
-    final seconds = totalSeconds % 60;
+    final hours = totalSeconds ~/ AppDefaults.secondsPerHour;
+    final minutes =
+        (totalSeconds % AppDefaults.secondsPerHour) ~/
+        AppDefaults.secondsPerMinute;
+    final seconds = totalSeconds % AppDefaults.secondsPerMinute;
 
     if (hours > 0) {
       final hh = hours.toString().padLeft(2, '0');

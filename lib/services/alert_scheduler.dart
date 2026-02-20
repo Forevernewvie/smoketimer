@@ -1,8 +1,15 @@
+import '../domain/app_defaults.dart';
 import '../domain/models/user_settings.dart';
 
 class AlertScheduler {
   const AlertScheduler();
 
+  /// Builds upcoming alert timestamps using current settings policy.
+  ///
+  /// The method applies:
+  /// 1) repeat flag and required inputs guard
+  /// 2) interval/pre-alert offset
+  /// 3) allowed weekday/time window alignment
   List<DateTime> buildUpcomingAlerts({
     required DateTime now,
     required DateTime? lastSmokingAt,
@@ -28,7 +35,8 @@ class AlertScheduler {
     final results = <DateTime>[];
     var guard = 0;
 
-    while (results.length < count && guard < 10000) {
+    while (results.length < count &&
+        guard < AppDefaults.schedulerBuildGuardLimit) {
       guard += 1;
       final adjusted = alignToAllowedWindow(candidate, settings);
       if (adjusted.isAfter(now) || adjusted.isAtSameMomentAs(now)) {
@@ -42,25 +50,28 @@ class AlertScheduler {
     return results;
   }
 
+  /// Returns whether [value] is inside active weekdays and allowed minute range.
   bool isAllowedDateTime(DateTime value, UserSettings settings) {
     if (!settings.activeWeekdays.contains(value.weekday)) {
       return false;
     }
 
-    final minuteOfDay = value.hour * 60 + value.minute;
+    final minuteOfDay = value.hour * AppDefaults.minutesPerHour + value.minute;
     return minuteOfDay >= settings.allowedStartMinutes &&
         minuteOfDay < settings.allowedEndMinutes;
   }
 
+  /// Aligns [candidate] to the nearest valid window defined in [settings].
   DateTime alignToAllowedWindow(DateTime candidate, UserSettings settings) {
     var result = candidate;
     var guard = 0;
 
-    while (guard < 20000) {
+    while (guard < AppDefaults.schedulerAlignGuardLimit) {
       guard += 1;
 
       final dayStart = DateTime(result.year, result.month, result.day);
-      final minuteOfDay = result.hour * 60 + result.minute;
+      final minuteOfDay =
+          result.hour * AppDefaults.minutesPerHour + result.minute;
 
       if (!settings.activeWeekdays.contains(result.weekday)) {
         result = dayStart

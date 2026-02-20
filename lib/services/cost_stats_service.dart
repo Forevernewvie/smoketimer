@@ -10,10 +10,12 @@ import '../domain/models/user_settings.dart';
 class CostStatsService {
   const CostStatsService._();
 
+  /// Returns whether cost tracking inputs are valid for spend computation.
   static bool isConfigured(UserSettings settings) {
     return settings.packPrice > 0 && settings.cigarettesPerPack > 0;
   }
 
+  /// Normalizes pack price to policy range.
   static double normalizePackPrice(double value) {
     if (!value.isFinite || value.isNaN) {
       return 0;
@@ -27,6 +29,7 @@ class CostStatsService {
         .toDouble();
   }
 
+  /// Normalizes cigarettes per pack to policy range.
   static int normalizeCigarettesPerPack(int value) {
     return value.clamp(
       AppDefaults.minCigarettesPerPack,
@@ -34,6 +37,7 @@ class CostStatsService {
     );
   }
 
+  /// Computes cost of one cigarette from current settings.
   static double computeUnitCost(UserSettings settings) {
     if (!isConfigured(settings)) {
       return 0;
@@ -42,6 +46,7 @@ class CostStatsService {
     return _sanitizeAmount(unit);
   }
 
+  /// Computes spend for a plain cigarette count.
   static double computeSpendForCount({
     required int cigaretteCount,
     required UserSettings settings,
@@ -53,6 +58,7 @@ class CostStatsService {
     return _sanitizeAmount(spend);
   }
 
+  /// Computes spend from a list of smoking records.
   static double computeSpendForRecords({
     required List<SmokingRecord> records,
     required UserSettings settings,
@@ -61,6 +67,7 @@ class CostStatsService {
     return computeSpendForCount(cigaretteCount: count, settings: settings);
   }
 
+  /// Computes lifetime spend over all records.
   static double computeLifetimeSpend({
     required List<SmokingRecord> allRecords,
     required UserSettings settings,
@@ -68,6 +75,7 @@ class CostStatsService {
     return computeSpendForRecords(records: allRecords, settings: settings);
   }
 
+  /// Computes average daily spend for selected period policy.
   static double computeAverageDailySpend({
     required RecordPeriod period,
     required DateTime now,
@@ -88,13 +96,14 @@ class CostStatsService {
     // - month: divide by total days in current month (calendar-based)
     final divisor = switch (period) {
       RecordPeriod.today => 1,
-      RecordPeriod.week => 7,
+      RecordPeriod.week => AppDefaults.daysPerWeek,
       RecordPeriod.month => DateTime(now.year, now.month + 1, 0).day,
     };
 
     return _sanitizeAmount(periodSpend / max(1, divisor));
   }
 
+  /// Formats amount as localized currency string with policy fallback.
   static String formatCurrency(double amount, UserSettings settings) {
     final safeAmount = _sanitizeAmount(amount);
     final code = settings.currencyCode.isEmpty
@@ -117,6 +126,7 @@ class CostStatsService {
     }
   }
 
+  /// Resolves display symbol from a currency code with deterministic fallback.
   static String resolveCurrencySymbol(String currencyCode) {
     final code = currencyCode.toUpperCase();
     try {
@@ -137,6 +147,7 @@ class CostStatsService {
     };
   }
 
+  /// Sanitizes invalid numeric values into safe non-negative amount.
   static double _sanitizeAmount(double value) {
     if (!value.isFinite || value.isNaN || value.isNegative) {
       return 0;
@@ -144,6 +155,7 @@ class CostStatsService {
     return value;
   }
 
+  /// Returns display decimal digits by currency policy.
   static int _decimalDigitsForCurrency(String currencyCode) {
     return switch (currencyCode.toUpperCase()) {
       'KRW' || 'JPY' => 0,

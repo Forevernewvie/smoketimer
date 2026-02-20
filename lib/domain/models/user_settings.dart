@@ -1,6 +1,9 @@
+import '../app_defaults.dart';
+
 enum RingReference { lastSmoking, dayStart }
 
 class UserSettings {
+  /// Creates immutable user settings object.
   const UserSettings({
     required this.intervalMinutes,
     required this.preAlertMinutes,
@@ -33,6 +36,7 @@ class UserSettings {
   final String currencyCode;
   final String currencySymbol;
 
+  /// Returns a copied settings object with selected overrides.
   UserSettings copyWith({
     int? intervalMinutes,
     int? preAlertMinutes,
@@ -70,6 +74,7 @@ class UserSettings {
     );
   }
 
+  /// Serializes settings into a JSON-compatible map.
   Map<String, dynamic> toJson() {
     return {
       'intervalMinutes': intervalMinutes,
@@ -89,6 +94,7 @@ class UserSettings {
     };
   }
 
+  /// Deserializes settings with backward-compatible default fallback.
   factory UserSettings.fromJson(
     Map<String, dynamic> json, {
     UserSettings? defaults,
@@ -105,21 +111,21 @@ class UserSettings {
       intervalMinutes:
           (json['intervalMinutes'] as num?)?.toInt() ??
           defaults?.intervalMinutes ??
-          45,
+          AppDefaults.intervalMinutes,
       preAlertMinutes:
           (json['preAlertMinutes'] as num?)?.toInt() ??
           defaults?.preAlertMinutes ??
-          5,
+          AppDefaults.preAlertMinutes,
       repeatEnabled:
           (json['repeatEnabled'] as bool?) ?? defaults?.repeatEnabled ?? true,
       allowedStartMinutes:
           (json['allowedStartMinutes'] as num?)?.toInt() ??
           defaults?.allowedStartMinutes ??
-          (8 * 60),
+          AppDefaults.allowedStartMinutes,
       allowedEndMinutes:
           (json['allowedEndMinutes'] as num?)?.toInt() ??
           defaults?.allowedEndMinutes ??
-          (24 * 60),
+          AppDefaults.allowedEndMinutes,
       activeWeekdays: weekdayList,
       use24Hour: (json['use24Hour'] as bool?) ?? defaults?.use24Hour ?? true,
       ringReference: RingReference.values.firstWhere(
@@ -133,20 +139,25 @@ class UserSettings {
       soundType:
           (json['soundType'] as String?) ?? defaults?.soundType ?? 'default',
       packPrice:
-          (json['packPrice'] as num?)?.toDouble() ?? defaults?.packPrice ?? 0,
+          (json['packPrice'] as num?)?.toDouble() ??
+          defaults?.packPrice ??
+          AppDefaults.defaultPackPrice,
       cigarettesPerPack:
           (json['cigarettesPerPack'] as num?)?.toInt() ??
           defaults?.cigarettesPerPack ??
-          20,
+          AppDefaults.defaultCigarettesPerPack,
       currencyCode:
-          (json['currencyCode'] as String?) ?? defaults?.currencyCode ?? 'KRW',
+          (json['currencyCode'] as String?) ??
+          defaults?.currencyCode ??
+          AppDefaults.defaultCurrencyCode,
       currencySymbol:
           (json['currencySymbol'] as String?) ??
           defaults?.currencySymbol ??
-          '₩',
+          AppDefaults.defaultCurrencySymbol,
     );
   }
 
+  /// Human-friendly label for ring reference mode.
   String get ringReferenceLabel {
     switch (ringReference) {
       case RingReference.lastSmoking:
@@ -156,6 +167,7 @@ class UserSettings {
     }
   }
 
+  /// Human-friendly label for sound mode.
   String get soundTypeLabel {
     switch (soundType) {
       case 'silent':
@@ -166,8 +178,10 @@ class UserSettings {
     }
   }
 
+  /// Indicates whether cost tracking can be computed safely.
   bool get isCostTrackingEnabled => packPrice > 0 && cigarettesPerPack > 0;
 
+  /// Returns currency label used by settings UI.
   String get currencyLabel {
     if (currencySymbol.isEmpty) {
       return currencyCode;

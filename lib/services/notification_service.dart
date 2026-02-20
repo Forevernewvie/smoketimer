@@ -5,7 +5,12 @@ import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:timezone/data/latest.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
 
+import '../domain/app_defaults.dart';
+import '../domain/errors/app_exceptions.dart';
+import 'logging/app_logger.dart';
+
 class ScheduledAlert {
+  /// Creates a scheduled local notification payload.
   const ScheduledAlert({
     required this.id,
     required this.at,
@@ -20,6 +25,7 @@ class ScheduledAlert {
 }
 
 abstract class NotificationService {
+  /// Initializes notification plugin and timezone configuration.
   Future<void> initialize();
 
   /// Request notification permission.
@@ -29,12 +35,14 @@ abstract class NotificationService {
   /// does not prompt unexpectedly at launch.
   Future<bool> requestPermission();
 
+  /// Replaces current schedule set with [alerts].
   Future<void> scheduleAlerts({
     required List<ScheduledAlert> alerts,
     required bool vibrationEnabled,
     required String soundType,
   });
 
+  /// Sends an immediate local test notification.
   Future<void> showTest({
     required String title,
     required String body,
@@ -42,14 +50,17 @@ abstract class NotificationService {
     required String soundType,
   });
 
+  /// Cancels all currently scheduled notifications.
   Future<void> cancelAll();
 }
 
 class FlutterNotificationService implements NotificationService {
+  /// Creates production notification service backed by plugin APIs.
   FlutterNotificationService() : _plugin = FlutterLocalNotificationsPlugin();
 
   final FlutterLocalNotificationsPlugin _plugin;
   bool _initialized = false;
+  static const _logger = AppLogger(namespace: 'notifications');
 
   static const _channelId = 'smoke_timer_alerts';
   static const _channelName = 'Smoke Timer Alerts';
@@ -65,7 +76,14 @@ class FlutterNotificationService implements NotificationService {
     try {
       final localTimezone = await FlutterTimezone.getLocalTimezone();
       tz.setLocalLocation(tz.getLocation(localTimezone));
-    } catch (_) {
+      _logger.info('timezone initialized: ${tz.local.name}');
+    } catch (error, stackTrace) {
+      _logger.warning('Failed to read local timezone. Falling back to UTC.');
+      _logger.error(
+        'timezone init failed',
+        error: error,
+        stackTrace: stackTrace,
+      );
       tz.setLocalLocation(tz.getLocation('UTC'));
     }
 
@@ -79,6 +97,7 @@ class FlutterNotificationService implements NotificationService {
     await _plugin.initialize(initSettings);
 
     _initialized = true;
+    _logger.info('notification service initialized');
   }
 
   @override
@@ -93,6 +112,7 @@ class FlutterNotificationService implements NotificationService {
             AndroidFlutterLocalNotificationsPlugin
           >();
       final granted = await android?.requestNotificationsPermission();
+      _logger.info('android notification permission result: $granted');
       return granted ?? true;
     }
 
@@ -106,9 +126,11 @@ class FlutterNotificationService implements NotificationService {
         badge: true,
         sound: true,
       );
+      _logger.info('ios notification permission result: $granted');
       return granted ?? true;
     }
 
+    _logger.debug('permission request skipped for unsupported platform');
     return true;
   }
 
@@ -122,6 +144,7 @@ class FlutterNotificationService implements NotificationService {
     await cancelAll();
 
     if (alerts.isEmpty) {
+      _logger.info('schedule cleared because alert list is empty');
       return;
     }
 
@@ -160,6 +183,10 @@ class FlutterNotificationService implements NotificationService {
         // In that case, fall back to inexact scheduling so the app still works.
         if (e.code == 'exact_alarms_not_permitted' &&
             scheduleMode != AndroidScheduleMode.inexactAllowWhileIdle) {
+          _logger.warning(
+            'Exact alarms are not permitted. Falling back to inexact mode.',
+            error: e,
+          );
           scheduleMode = AndroidScheduleMode.inexactAllowWhileIdle;
           await _plugin.zonedSchedule(
             alert.id,
@@ -173,9 +200,20 @@ class FlutterNotificationService implements NotificationService {
           );
           continue;
         }
-        rethrow;
+        throw NotificationOperationException(
+          code: 'schedule_platform_exception',
+          message: 'Failed to schedule notification.',
+          cause: e,
+        );
+      } catch (error) {
+        throw NotificationOperationException(
+          code: 'schedule_unknown_exception',
+          message: 'Unexpected failure while scheduling notifications.',
+          cause: error,
+        );
       }
     }
+    _logger.info('scheduled alerts: ${alerts.length}');
   }
 
   @override
@@ -207,14 +245,16 @@ class FlutterNotificationService implements NotificationService {
       debugPrint('[notifications] pending=${pending.length}');
     }
 
-    await _plugin.show(900001, title, body, details);
+    await _plugin.show(AppDefaults.testNotificationId, title, body, details);
   }
 
   @override
   Future<void> cancelAll() async {
     await _plugin.cancelAll();
+    _logger.debug('all notifications cancelled');
   }
 
+  /// Builds cross-platform notification payload from current settings.
   NotificationDetails _notificationDetails({
     required bool vibrationEnabled,
     required String soundType,
@@ -241,15 +281,19 @@ class FlutterNotificationService implements NotificationService {
 }
 
 class NoopNotificationService implements NotificationService {
+  /// No-op cancel used by tests and non-notification contexts.
   @override
   Future<void> cancelAll() async {}
 
+  /// No-op initialize used by tests and non-notification contexts.
   @override
   Future<void> initialize() async {}
 
+  /// Always grants permission in no-op mode.
   @override
   Future<bool> requestPermission() async => true;
 
+  /// No-op schedule used by tests and non-notification contexts.
   @override
   Future<void> scheduleAlerts({
     required List<ScheduledAlert> alerts,
@@ -257,6 +301,7 @@ class NoopNotificationService implements NotificationService {
     required String soundType,
   }) async {}
 
+  /// No-op immediate test notification.
   @override
   Future<void> showTest({
     required String title,
