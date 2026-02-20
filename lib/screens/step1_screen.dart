@@ -41,7 +41,7 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
   int _tabIndex = 0;
   late final AdService _adService;
 
-  static const _pagePadding = EdgeInsets.fromLTRB(24, 24, 24, 24);
+  static const _pagePadding = EdgeInsets.fromLTRB(20, 20, 20, 24);
   static const _maxContentWidth = 520.0;
 
   /// Initializes tab-level dependencies and starts banner loading.
@@ -188,7 +188,7 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
     }();
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F9FC),
+      backgroundColor: SmokeUiPalette.background,
       body: SafeArea(
         child: IndexedStack(
           index: _tabIndex,
@@ -320,7 +320,7 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
       MaterialPageRoute(
         builder: (routeContext) {
           return Scaffold(
-            backgroundColor: const Color(0xFFF7F9FC),
+            backgroundColor: SmokeUiPalette.background,
             body: SafeArea(
               child: Column(
                 children: [
@@ -506,7 +506,7 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
       context: context,
       showDragHandle: true,
       useSafeArea: true,
-      backgroundColor: Colors.white,
+      backgroundColor: SmokeUiPalette.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -514,94 +514,96 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
         return StatefulBuilder(
           builder: (context, setModalState) {
             String label = _formatIntervalLabel(minutes);
-            return Padding(
-              padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    '간격',
-                    style: TextStyle(
-                      color: Color(0xFF111827),
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
+            return SingleChildScrollView(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      '간격',
+                      style: TextStyle(
+                        color: SmokeUiPalette.textPrimary,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    '$label (${minutes.toString()}분)',
-                    style: const TextStyle(
-                      color: Color(0xFF475569),
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
+                    const SizedBox(height: 6),
+                    Text(
+                      '$label (${minutes.toString()}분)',
+                      style: const TextStyle(
+                        color: SmokeUiPalette.textSecondary,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  SliderTheme(
-                    data: SliderTheme.of(context).copyWith(
-                      activeTrackColor: const Color(0xFF2563EB),
-                      inactiveTrackColor: const Color(0xFFD9E1EC),
-                      thumbColor: const Color(0xFF2563EB),
-                      overlayColor: const Color(
-                        0xFF2563EB,
-                      ).withValues(alpha: 0.12),
+                    const SizedBox(height: 12),
+                    SliderTheme(
+                      data: SliderTheme.of(context).copyWith(
+                        activeTrackColor: SmokeUiPalette.accentDark,
+                        inactiveTrackColor: const Color(0xFFD9E1EC),
+                        thumbColor: SmokeUiPalette.accent,
+                        overlayColor: SmokeUiPalette.accent.withValues(
+                          alpha: 0.12,
+                        ),
+                      ),
+                      child: Slider(
+                        min: min.toDouble(),
+                        max: max.toDouble(),
+                        divisions: ((max - min) / step).round(),
+                        value: minutes.toDouble(),
+                        onChanged: (value) {
+                          final normalized = ((value / step).round() * step)
+                              .clamp(min, max);
+                          setModalState(() => minutes = normalized.toInt());
+                        },
+                      ),
                     ),
-                    child: Slider(
-                      min: min.toDouble(),
-                      max: max.toDouble(),
-                      divisions: ((max - min) / step).round(),
-                      value: minutes.toDouble(),
-                      onChanged: (value) {
-                        final normalized = ((value / step).round() * step)
-                            .clamp(min, max);
-                        setModalState(() => minutes = normalized.toInt());
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          _formatIntervalLabel(min),
+                          style: const TextStyle(
+                            color: Color(0xFF94A3B8),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Text(
+                          _formatIntervalLabel(max),
+                          style: const TextStyle(
+                            color: Color(0xFF94A3B8),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    PrimaryButton(
+                      text: '적용',
+                      onTap: () {
+                        Navigator.of(context).pop(minutes);
                       },
                     ),
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        _formatIntervalLabel(min),
-                        style: const TextStyle(
-                          color: Color(0xFF94A3B8),
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      Text(
-                        _formatIntervalLabel(max),
-                        style: const TextStyle(
-                          color: Color(0xFF94A3B8),
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  PrimaryButton(
-                    text: '적용',
-                    onTap: () {
-                      Navigator.of(context).pop(minutes);
-                    },
-                  ),
-                  const SizedBox(height: 8),
-                  SizedBox(
-                    width: double.infinity,
-                    child: TextButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: const Text(
-                        '취소',
-                        style: TextStyle(
-                          color: Color(0xFF64748B),
-                          fontWeight: FontWeight.w700,
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      width: double.infinity,
+                      child: TextButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: const Text(
+                          '취소',
+                          style: TextStyle(
+                            color: SmokeUiPalette.textSecondary,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             );
           },
@@ -728,7 +730,7 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
       context: context,
       showDragHandle: true,
       useSafeArea: true,
-      backgroundColor: Colors.white,
+      backgroundColor: SmokeUiPalette.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -761,7 +763,7 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
                       ? const Icon(
                           Icons.check_rounded,
                           size: 18,
-                          color: Color(0xFF2563EB),
+                          color: SmokeUiPalette.accentDark,
                         )
                       : null,
                   onTap: () => Navigator.of(context).pop(code),
@@ -796,7 +798,7 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
       showDragHandle: true,
       useSafeArea: true,
       isScrollControlled: true,
-      backgroundColor: Colors.white,
+      backgroundColor: SmokeUiPalette.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -849,7 +851,7 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: const BorderSide(
-                            color: Color(0xFF2563EB),
+                            color: SmokeUiPalette.accentDark,
                           ),
                         ),
                       ),
@@ -987,55 +989,78 @@ class _HomeCard extends StatelessWidget {
       ringLabel = '분 초과';
     }
 
+    final textScale = MediaQuery.textScalerOf(context).scale(1);
+    final stackedTodayActions = textScale > 1.25;
+    final stackedSpendMetrics = textScale > 1.2;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SizedBox(
-          height: 30,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const Text(
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              child: Text(
                 '흡연 타이머',
-                style: TextStyle(
-                  color: Color(0xFF111827),
-                  fontSize: 20,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: SmokeUiPalette.textPrimary,
+                  fontSize: 22,
                   fontWeight: FontWeight.w700,
                 ),
               ),
-              IconButton(
+            ),
+            const SizedBox(width: 12),
+            Material(
+              color: SmokeUiPalette.accentSoft,
+              borderRadius: BorderRadius.circular(10),
+              child: IconButton(
                 tooltip: '알림 설정',
                 padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 30, minHeight: 30),
+                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
                 visualDensity: VisualDensity.compact,
-                splashRadius: 18,
+                splashRadius: 20,
                 onPressed: () async {
                   await onOpenAlertSettings();
                 },
                 icon: const Icon(
                   Icons.notifications_none_rounded,
                   size: 20,
-                  color: Color(0xFF94A3B8),
+                  color: SmokeUiPalette.accentDark,
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 14),
         SurfaceCard(
-          padding: const EdgeInsets.all(18),
+          color: SmokeUiPalette.backgroundElevated,
+          strokeColor: const Color(0xFFCFD6E2),
+          padding: const EdgeInsets.all(16),
+          cornerRadius: 18,
           child: Column(
             children: [
               SizedBox(
-                height: 210,
+                height: 220,
                 child: Center(
                   child: RingGauge(
-                    size: 156,
+                    size: 168,
                     strokeWidth: 10,
                     sweepAngle: ringProgress * 2 * pi,
                     value: ringValueMinutes.toString(),
                     label: ringLabel,
+                    valueStyle: const TextStyle(
+                      color: SmokeUiPalette.textPrimary,
+                      fontSize: 44,
+                      fontWeight: FontWeight.w700,
+                    ),
+                    labelStyle: const TextStyle(
+                      color: SmokeUiPalette.textSecondary,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ),
@@ -1043,12 +1068,12 @@ class _HomeCard extends StatelessWidget {
                 '설정 간격 ${intervalMinutes.toString()}분',
                 textAlign: TextAlign.center,
                 style: const TextStyle(
-                  color: Color(0xFF64748B),
+                  color: SmokeUiPalette.textSecondary,
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
                 ),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 12),
               PrimaryButton(
                 text: '지금 흡연 기록',
                 onTap: () async {
@@ -1058,103 +1083,117 @@ class _HomeCard extends StatelessWidget {
             ],
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 14),
         SurfaceCard(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(14),
+          cornerRadius: 16,
           child: Column(
             children: [
-              const SizedBox(
-                height: 22,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Text(
-                      '오늘 흡연',
-                      style: TextStyle(
-                        color: Color(0xFF475569),
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                      ),
+              const Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Text(
+                    '오늘 흡연',
+                    style: TextStyle(
+                      color: SmokeUiPalette.textSecondary,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
                     ),
-                    Icon(
-                      Icons.smoking_rooms_rounded,
-                      size: 18,
-                      color: Color(0xFF94A3B8),
-                    ),
-                  ],
-                ),
+                  ),
+                  Icon(
+                    Icons.smoking_rooms_rounded,
+                    size: 18,
+                    color: SmokeUiPalette.accentDark,
+                  ),
+                ],
               ),
               const SizedBox(height: 10),
-              SizedBox(
-                height: 48,
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
+              if (stackedTodayActions) ...[
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    '${todayCount.toString()}개비',
+                    style: const TextStyle(
+                      color: SmokeUiPalette.textPrimary,
+                      fontSize: 32,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Row(
                   children: [
                     Expanded(
-                      flex: 3,
-                      child: FittedBox(
-                        alignment: Alignment.centerLeft,
-                        fit: BoxFit.scaleDown,
-                        child: Text(
-                          '${todayCount.toString()}개비',
-                          style: const TextStyle(
-                            color: Color(0xFF111827),
-                            fontSize: 32,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
+                      child: _ActionButton(
+                        text: '되돌리기',
+                        foreground: SmokeUiPalette.textSecondary,
+                        background: SmokeUiPalette.neutralSoft,
+                        borderColor: SmokeUiPalette.surfaceBorder,
+                        onTap: onUndoRecord,
                       ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
-                      flex: 5,
-                      child: Align(
-                        alignment: Alignment.centerRight,
-                        child: FittedBox(
-                          fit: BoxFit.scaleDown,
-                          child: SizedBox(
-                            height: 36,
-                            child: Row(
-                              children: [
-                                _ActionButton(
-                                  text: '되돌리기',
-                                  foreground: const Color(0xFF475569),
-                                  background: const Color(0xFFEEF2F7),
-                                  borderColor: const Color(0xFFD4DCE8),
-                                  onTap: onUndoRecord,
-                                ),
-                                const SizedBox(width: 8),
-                                _ActionButton(
-                                  text: '+1 추가',
-                                  foreground: Colors.white,
-                                  background: const Color(0xFF2563EB),
-                                  onTap: onAddRecord,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
+                      child: _ActionButton(
+                        text: '+1 추가',
+                        foreground: Colors.white,
+                        background: SmokeUiPalette.accentDark,
+                        onTap: onAddRecord,
                       ),
                     ),
                   ],
                 ),
-              ),
+              ] else ...[
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        '${todayCount.toString()}개비',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: SmokeUiPalette.textPrimary,
+                          fontSize: 34,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    _ActionButton(
+                      text: '되돌리기',
+                      foreground: SmokeUiPalette.textSecondary,
+                      background: SmokeUiPalette.neutralSoft,
+                      borderColor: SmokeUiPalette.surfaceBorder,
+                      onTap: onUndoRecord,
+                    ),
+                    const SizedBox(width: 8),
+                    _ActionButton(
+                      text: '+1 추가',
+                      foreground: Colors.white,
+                      background: SmokeUiPalette.accentDark,
+                      onTap: onAddRecord,
+                    ),
+                  ],
+                ),
+              ],
             ],
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 14),
         SurfaceCard(
           padding: const EdgeInsets.all(14),
+          cornerRadius: 16,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
                 '지출 요약',
                 style: TextStyle(
-                  color: Color(0xFF374151),
+                  color: SmokeUiPalette.textPrimary,
                   fontSize: 14,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
               const SizedBox(height: 10),
@@ -1163,7 +1202,7 @@ class _HomeCard extends StatelessWidget {
                   '가격 정보를 설정하면 지출을 계산할 수 있어요.',
                   key: Key('cost_empty_state_text'),
                   style: TextStyle(
-                    color: Color(0xFF64748B),
+                    color: SmokeUiPalette.textSecondary,
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
                   ),
@@ -1182,14 +1221,14 @@ class _HomeCard extends StatelessWidget {
                         vertical: 8,
                       ),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFEEF2FF),
+                        color: SmokeUiPalette.accentSoft,
                         borderRadius: BorderRadius.circular(9),
-                        border: Border.all(color: const Color(0xFFC7D2FE)),
+                        border: Border.all(color: const Color(0xFFFBC59E)),
                       ),
                       child: const Text(
                         '가격 설정',
                         style: TextStyle(
-                          color: Color(0xFF1D4ED8),
+                          color: SmokeUiPalette.accentDark,
                           fontSize: 12,
                           fontWeight: FontWeight.w700,
                         ),
@@ -1198,39 +1237,62 @@ class _HomeCard extends StatelessWidget {
                   ),
                 ),
               ] else ...[
-                Row(
-                  children: [
-                    Expanded(
-                      child: _SpendMetric(
-                        label: '오늘 지출',
-                        value: todaySpendText,
-                      ),
+                if (stackedSpendMetrics) ...[
+                  SizedBox(
+                    width: double.infinity,
+                    child: _SpendMetric(label: '오늘 지출', value: todaySpendText),
+                  ),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    width: double.infinity,
+                    child: _SpendMetric(
+                      label: '이번 달 지출',
+                      value: monthSpendText,
                     ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: _SpendMetric(
-                        label: '이번 달 지출',
-                        value: monthSpendText,
-                      ),
+                  ),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    width: double.infinity,
+                    child: _SpendMetric(
+                      label: '누적 지출',
+                      value: lifetimeSpendText,
                     ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: _SpendMetric(
-                        label: '누적 지출',
-                        value: lifetimeSpendText,
+                  ),
+                ] else ...[
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _SpendMetric(
+                          label: '오늘 지출',
+                          value: todaySpendText,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _SpendMetric(
+                          label: '이번 달 지출',
+                          value: monthSpendText,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: _SpendMetric(
+                          label: '누적 지출',
+                          value: lifetimeSpendText,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ],
             ],
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 14),
         Text(
           nextAlertText,
           style: const TextStyle(
-            color: Color(0xFF475569),
+            color: SmokeUiPalette.textSecondary,
             fontSize: 13,
             fontWeight: FontWeight.w600,
           ),
@@ -1257,24 +1319,33 @@ class _ActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () async {
-        await onTap();
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-        decoration: BoxDecoration(
-          color: background,
-          borderRadius: BorderRadius.circular(9),
-          border: borderColor == null ? null : Border.all(color: borderColor!),
-        ),
-        child: Text(
-          text,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            color: foreground,
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
+    return Material(
+      color: background,
+      borderRadius: BorderRadius.circular(9),
+      child: InkWell(
+        onTap: () async {
+          await onTap();
+        },
+        borderRadius: BorderRadius.circular(9),
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 36),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(9),
+            border: borderColor == null
+                ? null
+                : Border.all(color: borderColor!),
+          ),
+          child: Text(
+            text,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: foreground,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ),
       ),
@@ -1302,7 +1373,7 @@ class _SpendMetric extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(
-              color: Color(0xFF6B7280),
+              color: SmokeUiPalette.textSecondary,
               fontSize: 11,
               fontWeight: FontWeight.w500,
             ),
@@ -1313,7 +1384,7 @@ class _SpendMetric extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(
-              color: Color(0xFF111827),
+              color: SmokeUiPalette.textPrimary,
               fontSize: 13,
               fontWeight: FontWeight.w700,
             ),
@@ -1353,166 +1424,231 @@ class _RecordCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          '기록',
-          style: TextStyle(
-            color: Color(0xFF111827),
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        const SizedBox(height: 16),
-        SizedBox(
-          height: 42,
-          child: Row(
-            children: [
-              Expanded(
-                child: _PeriodTab(
-                  text: '오늘',
-                  selected: period == RecordPeriod.today,
-                  onTap: () => onPeriodChanged(RecordPeriod.today),
+    final textScale = MediaQuery.textScalerOf(context).scale(1);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final stackedSummaryCards =
+            constraints.maxWidth < 380 || textScale > 1.2;
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              '기록',
+              style: TextStyle(
+                color: SmokeUiPalette.textPrimary,
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              height: 42,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _PeriodTab(
+                      text: '오늘',
+                      selected: period == RecordPeriod.today,
+                      onTap: () => onPeriodChanged(RecordPeriod.today),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _PeriodTab(
+                      text: '주간',
+                      selected: period == RecordPeriod.week,
+                      onTap: () => onPeriodChanged(RecordPeriod.week),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _PeriodTab(
+                      text: '월간',
+                      selected: period == RecordPeriod.month,
+                      onTap: () => onPeriodChanged(RecordPeriod.month),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            if (stackedSummaryCards) ...[
+              SizedBox(
+                width: double.infinity,
+                child: _SummaryItem(
+                  label: '총 개비',
+                  value: '$totalCount',
+                  valueFontSize: 24,
                 ),
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _PeriodTab(
-                  text: '주간',
-                  selected: period == RecordPeriod.week,
-                  onTap: () => onPeriodChanged(RecordPeriod.week),
+              const SizedBox(height: 8),
+              SizedBox(
+                width: double.infinity,
+                child: _SummaryItem(
+                  label: '평균 간격',
+                  value: averageIntervalText,
+                  valueFontSize: 20,
                 ),
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _PeriodTab(
-                  text: '월간',
-                  selected: period == RecordPeriod.month,
-                  onTap: () => onPeriodChanged(RecordPeriod.month),
+              const SizedBox(height: 8),
+              SizedBox(
+                width: double.infinity,
+                child: _SummaryItem(
+                  label: '최장 간격',
+                  value: maxIntervalText,
+                  valueFontSize: 20,
                 ),
+              ),
+            ] else ...[
+              Row(
+                children: [
+                  Expanded(
+                    child: _SummaryItem(
+                      label: '총 개비',
+                      value: '$totalCount',
+                      valueFontSize: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _SummaryItem(
+                      label: '평균 간격',
+                      value: averageIntervalText,
+                      valueFontSize: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _SummaryItem(
+                      label: '최장 간격',
+                      value: maxIntervalText,
+                      valueFontSize: 20,
+                    ),
+                  ),
+                ],
               ),
             ],
-          ),
-        ),
-        const SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(
-              child: _SummaryItem(
-                label: '총 개비',
-                value: '$totalCount',
-                valueFontSize: 24,
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: _SummaryItem(
-                label: '평균 간격',
-                value: averageIntervalText,
-                valueFontSize: 20,
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: _SummaryItem(
-                label: '최장 간격',
-                value: maxIntervalText,
-                valueFontSize: 20,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        SurfaceCard(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                '비용 인사이트',
-                style: TextStyle(
-                  color: Color(0xFF374151),
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 10),
-              if (!isCostConfigured) ...[
-                const Text(
-                  '가격 정보를 설정하면 지출 통계를 볼 수 있어요.',
-                  style: TextStyle(
-                    color: Color(0xFF64748B),
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
+            const SizedBox(height: 16),
+            SurfaceCard(
+              padding: const EdgeInsets.all(12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    '비용 인사이트',
+                    style: TextStyle(
+                      color: SmokeUiPalette.textPrimary,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 10),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: GestureDetector(
-                    onTap: () async {
-                      await onOpenPricingSettings();
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
+                  const SizedBox(height: 10),
+                  if (!isCostConfigured) ...[
+                    const Text(
+                      '가격 정보를 설정하면 지출 통계를 볼 수 있어요.',
+                      style: TextStyle(
+                        color: SmokeUiPalette.textSecondary,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
                       ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFEEF2FF),
-                        borderRadius: BorderRadius.circular(9),
-                        border: Border.all(color: const Color(0xFFC7D2FE)),
-                      ),
-                      child: const Text(
-                        '가격 설정',
-                        style: TextStyle(
-                          color: Color(0xFF1D4ED8),
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
+                    ),
+                    const SizedBox(height: 10),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: GestureDetector(
+                        onTap: () async {
+                          await onOpenPricingSettings();
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color: SmokeUiPalette.accentSoft,
+                            borderRadius: BorderRadius.circular(9),
+                            border: Border.all(color: const Color(0xFFFBC59E)),
+                          ),
+                          child: const Text(
+                            '가격 설정',
+                            style: TextStyle(
+                              color: SmokeUiPalette.accentDark,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                ),
-              ] else ...[
-                Row(
-                  children: [
-                    Expanded(
-                      child: _SummaryItem(
-                        label: '흡연 개비',
-                        value: '$totalCount',
-                        valueFontSize: 18,
+                  ] else ...[
+                    if (stackedSummaryCards) ...[
+                      SizedBox(
+                        width: double.infinity,
+                        child: _SummaryItem(
+                          label: '흡연 개비',
+                          value: '$totalCount',
+                          valueFontSize: 18,
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: _SummaryItem(
-                        label: '예상 지출',
-                        value: periodSpendText,
-                        valueFontSize: 16,
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        width: double.infinity,
+                        child: _SummaryItem(
+                          label: '예상 지출',
+                          value: periodSpendText,
+                          valueFontSize: 16,
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: _SummaryItem(
-                        label: '일 평균',
-                        value: averageDailySpendText,
-                        valueFontSize: 16,
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        width: double.infinity,
+                        child: _SummaryItem(
+                          label: '일 평균',
+                          value: averageDailySpendText,
+                          valueFontSize: 16,
+                        ),
                       ),
-                    ),
+                    ] else ...[
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _SummaryItem(
+                              label: '흡연 개비',
+                              value: '$totalCount',
+                              valueFontSize: 18,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: _SummaryItem(
+                              label: '예상 지출',
+                              value: periodSpendText,
+                              valueFontSize: 16,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: _SummaryItem(
+                              label: '일 평균',
+                              value: averageDailySpendText,
+                              valueFontSize: 16,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ],
-                ),
-              ],
-            ],
-          ),
-        ),
-        const SizedBox(height: 16),
-        SurfaceCard(
-          cornerRadius: 16,
-          child: _RecordList(records: records, use24Hour: use24Hour),
-        ),
-      ],
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            SurfaceCard(
+              cornerRadius: 16,
+              child: _RecordList(records: records, use24Hour: use24Hour),
+            ),
+          ],
+        );
+      },
     );
   }
 }
@@ -1533,18 +1669,22 @@ class _PeriodTab extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        height: 42,
+        constraints: const BoxConstraints(minHeight: 42),
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: selected ? const Color(0xFF1D4ED8) : const Color(0xFFEEF2F7),
+          color: selected
+              ? SmokeUiPalette.accentDark
+              : SmokeUiPalette.neutralSoft,
           borderRadius: BorderRadius.circular(11),
-          border: selected ? null : Border.all(color: const Color(0xFFD7DFEA)),
+          border: selected
+              ? null
+              : Border.all(color: SmokeUiPalette.surfaceBorder),
         ),
         child: Text(
           text,
           textAlign: TextAlign.center,
           style: TextStyle(
-            color: selected ? Colors.white : const Color(0xFF64748B),
+            color: selected ? Colors.white : SmokeUiPalette.textSecondary,
             fontSize: 13,
             fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
           ),
@@ -1580,7 +1720,7 @@ class _SummaryItem extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(
-              color: Color(0xFF6B7280),
+              color: SmokeUiPalette.textSecondary,
               fontSize: 12,
               fontWeight: FontWeight.w500,
             ),
@@ -1591,7 +1731,7 @@ class _SummaryItem extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
-              color: const Color(0xFF111827),
+              color: SmokeUiPalette.textPrimary,
               fontSize: valueFontSize,
               fontWeight: FontWeight.w700,
             ),
@@ -1617,7 +1757,7 @@ class _RecordList extends StatelessWidget {
           child: Text(
             '기록이 없습니다',
             style: TextStyle(
-              color: Color(0xFF6B7280),
+              color: SmokeUiPalette.textSecondary,
               fontSize: 13,
               fontWeight: FontWeight.w500,
             ),
@@ -1627,11 +1767,11 @@ class _RecordList extends StatelessWidget {
     }
 
     const maxVisible = 20;
-    final visible = records.take(maxVisible).toList();
+    final visibleCount = min(records.length, maxVisible);
 
     return Column(
-      children: List.generate(visible.length, (index) {
-        final record = visible[index];
+      children: List.generate(visibleCount, (index) {
+        final record = records[index];
         final time = TimeFormatter.formatClock(
           record.timestamp,
           use24Hour: use24Hour,
@@ -1661,7 +1801,7 @@ class _RecordListRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 48,
+      constraints: const BoxConstraints(minHeight: 48),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         border: withTopBorder
@@ -1672,21 +1812,31 @@ class _RecordListRow extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Text(
-            time,
-            style: const TextStyle(
-              color: Color(0xFF111827),
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
+          Expanded(
+            child: Text(
+              time,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: SmokeUiPalette.textPrimary,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
-          Text(
-            amount,
-            textAlign: TextAlign.right,
-            style: const TextStyle(
-              color: Color(0xFF374151),
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
+          const SizedBox(width: 8),
+          Flexible(
+            fit: FlexFit.loose,
+            child: Text(
+              amount,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.right,
+              style: const TextStyle(
+                color: SmokeUiPalette.textSecondary,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],
@@ -1734,7 +1884,7 @@ class _AlertCard extends StatelessWidget {
         const Text(
           '알림 설정',
           style: TextStyle(
-            color: Color(0xFF111827),
+            color: SmokeUiPalette.textPrimary,
             fontSize: 20,
             fontWeight: FontWeight.w700,
           ),
@@ -1751,7 +1901,7 @@ class _AlertCard extends StatelessWidget {
                 ),
                 label: '반복 알림',
                 labelStyle: const TextStyle(
-                  color: Color(0xFF111827),
+                  color: SmokeUiPalette.textPrimary,
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
                 ),
@@ -1766,7 +1916,7 @@ class _AlertCard extends StatelessWidget {
                 ),
                 label: '알림 권한',
                 labelStyle: const TextStyle(
-                  color: Color(0xFF374151),
+                  color: SmokeUiPalette.textSecondary,
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                 ),
@@ -1783,7 +1933,7 @@ class _AlertCard extends StatelessWidget {
                 ),
                 label: '간격',
                 labelStyle: const TextStyle(
-                  color: Color(0xFF374151),
+                  color: SmokeUiPalette.textSecondary,
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                 ),
@@ -1800,7 +1950,7 @@ class _AlertCard extends StatelessWidget {
                 ),
                 label: '미리 알림',
                 labelStyle: const TextStyle(
-                  color: Color(0xFF374151),
+                  color: SmokeUiPalette.textSecondary,
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                 ),
@@ -1816,7 +1966,7 @@ class _AlertCard extends StatelessWidget {
                 ),
                 label: preAlertMinutes > 0 ? '미리 알림' : '다음 알림',
                 labelStyle: const TextStyle(
-                  color: Color(0xFF374151),
+                  color: SmokeUiPalette.textSecondary,
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                 ),
@@ -1839,7 +1989,7 @@ class _AlertCard extends StatelessWidget {
                 ),
                 label: '허용 시간대',
                 labelStyle: const TextStyle(
-                  color: Color(0xFF374151),
+                  color: SmokeUiPalette.textSecondary,
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                 ),
@@ -1855,7 +2005,7 @@ class _AlertCard extends StatelessWidget {
                     const Text(
                       '요일',
                       style: TextStyle(
-                        color: Color(0xFF374151),
+                        color: SmokeUiPalette.textSecondary,
                         fontSize: 14,
                         fontWeight: FontWeight.w500,
                       ),
@@ -1898,7 +2048,7 @@ class _AlertCard extends StatelessWidget {
         const SizedBox(height: 16),
         PrimaryButton(
           text: '테스트 알림 보내기',
-          color: const Color(0xFF1F2937),
+          color: SmokeUiPalette.accentDark,
           textStyle: const TextStyle(
             color: Colors.white,
             fontSize: 14,
@@ -1912,7 +2062,7 @@ class _AlertCard extends StatelessWidget {
         const Text(
           '알림 권한이 꺼져 있으면 시스템 설정에서 켜주세요.',
           style: TextStyle(
-            color: Color(0xFF6B7280),
+            color: SmokeUiPalette.textSecondary,
             fontSize: 12,
             fontWeight: FontWeight.w500,
           ),
@@ -1971,7 +2121,7 @@ class _SettingsCard extends StatelessWidget {
         const Text(
           '설정',
           style: TextStyle(
-            color: Color(0xFF111827),
+            color: SmokeUiPalette.textPrimary,
             fontSize: 20,
             fontWeight: FontWeight.w700,
           ),
@@ -1983,7 +2133,7 @@ class _SettingsCard extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             label: '알림 설정',
             labelStyle: const TextStyle(
-              color: Color(0xFF111827),
+              color: SmokeUiPalette.textPrimary,
               fontSize: 15,
               fontWeight: FontWeight.w600,
             ),
@@ -2006,7 +2156,7 @@ class _SettingsCard extends StatelessWidget {
                 ),
                 label: '갑당 가격',
                 labelStyle: const TextStyle(
-                  color: Color(0xFF374151),
+                  color: SmokeUiPalette.textSecondary,
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                 ),
@@ -2023,7 +2173,7 @@ class _SettingsCard extends StatelessWidget {
                 ),
                 label: '한 갑 개비 수',
                 labelStyle: const TextStyle(
-                  color: Color(0xFF374151),
+                  color: SmokeUiPalette.textSecondary,
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                 ),
@@ -2041,7 +2191,7 @@ class _SettingsCard extends StatelessWidget {
                 ),
                 label: '통화',
                 labelStyle: const TextStyle(
-                  color: Color(0xFF374151),
+                  color: SmokeUiPalette.textSecondary,
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                 ),
@@ -2056,7 +2206,7 @@ class _SettingsCard extends StatelessWidget {
                   child: Text(
                     '가격 정보를 설정하면 지출을 계산할 수 있어요.',
                     style: TextStyle(
-                      color: Color(0xFF6B7280),
+                      color: SmokeUiPalette.textSecondary,
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
                     ),
@@ -2077,7 +2227,7 @@ class _SettingsCard extends StatelessWidget {
                 ),
                 label: '24시간 표기',
                 labelStyle: const TextStyle(
-                  color: Color(0xFF111827),
+                  color: SmokeUiPalette.textPrimary,
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
                 ),
@@ -2092,7 +2242,7 @@ class _SettingsCard extends StatelessWidget {
                 ),
                 label: '홈 원형 기준',
                 labelStyle: const TextStyle(
-                  color: Color(0xFF374151),
+                  color: SmokeUiPalette.textSecondary,
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                 ),
@@ -2109,7 +2259,7 @@ class _SettingsCard extends StatelessWidget {
                 ),
                 label: '진동',
                 labelStyle: const TextStyle(
-                  color: Color(0xFF374151),
+                  color: SmokeUiPalette.textSecondary,
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                 ),
@@ -2125,7 +2275,7 @@ class _SettingsCard extends StatelessWidget {
                 ),
                 label: '소리',
                 labelStyle: const TextStyle(
-                  color: Color(0xFF374151),
+                  color: SmokeUiPalette.textSecondary,
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                 ),
@@ -2144,7 +2294,7 @@ class _SettingsCard extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
             label: '데이터 초기화',
             labelStyle: const TextStyle(
-              color: Color(0xFFDC2626),
+              color: SmokeUiPalette.risk,
               fontSize: 14,
               fontWeight: FontWeight.w600,
             ),
@@ -2189,7 +2339,7 @@ class _SettingRow extends StatelessWidget {
 
     final content = Container(
       key: rowKey,
-      height: height,
+      constraints: BoxConstraints(minHeight: height),
       padding: padding,
       decoration: BoxDecoration(
         border: withTopBorder
@@ -2215,7 +2365,7 @@ class _SettingRow extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.right,
                 style: const TextStyle(
-                  color: Color(0xFF111827),
+                  color: SmokeUiPalette.textPrimary,
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                 ),
@@ -2226,7 +2376,7 @@ class _SettingRow extends StatelessWidget {
             const Icon(
               Icons.chevron_right_rounded,
               size: 14,
-              color: Color(0xFF9CA3AF),
+              color: Color(0xFF94A3B8),
             ),
           ...trailingWidgets,
         ],
@@ -2237,12 +2387,14 @@ class _SettingRow extends StatelessWidget {
       return content;
     }
 
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: () async {
-        await onTap!();
-      },
-      child: content,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () async {
+          await onTap!();
+        },
+        child: content,
+      ),
     );
   }
 }

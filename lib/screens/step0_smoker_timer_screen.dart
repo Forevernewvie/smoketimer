@@ -50,7 +50,7 @@ class _Step0SmokerTimerScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F9FC),
+      backgroundColor: SmokeUiPalette.background,
       body: SafeArea(
         child: Center(
           child: ConstrainedBox(
@@ -123,6 +123,7 @@ class _OnboardingPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textScale = MediaQuery.textScalerOf(context).scale(1);
     return LayoutBuilder(
       builder: (context, constraints) {
         return SingleChildScrollView(
@@ -132,35 +133,32 @@ class _OnboardingPage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  SizedBox(
-                    height: 24,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Text(
-                          '${index + 1}/3',
-                          style: const TextStyle(
-                            color: Color(0xFF1D4ED8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
+                        '${index + 1}/3',
+                        style: const TextStyle(
+                          color: SmokeUiPalette.accent,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onTap: onSkipTap,
+                        child: const Text(
+                          '건너뛰기',
+                          textAlign: TextAlign.right,
+                          style: TextStyle(
+                            color: SmokeUiPalette.textSecondary,
                             fontSize: 12,
-                            fontWeight: FontWeight.w700,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
-                        GestureDetector(
-                          behavior: HitTestBehavior.opaque,
-                          onTap: onSkipTap,
-                          child: const Text(
-                            '건너뛰기',
-                            textAlign: TextAlign.right,
-                            style: TextStyle(
-                              color: Color(0xFF64748B),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 16),
                   hero,
@@ -168,34 +166,54 @@ class _OnboardingPage extends StatelessWidget {
                   Text(
                     title,
                     style: const TextStyle(
-                      color: Color(0xFF111827),
-                      fontSize: 20,
+                      color: SmokeUiPalette.textPrimary,
+                      fontSize: 22,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 12),
                   Text(
                     description,
                     style: const TextStyle(
-                      color: Color(0xFF64748B),
+                      color: SmokeUiPalette.textSecondary,
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
                   const Spacer(),
-                  SizedBox(
-                    height: 44,
-                    child: Row(
+                  const SizedBox(height: 20),
+                  if (constraints.maxWidth < 360 || textScale > 1.25) ...[
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: PageDots(activeIndex: index),
+                    ),
+                    const SizedBox(height: 12),
+                    PrimaryButton(
+                      text: buttonText,
+                      height: 44,
+                      color: SmokeUiPalette.accent,
+                      textStyle: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                      ),
+                      onTap: onButtonTap,
+                    ),
+                  ] else ...[
+                    Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         PageDots(activeIndex: index),
-                        SizedBox(
-                          width: 112,
+                        ConstrainedBox(
+                          constraints: const BoxConstraints(
+                            minWidth: 112,
+                            maxWidth: 136,
+                          ),
                           child: PrimaryButton(
                             text: buttonText,
                             height: 44,
-                            color: const Color(0xFF1D4ED8),
+                            color: SmokeUiPalette.accent,
                             textStyle: const TextStyle(
                               color: Colors.white,
                               fontSize: 14,
@@ -206,7 +224,7 @@ class _OnboardingPage extends StatelessWidget {
                         ),
                       ],
                     ),
-                  ),
+                  ],
                 ],
               ),
             ),
@@ -234,12 +252,12 @@ class _RingHero extends StatelessWidget {
             value: '37',
             label: '분 경과',
             valueStyle: TextStyle(
-              color: Color(0xFF111827),
+              color: SmokeUiPalette.textPrimary,
               fontSize: 30,
               fontWeight: FontWeight.w700,
             ),
             labelStyle: TextStyle(
-              color: Color(0xFF64748B),
+              color: SmokeUiPalette.textSecondary,
               fontSize: 12,
               fontWeight: FontWeight.w500,
             ),
@@ -265,7 +283,7 @@ class _BarHero extends StatelessWidget {
             const Text(
               '오늘 평균 간격',
               style: TextStyle(
-                color: Color(0xFF0F172A),
+                color: SmokeUiPalette.textPrimary,
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
               ),
@@ -276,11 +294,11 @@ class _BarHero extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: const [
-                  _BarChartPillar(height: 72, color: Color(0xFFDBEAFE)),
-                  _BarChartPillar(height: 102, color: Color(0xFF93C5FD)),
-                  _BarChartPillar(height: 58, color: Color(0xFFBFDBFE)),
-                  _BarChartPillar(height: 124, color: Color(0xFF2563EB)),
-                  _BarChartPillar(height: 84, color: Color(0xFF60A5FA)),
+                  _BarChartPillar(height: 72, color: Color(0xFFFFD8B8)),
+                  _BarChartPillar(height: 102, color: Color(0xFFFFB67E)),
+                  _BarChartPillar(height: 58, color: Color(0xFFFFE4CE)),
+                  _BarChartPillar(height: 124, color: SmokeUiPalette.accent),
+                  _BarChartPillar(height: 84, color: SmokeUiPalette.mint),
                 ],
               ),
             ),
@@ -288,7 +306,7 @@ class _BarHero extends StatelessWidget {
             const Text(
               '최근 7일 대비 +18분',
               style: TextStyle(
-                color: Color(0xFF64748B),
+                color: SmokeUiPalette.textSecondary,
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
               ),
@@ -319,13 +337,13 @@ class _SummaryHero extends StatelessWidget {
               height: 84,
               child: DecoratedBox(
                 decoration: BoxDecoration(
-                  color: Color(0xFFDBEAFE),
+                  color: SmokeUiPalette.accentSoft,
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
                   Icons.schedule_rounded,
                   size: 30,
-                  color: Color(0xFF1D4ED8),
+                  color: SmokeUiPalette.accentDark,
                 ),
               ),
             ),
@@ -334,7 +352,7 @@ class _SummaryHero extends StatelessWidget {
               '오늘 누적 3회 기록',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: Color(0xFF0F172A),
+                color: SmokeUiPalette.textPrimary,
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
               ),
@@ -344,7 +362,7 @@ class _SummaryHero extends StatelessWidget {
               '최근 기록: 오전 09:40',
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: Color(0xFF64748B),
+                color: SmokeUiPalette.textSecondary,
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
               ),

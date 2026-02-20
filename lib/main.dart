@@ -9,6 +9,7 @@ import 'screens/step0_smoker_timer_screen.dart';
 import 'screens/step0_splash_screen.dart';
 import 'screens/step1_screen.dart';
 import 'services/logging/app_logger.dart';
+import 'widgets/pen_design_widgets.dart';
 
 /// Bootstraps dependencies and starts the root app widget.
 Future<void> main() async {
@@ -47,8 +48,12 @@ class SmokeTimerApp extends ConsumerWidget {
       title: 'Smoke Timer UI',
       theme: ThemeData(
         useMaterial3: true,
-        scaffoldBackgroundColor: const Color(0xFFF7F9FC),
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF2563EB)),
+        scaffoldBackgroundColor: SmokeUiPalette.background,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: SmokeUiPalette.accent,
+          primary: SmokeUiPalette.accentDark,
+          secondary: SmokeUiPalette.mint,
+        ),
       ),
       home: const RootStageScreen(),
       routes: {

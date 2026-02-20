@@ -2,87 +2,29 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-class FrameRouteAppBar extends StatelessWidget implements PreferredSizeWidget {
-  const FrameRouteAppBar({
-    required this.title,
-    required this.currentRoute,
-    super.key,
-  });
+class SmokeUiPalette {
+  const SmokeUiPalette._();
 
-  final String title;
-  final String currentRoute;
-
-  @override
-  Widget build(BuildContext context) {
-    return AppBar(
-      title: Text(title),
-      backgroundColor: const Color(0xFFE9EDF3),
-      foregroundColor: const Color(0xFF111827),
-      elevation: 0,
-      scrolledUnderElevation: 0,
-      actions: [
-        PopupMenuButton<String>(
-          tooltip: '화면 이동',
-          onSelected: (route) {
-            if (route != currentRoute) {
-              Navigator.pushReplacementNamed(context, route);
-            }
-          },
-          itemBuilder: (context) => const [
-            PopupMenuItem(
-              value: '/step0-smoker-timer',
-              child: Text('KM1Jk • Step 0 Smoker Timer'),
-            ),
-            PopupMenuItem(
-              value: '/step0-splash',
-              child: Text('DujVY • Step 0 Splash'),
-            ),
-            PopupMenuItem(value: '/step1', child: Text('cOnQP • Step 1')),
-          ],
-          icon: const Icon(Icons.dashboard_customize_outlined),
-        ),
-      ],
-    );
-  }
-
-  @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
-}
-
-class PhoneShell extends StatelessWidget {
-  const PhoneShell({
-    required this.child,
-    this.gap = 16,
-    this.padding = const EdgeInsets.all(20),
-    super.key,
-  });
-
-  final Widget child;
-  final double gap;
-  final EdgeInsetsGeometry padding;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 320,
-      height: 700,
-      padding: padding,
-      decoration: BoxDecoration(
-        color: const Color(0xFFF7F9FC),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFFDDE3EA)),
-      ),
-      child: child,
-    );
-  }
+  static const background = Color(0xFFF4F6FA);
+  static const backgroundElevated = Color(0xFFECEFF4);
+  static const surface = Color(0xFFFFFFFF);
+  static const surfaceBorder = Color(0xFFD8DEE8);
+  static const textPrimary = Color(0xFF111827);
+  static const textSecondary = Color(0xFF5A6472);
+  static const accent = Color(0xFFFF8A3D);
+  static const accentDark = Color(0xFFE7792F);
+  static const accentSoft = Color(0xFFFFE9D8);
+  static const mint = Color(0xFF14B88F);
+  static const risk = Color(0xFFD95B57);
+  static const neutralSoft = Color(0xFFEEF2F7);
 }
 
 class SurfaceCard extends StatelessWidget {
   const SurfaceCard({
     required this.child,
     this.padding,
-    this.color = const Color(0xFFFFFFFF),
-    this.strokeColor = const Color(0xFFDFE6EF),
+    this.color = SmokeUiPalette.surface,
+    this.strokeColor = SmokeUiPalette.surfaceBorder,
     this.strokeWidth = 1,
     this.cornerRadius = 16,
     super.key,
@@ -120,15 +62,15 @@ class RingGauge extends StatelessWidget {
     required this.sweepAngle,
     required this.value,
     required this.label,
-    this.trackColor = const Color(0xFFD4DDE8),
-    this.arcColor = const Color(0xFF2563EB),
+    this.trackColor = const Color(0xFFCDD6E2),
+    this.arcColor = SmokeUiPalette.accent,
     this.valueStyle = const TextStyle(
-      color: Color(0xFF111827),
-      fontSize: 34,
+      color: SmokeUiPalette.textPrimary,
+      fontSize: 36,
       fontWeight: FontWeight.w700,
     ),
     this.labelStyle = const TextStyle(
-      color: Color(0xFF64748B),
+      color: SmokeUiPalette.textSecondary,
       fontSize: 13,
       fontWeight: FontWeight.w500,
     ),
@@ -162,12 +104,23 @@ class RingGauge extends StatelessWidget {
               sweepAngle: sweepAngle,
             ),
           ),
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(value, textAlign: TextAlign.center, style: valueStyle),
-              Text(label, textAlign: TextAlign.center, style: labelStyle),
-            ],
+          Padding(
+            padding: EdgeInsets.all(strokeWidth),
+            child: SizedBox(
+              width: size - (strokeWidth * 2),
+              height: size - (strokeWidth * 2),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.center,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(value, textAlign: TextAlign.center, style: valueStyle),
+                    Text(label, textAlign: TextAlign.center, style: labelStyle),
+                  ],
+                ),
+              ),
+            ),
           ),
         ],
       ),
@@ -242,7 +195,7 @@ class PageDots extends StatelessWidget {
           height: 8,
           margin: EdgeInsets.only(right: index == 2 ? 0 : 6),
           decoration: BoxDecoration(
-            color: active ? const Color(0xFF1D4ED8) : const Color(0xFFCBD5E1),
+            color: active ? SmokeUiPalette.accent : const Color(0xFFCBD5E1),
             borderRadius: BorderRadius.circular(99),
           ),
         );
@@ -262,7 +215,7 @@ class TogglePill extends StatelessWidget {
       width: 44,
       height: 24,
       decoration: BoxDecoration(
-        color: isOn ? const Color(0xFF1D4ED8) : const Color(0xFFD1D5DB),
+        color: isOn ? SmokeUiPalette.accent : const Color(0xFFD1D5DB),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Stack(
@@ -299,14 +252,14 @@ class DayChip extends StatelessWidget {
       height: 32,
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: active ? const Color(0xFF1D4ED8) : const Color(0xFFEEF2F7),
+        color: active ? SmokeUiPalette.accentDark : SmokeUiPalette.neutralSoft,
         borderRadius: BorderRadius.circular(8),
-        border: active ? null : Border.all(color: const Color(0xFFD7DFEA)),
+        border: active ? null : Border.all(color: SmokeUiPalette.surfaceBorder),
       ),
       child: Text(
         text,
         style: TextStyle(
-          color: active ? Colors.white : const Color(0xFF374151),
+          color: active ? Colors.white : SmokeUiPalette.textSecondary,
           fontSize: 13,
           fontWeight: FontWeight.w600,
         ),
@@ -319,7 +272,7 @@ class PrimaryButton extends StatelessWidget {
   const PrimaryButton({
     required this.text,
     this.height = 48,
-    this.color = const Color(0xFF2563EB),
+    this.color = SmokeUiPalette.accent,
     this.radius = 12,
     this.onTap,
     this.textStyle = const TextStyle(
@@ -339,17 +292,29 @@ class PrimaryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: double.infinity,
-        height: height,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(radius),
+    return Material(
+      color: color,
+      borderRadius: BorderRadius.circular(radius),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(radius),
+        splashColor: Colors.white.withValues(alpha: 0.16),
+        highlightColor: Colors.white.withValues(alpha: 0.06),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minHeight: height),
+          child: Container(
+            width: double.infinity,
+            alignment: Alignment.center,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            child: Text(
+              text,
+              style: textStyle,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+            ),
+          ),
         ),
-        child: Text(text, style: textStyle, textAlign: TextAlign.center),
       ),
     );
   }

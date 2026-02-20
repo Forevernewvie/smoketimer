@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../widgets/pen_design_widgets.dart';
+
 class Step0SplashScreen extends StatelessWidget {
   const Step0SplashScreen({super.key});
 
@@ -8,7 +10,7 @@ class Step0SplashScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F9FC),
+      backgroundColor: SmokeUiPalette.background,
       body: SafeArea(
         child: Center(
           child: Padding(
@@ -37,7 +39,7 @@ class _SplashA3Card extends StatelessWidget {
           height: 92,
           child: DecoratedBox(
             decoration: BoxDecoration(
-              color: Color(0xFF2563EB),
+              color: SmokeUiPalette.accentDark,
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -52,7 +54,7 @@ class _SplashA3Card extends StatelessWidget {
           '흡연 타이머',
           textAlign: TextAlign.center,
           style: TextStyle(
-            color: Color(0xFF111827),
+            color: SmokeUiPalette.textPrimary,
             fontSize: 24,
             fontWeight: FontWeight.w700,
           ),
@@ -62,7 +64,7 @@ class _SplashA3Card extends StatelessWidget {
           '마지막 흡연 후 경과 시간 표시',
           textAlign: TextAlign.center,
           style: TextStyle(
-            color: Color(0xFF64748B),
+            color: SmokeUiPalette.textSecondary,
             fontSize: 12,
             fontWeight: FontWeight.w500,
           ),
@@ -74,7 +76,7 @@ class _SplashA3Card extends StatelessWidget {
           '시작 준비 중',
           textAlign: TextAlign.center,
           style: TextStyle(
-            color: Color(0xFF94A3B8),
+            color: SmokeUiPalette.textSecondary,
             fontSize: 11,
             fontWeight: FontWeight.w500,
           ),
@@ -149,7 +151,7 @@ class _AnimatedSplashLoadingBarState extends State<_AnimatedSplashLoadingBar>
                   height: _AnimatedSplashLoadingBar.barHeight,
                   child: DecoratedBox(
                     decoration: BoxDecoration(
-                      color: const Color(0xFF2563EB),
+                      color: SmokeUiPalette.accentDark,
                       borderRadius: BorderRadius.circular(999),
                     ),
                   ),

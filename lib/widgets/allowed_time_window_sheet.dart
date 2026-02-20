@@ -34,7 +34,7 @@ Future<AllowedTimeWindow?> showAllowedTimeWindowSheet(
     context: context,
     showDragHandle: true,
     useSafeArea: true,
-    backgroundColor: Colors.white,
+    backgroundColor: SmokeUiPalette.surface,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
     ),
@@ -49,150 +49,152 @@ Future<AllowedTimeWindow?> showAllowedTimeWindowSheet(
 
           final isValid = endMinutes > startMinutes;
 
-          return Padding(
-            padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  '허용 시간대',
-                  style: TextStyle(
-                    color: Color(0xFF111827),
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  preview,
-                  style: const TextStyle(
-                    color: Color(0xFF475569),
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                SliderTheme(
-                  data: SliderTheme.of(context).copyWith(
-                    activeTrackColor: const Color(0xFF2563EB),
-                    inactiveTrackColor: const Color(0xFFD9E1EC),
-                    thumbColor: const Color(0xFF2563EB),
-                    overlayColor: const Color(
-                      0xFF2563EB,
-                    ).withValues(alpha: 0.12),
-                  ),
-                  child: RangeSlider(
-                    min: min.toDouble(),
-                    max: max.toDouble(),
-                    divisions: ((max - min) / step).round(),
-                    values: RangeValues(
-                      startMinutes.toDouble(),
-                      endMinutes.toDouble(),
-                    ),
-                    labels: RangeLabels(
-                      TimeFormatter.formatMinutesToClock(
-                        startMinutes,
-                        use24Hour: use24Hour,
-                      ),
-                      TimeFormatter.formatMinutesToClock(
-                        endMinutes,
-                        use24Hour: use24Hour,
-                      ),
-                    ),
-                    onChanged: (values) {
-                      final nextStart = _snapMinutes(
-                        values.start.round(),
-                        step: step,
-                        min: min,
-                        max: max,
-                      );
-                      final nextEnd = _snapMinutes(
-                        values.end.round(),
-                        step: step,
-                        min: min,
-                        max: max,
-                      );
-
-                      setModalState(() {
-                        startMinutes = nextStart;
-                        endMinutes = nextEnd;
-                      });
-                    },
-                  ),
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      TimeFormatter.formatMinutesToClock(
-                        min,
-                        use24Hour: use24Hour,
-                      ),
-                      style: const TextStyle(
-                        color: Color(0xFF94A3B8),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    Text(
-                      TimeFormatter.formatMinutesToClock(
-                        max,
-                        use24Hour: use24Hour,
-                      ),
-                      style: const TextStyle(
-                        color: Color(0xFF94A3B8),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                if (!isValid)
+          return SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   const Text(
-                    '종료 시간은 시작 시간보다 커야 합니다.',
+                    '허용 시간대',
                     style: TextStyle(
-                      color: Color(0xFFDC2626),
-                      fontSize: 12,
+                      color: SmokeUiPalette.textPrimary,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    preview,
+                    style: const TextStyle(
+                      color: SmokeUiPalette.textSecondary,
+                      fontSize: 13,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                const SizedBox(height: 16),
-                Opacity(
-                  key: const Key('allowed_window_apply_opacity'),
-                  opacity: isValid ? 1 : 0.4,
-                  child: PrimaryButton(
-                    key: const Key('allowed_window_apply'),
-                    text: '적용',
-                    onTap: isValid
-                        ? () {
-                            Navigator.of(context).pop(
-                              AllowedTimeWindow(
-                                startMinutes: startMinutes,
-                                endMinutes: endMinutes,
-                              ),
-                            );
-                          }
-                        : null,
+                  const SizedBox(height: 12),
+                  SliderTheme(
+                    data: SliderTheme.of(context).copyWith(
+                      activeTrackColor: SmokeUiPalette.accentDark,
+                      inactiveTrackColor: const Color(0xFFD9E1EC),
+                      thumbColor: SmokeUiPalette.accent,
+                      overlayColor: SmokeUiPalette.accent.withValues(
+                        alpha: 0.12,
+                      ),
+                    ),
+                    child: RangeSlider(
+                      min: min.toDouble(),
+                      max: max.toDouble(),
+                      divisions: ((max - min) / step).round(),
+                      values: RangeValues(
+                        startMinutes.toDouble(),
+                        endMinutes.toDouble(),
+                      ),
+                      labels: RangeLabels(
+                        TimeFormatter.formatMinutesToClock(
+                          startMinutes,
+                          use24Hour: use24Hour,
+                        ),
+                        TimeFormatter.formatMinutesToClock(
+                          endMinutes,
+                          use24Hour: use24Hour,
+                        ),
+                      ),
+                      onChanged: (values) {
+                        final nextStart = _snapMinutes(
+                          values.start.round(),
+                          step: step,
+                          min: min,
+                          max: max,
+                        );
+                        final nextEnd = _snapMinutes(
+                          values.end.round(),
+                          step: step,
+                          min: min,
+                          max: max,
+                        );
+
+                        setModalState(() {
+                          startMinutes = nextStart;
+                          endMinutes = nextEnd;
+                        });
+                      },
+                    ),
                   ),
-                ),
-                const SizedBox(height: 8),
-                SizedBox(
-                  width: double.infinity,
-                  child: TextButton(
-                    key: const Key('allowed_window_cancel'),
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: const Text(
-                      '취소',
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        TimeFormatter.formatMinutesToClock(
+                          min,
+                          use24Hour: use24Hour,
+                        ),
+                        style: const TextStyle(
+                          color: Color(0xFF94A3B8),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      Text(
+                        TimeFormatter.formatMinutesToClock(
+                          max,
+                          use24Hour: use24Hour,
+                        ),
+                        style: const TextStyle(
+                          color: Color(0xFF94A3B8),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  if (!isValid)
+                    const Text(
+                      '종료 시간은 시작 시간보다 커야 합니다.',
                       style: TextStyle(
-                        color: Color(0xFF64748B),
-                        fontWeight: FontWeight.w700,
+                        color: SmokeUiPalette.risk,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  const SizedBox(height: 16),
+                  Opacity(
+                    key: const Key('allowed_window_apply_opacity'),
+                    opacity: isValid ? 1 : 0.4,
+                    child: PrimaryButton(
+                      key: const Key('allowed_window_apply'),
+                      text: '적용',
+                      onTap: isValid
+                          ? () {
+                              Navigator.of(context).pop(
+                                AllowedTimeWindow(
+                                  startMinutes: startMinutes,
+                                  endMinutes: endMinutes,
+                                ),
+                              );
+                            }
+                          : null,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    width: double.infinity,
+                    child: TextButton(
+                      key: const Key('allowed_window_cancel'),
+                      onPressed: () => Navigator.of(context).pop(),
+                      child: const Text(
+                        '취소',
+                        style: TextStyle(
+                          color: SmokeUiPalette.textSecondary,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           );
         },
