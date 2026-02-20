@@ -12,6 +12,10 @@ class UserSettings {
     required this.ringReference,
     required this.vibrationEnabled,
     required this.soundType,
+    required this.packPrice,
+    required this.cigarettesPerPack,
+    required this.currencyCode,
+    required this.currencySymbol,
   });
 
   final int intervalMinutes;
@@ -24,6 +28,10 @@ class UserSettings {
   final RingReference ringReference;
   final bool vibrationEnabled;
   final String soundType;
+  final double packPrice;
+  final int cigarettesPerPack;
+  final String currencyCode;
+  final String currencySymbol;
 
   UserSettings copyWith({
     int? intervalMinutes,
@@ -36,6 +44,11 @@ class UserSettings {
     RingReference? ringReference,
     bool? vibrationEnabled,
     String? soundType,
+    double? packPrice,
+    int? cigarettesPerPack,
+    String? currencyCode,
+    String? currencySymbol,
+    bool clearCurrencySymbol = false,
   }) {
     return UserSettings(
       intervalMinutes: intervalMinutes ?? this.intervalMinutes,
@@ -48,6 +61,12 @@ class UserSettings {
       ringReference: ringReference ?? this.ringReference,
       vibrationEnabled: vibrationEnabled ?? this.vibrationEnabled,
       soundType: soundType ?? this.soundType,
+      packPrice: packPrice ?? this.packPrice,
+      cigarettesPerPack: cigarettesPerPack ?? this.cigarettesPerPack,
+      currencyCode: currencyCode ?? this.currencyCode,
+      currencySymbol: clearCurrencySymbol
+          ? ''
+          : (currencySymbol ?? this.currencySymbol),
     );
   }
 
@@ -63,29 +82,68 @@ class UserSettings {
       'ringReference': ringReference.name,
       'vibrationEnabled': vibrationEnabled,
       'soundType': soundType,
+      'packPrice': packPrice,
+      'cigarettesPerPack': cigarettesPerPack,
+      'currencyCode': currencyCode,
+      'currencySymbol': currencySymbol,
     };
   }
 
-  factory UserSettings.fromJson(Map<String, dynamic> json) {
-    final weekdayList =
+  factory UserSettings.fromJson(
+    Map<String, dynamic> json, {
+    UserSettings? defaults,
+  }) {
+    final parsedWeekdayList =
         (json['activeWeekdays'] as List<dynamic>? ?? <dynamic>[])
             .map((value) => (value as num).toInt())
             .toSet();
+    final weekdayList = parsedWeekdayList.isEmpty
+        ? (defaults?.activeWeekdays ?? <int>{1, 2, 3, 4, 5})
+        : parsedWeekdayList;
 
     return UserSettings(
-      intervalMinutes: (json['intervalMinutes'] as num).toInt(),
-      preAlertMinutes: (json['preAlertMinutes'] as num).toInt(),
-      repeatEnabled: json['repeatEnabled'] as bool,
-      allowedStartMinutes: (json['allowedStartMinutes'] as num).toInt(),
-      allowedEndMinutes: (json['allowedEndMinutes'] as num).toInt(),
+      intervalMinutes:
+          (json['intervalMinutes'] as num?)?.toInt() ??
+          defaults?.intervalMinutes ??
+          45,
+      preAlertMinutes:
+          (json['preAlertMinutes'] as num?)?.toInt() ??
+          defaults?.preAlertMinutes ??
+          5,
+      repeatEnabled:
+          (json['repeatEnabled'] as bool?) ?? defaults?.repeatEnabled ?? true,
+      allowedStartMinutes:
+          (json['allowedStartMinutes'] as num?)?.toInt() ??
+          defaults?.allowedStartMinutes ??
+          (8 * 60),
+      allowedEndMinutes:
+          (json['allowedEndMinutes'] as num?)?.toInt() ??
+          defaults?.allowedEndMinutes ??
+          (24 * 60),
       activeWeekdays: weekdayList,
-      use24Hour: json['use24Hour'] as bool,
+      use24Hour: (json['use24Hour'] as bool?) ?? defaults?.use24Hour ?? true,
       ringReference: RingReference.values.firstWhere(
         (item) => item.name == json['ringReference'],
-        orElse: () => RingReference.lastSmoking,
+        orElse: () => defaults?.ringReference ?? RingReference.lastSmoking,
       ),
-      vibrationEnabled: json['vibrationEnabled'] as bool,
-      soundType: json['soundType'] as String,
+      vibrationEnabled:
+          (json['vibrationEnabled'] as bool?) ??
+          defaults?.vibrationEnabled ??
+          true,
+      soundType:
+          (json['soundType'] as String?) ?? defaults?.soundType ?? 'default',
+      packPrice:
+          (json['packPrice'] as num?)?.toDouble() ?? defaults?.packPrice ?? 0,
+      cigarettesPerPack:
+          (json['cigarettesPerPack'] as num?)?.toInt() ??
+          defaults?.cigarettesPerPack ??
+          20,
+      currencyCode:
+          (json['currencyCode'] as String?) ?? defaults?.currencyCode ?? 'KRW',
+      currencySymbol:
+          (json['currencySymbol'] as String?) ??
+          defaults?.currencySymbol ??
+          '₩',
     );
   }
 
@@ -106,5 +164,14 @@ class UserSettings {
       default:
         return '기본';
     }
+  }
+
+  bool get isCostTrackingEnabled => packPrice > 0 && cigarettesPerPack > 0;
+
+  String get currencyLabel {
+    if (currencySymbol.isEmpty) {
+      return currencyCode;
+    }
+    return '$currencyCode ($currencySymbol)';
   }
 }

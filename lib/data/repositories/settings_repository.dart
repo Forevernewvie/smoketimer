@@ -21,7 +21,10 @@ class SettingsRepository {
     }
 
     final decoded = jsonDecode(raw) as Map<String, dynamic>;
-    return UserSettings.fromJson(decoded);
+    return UserSettings.fromJson(
+      decoded,
+      defaults: AppDefaults.defaultSettings(),
+    );
   }
 
   Future<void> saveSettings(UserSettings settings) async {

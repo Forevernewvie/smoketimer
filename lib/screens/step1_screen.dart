@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../domain/app_defaults.dart';
@@ -10,6 +11,7 @@ import '../presentation/state/ads_providers.dart';
 import '../presentation/state/app_providers.dart';
 import '../presentation/state/app_state.dart';
 import '../services/ads/ad_service.dart';
+import '../services/cost_stats_service.dart';
 import '../services/smoking_stats_service.dart';
 import '../services/time_formatter.dart';
 import '../widgets/allowed_time_window_sheet.dart';
@@ -93,6 +95,11 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
       RecordPeriod.today,
       state.now,
     );
+    final monthRecords = SmokingStatsService.recordsForPeriod(
+      state.records,
+      RecordPeriod.month,
+      state.now,
+    );
 
     final todayCount = SmokingStatsService.totalCount(todayRecords);
 
@@ -115,6 +122,52 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
     final maxIntervalText = hasIntervalStats
         ? '${maxInterval.toString()}분'
         : '-';
+
+    final isCostConfigured = CostStatsService.isConfigured(state.settings);
+    final todaySpend = CostStatsService.computeSpendForCount(
+      cigaretteCount: todayCount,
+      settings: state.settings,
+    );
+    final monthSpend = CostStatsService.computeSpendForRecords(
+      records: monthRecords,
+      settings: state.settings,
+    );
+    final lifetimeSpend = CostStatsService.computeLifetimeSpend(
+      allRecords: state.records,
+      settings: state.settings,
+    );
+
+    final periodSpend = CostStatsService.computeSpendForRecords(
+      records: periodRecords,
+      settings: state.settings,
+    );
+    final averageDailySpend = CostStatsService.computeAverageDailySpend(
+      period: state.recordPeriod,
+      now: state.now,
+      periodRecords: periodRecords,
+      settings: state.settings,
+    );
+
+    final todaySpendText = CostStatsService.formatCurrency(
+      todaySpend,
+      state.settings,
+    );
+    final monthSpendText = CostStatsService.formatCurrency(
+      monthSpend,
+      state.settings,
+    );
+    final lifetimeSpendText = CostStatsService.formatCurrency(
+      lifetimeSpend,
+      state.settings,
+    );
+    final periodSpendText = CostStatsService.formatCurrency(
+      periodSpend,
+      state.settings,
+    );
+    final averageDailySpendText = CostStatsService.formatCurrency(
+      averageDailySpend,
+      state.settings,
+    );
 
     final nextAlertText = () {
       if (!state.settings.repeatEnabled) {
@@ -149,9 +202,14 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
                 ringProgress: ringProgress,
                 todayCount: todayCount,
                 nextAlertText: nextAlertText,
+                isCostConfigured: isCostConfigured,
+                todaySpendText: todaySpendText,
+                monthSpendText: monthSpendText,
+                lifetimeSpendText: lifetimeSpendText,
                 onAddRecord: controller.addSmokingRecord,
                 onUndoRecord: controller.undoLastRecord,
                 onOpenAlertSettings: () => _openAlertSettings(context),
+                onOpenPricingSettings: _openCostSettingsTab,
               ),
             ),
             _scrollableTab(
@@ -163,7 +221,11 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
                 averageIntervalText: averageIntervalText,
                 maxIntervalText: maxIntervalText,
                 use24Hour: state.settings.use24Hour,
+                isCostConfigured: isCostConfigured,
+                periodSpendText: periodSpendText,
+                averageDailySpendText: averageDailySpendText,
                 onPeriodChanged: controller.setRecordPeriod,
+                onOpenPricingSettings: _openCostSettingsTab,
               ),
             ),
             _scrollableTab(
@@ -176,11 +238,24 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
                 alertSummary: state.settings.repeatEnabled
                     ? '켜짐 · ${_formatIntervalLabel(state.settings.intervalMinutes)}'
                     : '꺼짐',
+                isCostConfigured: isCostConfigured,
+                packPriceText: state.settings.packPrice > 0
+                    ? CostStatsService.formatCurrency(
+                        state.settings.packPrice,
+                        state.settings,
+                      )
+                    : '미설정',
+                cigarettesPerPack: state.settings.cigarettesPerPack,
+                currencyLabel: state.settings.currencyLabel,
                 onToggle24Hour: controller.toggleUse24Hour,
                 onCycleRingReference: controller.cycleRingReference,
                 onToggleVibration: controller.toggleVibration,
                 onCycleSoundType: controller.cycleSoundType,
                 onOpenAlertSettings: () => _openAlertSettings(context),
+                onEditPackPrice: () => _pickPackPrice(context, state),
+                onEditCigarettesPerPack: () =>
+                    _pickCigarettesPerPack(context, state),
+                onEditCurrency: () => _pickCurrencyCode(context, state),
                 onResetData: () => _confirmReset(context),
               ),
             ),
@@ -217,6 +292,13 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
         ],
       ),
     );
+  }
+
+  Future<void> _openCostSettingsTab() async {
+    if (!mounted) {
+      return;
+    }
+    setState(() => _tabIndex = 2);
   }
 
   Widget _scrollableTab({required Key key, required Widget child}) {
@@ -568,6 +650,258 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
         );
   }
 
+  Future<void> _pickPackPrice(BuildContext context, AppState state) async {
+    final initialText = state.settings.packPrice <= 0
+        ? ''
+        : state.settings.packPrice.toStringAsFixed(
+            state.settings.packPrice % 1 == 0 ? 0 : 2,
+          );
+
+    final raw = await _showCostValueInputSheet(
+      context: context,
+      title: '갑당 가격',
+      hintText: '예: 4500',
+      helperText:
+          '${AppDefaults.minPackPrice.toInt()} ~ ${AppDefaults.maxPackPrice.toInt()} 범위',
+      initialText: initialText,
+      inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9.]'))],
+      validator: (value) {
+        final parsed = double.tryParse(value);
+        if (parsed == null) {
+          return '숫자만 입력해주세요.';
+        }
+        if (parsed <= 0) {
+          return '0보다 큰 값을 입력해주세요.';
+        }
+        if (parsed < AppDefaults.minPackPrice ||
+            parsed > AppDefaults.maxPackPrice) {
+          return '허용 범위를 벗어났습니다.';
+        }
+        return null;
+      },
+    );
+
+    if (raw == null || !context.mounted) {
+      return;
+    }
+    final parsed = double.parse(raw);
+    await ref.read(appControllerProvider.notifier).setPackPrice(parsed);
+  }
+
+  Future<void> _pickCigarettesPerPack(
+    BuildContext context,
+    AppState state,
+  ) async {
+    final raw = await _showCostValueInputSheet(
+      context: context,
+      title: '한 갑 개비 수',
+      hintText: '예: 20',
+      helperText:
+          '${AppDefaults.minCigarettesPerPack} ~ ${AppDefaults.maxCigarettesPerPack} 범위',
+      initialText: state.settings.cigarettesPerPack.toString(),
+      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+      validator: (value) {
+        final parsed = int.tryParse(value);
+        if (parsed == null) {
+          return '정수를 입력해주세요.';
+        }
+        if (parsed <= 0) {
+          return '0보다 큰 값을 입력해주세요.';
+        }
+        if (parsed < AppDefaults.minCigarettesPerPack ||
+            parsed > AppDefaults.maxCigarettesPerPack) {
+          return '허용 범위를 벗어났습니다.';
+        }
+        return null;
+      },
+    );
+
+    if (raw == null || !context.mounted) {
+      return;
+    }
+    final parsed = int.parse(raw);
+    await ref.read(appControllerProvider.notifier).setCigarettesPerPack(parsed);
+  }
+
+  Future<void> _pickCurrencyCode(BuildContext context, AppState state) async {
+    final picked = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      useSafeArea: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.fromLTRB(12, 8, 12, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 12),
+                child: Text(
+                  '통화',
+                  style: TextStyle(
+                    color: Color(0xFF111827),
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              ...AppDefaults.currencyCodeOptions.map((code) {
+                final symbol = CostStatsService.resolveCurrencySymbol(code);
+                final selected = state.settings.currencyCode == code;
+                return ListTile(
+                  dense: true,
+                  title: Text('$code ($symbol)'),
+                  trailing: selected
+                      ? const Icon(
+                          Icons.check_rounded,
+                          size: 18,
+                          color: Color(0xFF2563EB),
+                        )
+                      : null,
+                  onTap: () => Navigator.of(context).pop(code),
+                );
+              }),
+            ],
+          ),
+        );
+      },
+    );
+
+    if (picked == null || picked == state.settings.currencyCode || !mounted) {
+      return;
+    }
+    await ref.read(appControllerProvider.notifier).setCurrencyCode(picked);
+  }
+
+  Future<String?> _showCostValueInputSheet({
+    required BuildContext context,
+    required String title,
+    required String hintText,
+    required String helperText,
+    required String initialText,
+    required List<TextInputFormatter> inputFormatters,
+    required String? Function(String value) validator,
+  }) async {
+    final controller = TextEditingController(text: initialText);
+    String? errorText;
+
+    final value = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      useSafeArea: true,
+      isScrollControlled: true,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return Padding(
+          padding: EdgeInsets.fromLTRB(
+            24,
+            12,
+            24,
+            24 + MediaQuery.of(context).viewInsets.bottom,
+          ),
+          child: StatefulBuilder(
+            builder: (context, setModalState) {
+              return SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        color: Color(0xFF111827),
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      helperText,
+                      style: const TextStyle(
+                        color: Color(0xFF64748B),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      key: const Key('cost_input_field'),
+                      controller: controller,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      inputFormatters: inputFormatters,
+                      decoration: InputDecoration(
+                        hintText: hintText,
+                        errorText: errorText,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: const BorderSide(
+                            color: Color(0xFF2563EB),
+                          ),
+                        ),
+                      ),
+                      onChanged: (_) {
+                        if (errorText != null) {
+                          setModalState(() {
+                            errorText = null;
+                          });
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    PrimaryButton(
+                      key: const Key('cost_apply_button'),
+                      text: '적용',
+                      onTap: () {
+                        final raw = controller.text.trim().replaceAll(',', '');
+                        final validationMessage = validator(raw);
+                        if (validationMessage != null) {
+                          setModalState(() {
+                            errorText = validationMessage;
+                          });
+                          return;
+                        }
+                        Navigator.of(context).pop(raw);
+                      },
+                    ),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      width: double.infinity,
+                      child: TextButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: const Text(
+                          '취소',
+                          style: TextStyle(
+                            color: Color(0xFF64748B),
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
+    return value;
+  }
+
   Future<void> _confirmReset(BuildContext context) async {
     final shouldReset = await showDialog<bool>(
       context: context,
@@ -605,9 +939,14 @@ class _HomeCard extends StatelessWidget {
     required this.ringProgress,
     required this.todayCount,
     required this.nextAlertText,
+    required this.isCostConfigured,
+    required this.todaySpendText,
+    required this.monthSpendText,
+    required this.lifetimeSpendText,
     required this.onAddRecord,
     required this.onUndoRecord,
     required this.onOpenAlertSettings,
+    required this.onOpenPricingSettings,
   });
 
   final bool hasRingBaseTime;
@@ -616,9 +955,14 @@ class _HomeCard extends StatelessWidget {
   final double ringProgress;
   final int todayCount;
   final String nextAlertText;
+  final bool isCostConfigured;
+  final String todaySpendText;
+  final String monthSpendText;
+  final String lifetimeSpendText;
   final Future<void> Function() onAddRecord;
   final Future<void> Function() onUndoRecord;
   final Future<void> Function() onOpenAlertSettings;
+  final Future<void> Function() onOpenPricingSettings;
 
   @override
   Widget build(BuildContext context) {
@@ -800,6 +1144,89 @@ class _HomeCard extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 16),
+        SurfaceCard(
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                '지출 요약',
+                style: TextStyle(
+                  color: Color(0xFF374151),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 10),
+              if (!isCostConfigured) ...[
+                const Text(
+                  '가격 정보를 설정하면 지출을 계산할 수 있어요.',
+                  key: Key('cost_empty_state_text'),
+                  style: TextStyle(
+                    color: Color(0xFF64748B),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: GestureDetector(
+                    key: const Key('set_pricing_cta'),
+                    onTap: () async {
+                      await onOpenPricingSettings();
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEEF2FF),
+                        borderRadius: BorderRadius.circular(9),
+                        border: Border.all(color: const Color(0xFFC7D2FE)),
+                      ),
+                      child: const Text(
+                        '가격 설정',
+                        style: TextStyle(
+                          color: Color(0xFF1D4ED8),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ] else ...[
+                Row(
+                  children: [
+                    Expanded(
+                      child: _SpendMetric(
+                        label: '오늘 지출',
+                        value: todaySpendText,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _SpendMetric(
+                        label: '이번 달 지출',
+                        value: monthSpendText,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _SpendMetric(
+                        label: '누적 지출',
+                        value: lifetimeSpendText,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
         Text(
           nextAlertText,
           style: const TextStyle(
@@ -855,6 +1282,48 @@ class _ActionButton extends StatelessWidget {
   }
 }
 
+class _SpendMetric extends StatelessWidget {
+  const _SpendMetric({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return SurfaceCard(
+      cornerRadius: 10,
+      strokeColor: const Color(0xFFE5E7EB),
+      padding: const EdgeInsets.fromLTRB(8, 8, 8, 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: Color(0xFF6B7280),
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: Color(0xFF111827),
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _RecordCard extends StatelessWidget {
   const _RecordCard({
     required this.period,
@@ -863,7 +1332,11 @@ class _RecordCard extends StatelessWidget {
     required this.averageIntervalText,
     required this.maxIntervalText,
     required this.use24Hour,
+    required this.isCostConfigured,
+    required this.periodSpendText,
+    required this.averageDailySpendText,
     required this.onPeriodChanged,
+    required this.onOpenPricingSettings,
   });
 
   final RecordPeriod period;
@@ -872,7 +1345,11 @@ class _RecordCard extends StatelessWidget {
   final String averageIntervalText;
   final String maxIntervalText;
   final bool use24Hour;
+  final bool isCostConfigured;
+  final String periodSpendText;
+  final String averageDailySpendText;
   final ValueChanged<RecordPeriod> onPeriodChanged;
+  final Future<void> Function() onOpenPricingSettings;
 
   @override
   Widget build(BuildContext context) {
@@ -945,6 +1422,90 @@ class _RecordCard extends StatelessWidget {
               ),
             ),
           ],
+        ),
+        const SizedBox(height: 16),
+        SurfaceCard(
+          padding: const EdgeInsets.all(12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                '비용 인사이트',
+                style: TextStyle(
+                  color: Color(0xFF374151),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(height: 10),
+              if (!isCostConfigured) ...[
+                const Text(
+                  '가격 정보를 설정하면 지출 통계를 볼 수 있어요.',
+                  style: TextStyle(
+                    color: Color(0xFF64748B),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: GestureDetector(
+                    onTap: () async {
+                      await onOpenPricingSettings();
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEEF2FF),
+                        borderRadius: BorderRadius.circular(9),
+                        border: Border.all(color: const Color(0xFFC7D2FE)),
+                      ),
+                      child: const Text(
+                        '가격 설정',
+                        style: TextStyle(
+                          color: Color(0xFF1D4ED8),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ] else ...[
+                Row(
+                  children: [
+                    Expanded(
+                      child: _SummaryItem(
+                        label: '흡연 개비',
+                        value: '$totalCount',
+                        valueFontSize: 18,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _SummaryItem(
+                        label: '예상 지출',
+                        value: periodSpendText,
+                        valueFontSize: 16,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _SummaryItem(
+                        label: '일 평균',
+                        value: averageDailySpendText,
+                        valueFontSize: 16,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ],
+          ),
         ),
         const SizedBox(height: 16),
         SurfaceCard(
@@ -1368,11 +1929,18 @@ class _SettingsCard extends StatelessWidget {
     required this.vibrationEnabled,
     required this.soundTypeLabel,
     required this.alertSummary,
+    required this.isCostConfigured,
+    required this.packPriceText,
+    required this.cigarettesPerPack,
+    required this.currencyLabel,
     required this.onToggle24Hour,
     required this.onCycleRingReference,
     required this.onToggleVibration,
     required this.onCycleSoundType,
     required this.onOpenAlertSettings,
+    required this.onEditPackPrice,
+    required this.onEditCigarettesPerPack,
+    required this.onEditCurrency,
     required this.onResetData,
   });
 
@@ -1381,11 +1949,18 @@ class _SettingsCard extends StatelessWidget {
   final bool vibrationEnabled;
   final String soundTypeLabel;
   final String alertSummary;
+  final bool isCostConfigured;
+  final String packPriceText;
+  final int cigarettesPerPack;
+  final String currencyLabel;
   final Future<void> Function() onToggle24Hour;
   final Future<void> Function() onCycleRingReference;
   final Future<void> Function() onToggleVibration;
   final Future<void> Function() onCycleSoundType;
   final Future<void> Function() onOpenAlertSettings;
+  final Future<void> Function() onEditPackPrice;
+  final Future<void> Function() onEditCigarettesPerPack;
+  final Future<void> Function() onEditCurrency;
   final Future<void> Function() onResetData;
 
   @override
@@ -1415,6 +1990,79 @@ class _SettingsCard extends StatelessWidget {
             value: alertSummary,
             showChevron: true,
             onTap: onOpenAlertSettings,
+          ),
+        ),
+        const SizedBox(height: 16),
+        SurfaceCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _SettingRow(
+                rowKey: const Key('cost_pack_price_row'),
+                height: 52,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
+                label: '갑당 가격',
+                labelStyle: const TextStyle(
+                  color: Color(0xFF374151),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+                value: packPriceText,
+                showChevron: true,
+                onTap: onEditPackPrice,
+              ),
+              _SettingRow(
+                rowKey: const Key('cost_cigarettes_per_pack_row'),
+                height: 52,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
+                label: '한 갑 개비 수',
+                labelStyle: const TextStyle(
+                  color: Color(0xFF374151),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+                value: '${cigarettesPerPack.toString()}개비',
+                withTopBorder: true,
+                showChevron: true,
+                onTap: onEditCigarettesPerPack,
+              ),
+              _SettingRow(
+                rowKey: const Key('cost_currency_row'),
+                height: 52,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
+                label: '통화',
+                labelStyle: const TextStyle(
+                  color: Color(0xFF374151),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+                value: currencyLabel,
+                withTopBorder: true,
+                showChevron: true,
+                onTap: onEditCurrency,
+              ),
+              if (!isCostConfigured)
+                const Padding(
+                  padding: EdgeInsets.fromLTRB(14, 4, 14, 12),
+                  child: Text(
+                    '가격 정보를 설정하면 지출을 계산할 수 있어요.',
+                    style: TextStyle(
+                      color: Color(0xFF6B7280),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+            ],
           ),
         ),
         const SizedBox(height: 16),
@@ -1510,6 +2158,7 @@ class _SettingsCard extends StatelessWidget {
 
 class _SettingRow extends StatelessWidget {
   const _SettingRow({
+    this.rowKey,
     required this.height,
     required this.padding,
     required this.label,
@@ -1521,6 +2170,7 @@ class _SettingRow extends StatelessWidget {
     this.onTap,
   });
 
+  final Key? rowKey;
   final double height;
   final EdgeInsetsGeometry padding;
   final String label;
@@ -1538,6 +2188,7 @@ class _SettingRow extends StatelessWidget {
         : <Widget>[trailing!];
 
     final content = Container(
+      key: rowKey,
       height: height,
       padding: padding,
       decoration: BoxDecoration(

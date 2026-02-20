@@ -18,6 +18,10 @@ void main() {
       ringReference: RingReference.lastSmoking,
       vibrationEnabled: true,
       soundType: 'default',
+      packPrice: 4500,
+      cigarettesPerPack: 20,
+      currencyCode: 'KRW',
+      currencySymbol: '₩',
     );
 
     test('buildUpcomingAlerts returns interval-based next notifications', () {

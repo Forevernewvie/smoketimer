@@ -10,6 +10,7 @@ import '../../domain/models/record_period.dart';
 import '../../domain/models/smoking_record.dart';
 import '../../domain/models/user_settings.dart';
 import '../../services/alert_scheduler.dart';
+import '../../services/cost_stats_service.dart';
 import '../../services/notification_service.dart';
 import '../../services/smoking_stats_service.dart';
 import 'app_config.dart';
@@ -300,6 +301,47 @@ class AppController extends StateNotifier<AppState> {
     final updated = state.settings.copyWith(soundType: next);
 
     await _updateSettings(updated);
+  }
+
+  Future<void> setPackPrice(double packPrice) async {
+    final normalized = CostStatsService.normalizePackPrice(packPrice);
+    if (normalized == state.settings.packPrice) {
+      return;
+    }
+
+    final updated = state.settings.copyWith(packPrice: normalized);
+    await _updateSettings(updated, reschedule: false);
+  }
+
+  Future<void> setCigarettesPerPack(int cigarettesPerPack) async {
+    final normalized = CostStatsService.normalizeCigarettesPerPack(
+      cigarettesPerPack,
+    );
+    if (normalized == state.settings.cigarettesPerPack) {
+      return;
+    }
+
+    final updated = state.settings.copyWith(cigarettesPerPack: normalized);
+    await _updateSettings(updated, reschedule: false);
+  }
+
+  Future<void> setCurrencyCode(String currencyCode) async {
+    final normalized = currencyCode.trim().toUpperCase();
+    final nextCode = normalized.isEmpty
+        ? AppDefaults.defaultCurrencyCode
+        : normalized;
+    final nextSymbol = CostStatsService.resolveCurrencySymbol(nextCode);
+
+    if (nextCode == state.settings.currencyCode &&
+        nextSymbol == state.settings.currencySymbol) {
+      return;
+    }
+
+    final updated = state.settings.copyWith(
+      currencyCode: nextCode,
+      currencySymbol: nextSymbol,
+    );
+    await _updateSettings(updated, reschedule: false);
   }
 
   Future<void> resetAllData() async {

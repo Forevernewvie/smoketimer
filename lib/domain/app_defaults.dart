@@ -30,6 +30,19 @@ class AppDefaults {
   static const List<int> preAlertOptions = [0, 5, 10, 15];
   static const List<String> soundTypeOptions = ['default', 'silent'];
 
+  /// Cost tracking policy:
+  /// - `packPrice` is interpreted as local currency amount for one pack.
+  /// - Current product policy recomputes historical spend using current price.
+  static const double defaultPackPrice = 0;
+  static const double minPackPrice = 100;
+  static const double maxPackPrice = 200000;
+  static const int defaultCigarettesPerPack = 20;
+  static const int minCigarettesPerPack = 1;
+  static const int maxCigarettesPerPack = 60;
+  static const String defaultCurrencyCode = 'KRW';
+  static const String defaultCurrencySymbol = '₩';
+  static const List<String> currencyCodeOptions = ['KRW', 'USD', 'JPY', 'EUR'];
+
   static UserSettings defaultSettings() {
     return const UserSettings(
       intervalMinutes: intervalMinutes,
@@ -42,6 +55,10 @@ class AppDefaults {
       ringReference: RingReference.lastSmoking,
       vibrationEnabled: true,
       soundType: 'default',
+      packPrice: defaultPackPrice,
+      cigarettesPerPack: defaultCigarettesPerPack,
+      currencyCode: defaultCurrencyCode,
+      currencySymbol: defaultCurrencySymbol,
     );
   }
 
