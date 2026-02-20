@@ -919,35 +919,32 @@ class _RecordCard extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 16),
-        SizedBox(
-          height: 90,
-          child: Row(
-            children: [
-              Expanded(
-                child: _SummaryItem(
-                  label: '총 개비',
-                  value: '$totalCount',
-                  valueFontSize: 24,
-                ),
+        Row(
+          children: [
+            Expanded(
+              child: _SummaryItem(
+                label: '총 개비',
+                value: '$totalCount',
+                valueFontSize: 24,
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _SummaryItem(
-                  label: '평균 간격',
-                  value: averageIntervalText,
-                  valueFontSize: 20,
-                ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _SummaryItem(
+                label: '평균 간격',
+                value: averageIntervalText,
+                valueFontSize: 20,
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _SummaryItem(
-                  label: '최장 간격',
-                  value: maxIntervalText,
-                  valueFontSize: 20,
-                ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: _SummaryItem(
+                label: '최장 간격',
+                value: maxIntervalText,
+                valueFontSize: 20,
               ),
-            ],
-          ),
+            ),
+          ],
         ),
         const SizedBox(height: 16),
         SurfaceCard(
@@ -1013,30 +1010,32 @@ class _SummaryItem extends StatelessWidget {
       cornerRadius: 12,
       strokeColor: const Color(0xFFE5E7EB),
       padding: const EdgeInsets.all(10),
-      child: SizedBox(
-        height: 84,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              label,
-              style: const TextStyle(
-                color: Color(0xFF6B7280),
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-              ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              color: Color(0xFF6B7280),
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
             ),
-            const SizedBox(height: 4),
-            Text(
-              value,
-              style: TextStyle(
-                color: const Color(0xFF111827),
-                fontSize: valueFontSize,
-                fontWeight: FontWeight.w700,
-              ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: const Color(0xFF111827),
+              fontSize: valueFontSize,
+              fontWeight: FontWeight.w700,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -1548,15 +1547,27 @@ class _SettingRow extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Expanded(child: Text(label, style: labelStyle)),
+          Expanded(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: labelStyle,
+            ),
+          ),
           if (value != null)
-            Text(
-              value!,
-              textAlign: TextAlign.right,
-              style: const TextStyle(
-                color: Color(0xFF111827),
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
+            Flexible(
+              fit: FlexFit.loose,
+              child: Text(
+                value!,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.right,
+                style: const TextStyle(
+                  color: Color(0xFF111827),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           if (value != null && showChevron) const SizedBox(width: 8),
