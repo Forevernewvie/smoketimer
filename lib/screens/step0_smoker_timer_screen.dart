@@ -70,6 +70,11 @@ class _Step0SmokerTimerScreenState
                     index: 0,
                     title: '경과 시간을 한눈에',
                     description: '마지막 기록 시점부터 자동으로 카운트됩니다.',
+                    features: const [
+                      '빠른 기록(+1) / 되돌리기',
+                      '다음 흡연까지 남은 시간 확인',
+                      '오늘 페이스를 직관적으로 확인',
+                    ],
                     buttonText: '다음',
                     onButtonTap: _next,
                     onSkipTap: _skip,
@@ -78,8 +83,13 @@ class _Step0SmokerTimerScreenState
                   ),
                   _OnboardingPage(
                     index: 1,
-                    title: '흡연 기록을 숫자로 확인',
+                    title: '기록을 흐름으로 파악',
                     description: '하루 흡연 횟수와 시간대를 자동으로 정리합니다.',
+                    features: const [
+                      '오늘/주간/월간 탭 전환',
+                      '총 개비 · 평균 간격 · 최장 간격',
+                      '최근 기록 최대 20건 확인',
+                    ],
                     buttonText: '다음',
                     onButtonTap: _next,
                     onSkipTap: _skip,
@@ -90,6 +100,11 @@ class _Step0SmokerTimerScreenState
                     index: 2,
                     title: '알림 간격을 내 루틴에 맞게',
                     description: '다음 흡연 알림 시간을 자유롭게 설정하세요.',
+                    features: const [
+                      '반복 간격(30분~4시간) 설정',
+                      '요일/허용 시간대 커스터마이즈',
+                      '테스트 알림으로 즉시 확인',
+                    ],
                     buttonText: '시작하기',
                     onButtonTap: _next,
                     onSkipTap: _skip,
@@ -111,6 +126,7 @@ class _OnboardingPage extends StatelessWidget {
     required this.index,
     required this.title,
     required this.description,
+    required this.features,
     required this.buttonText,
     required this.onButtonTap,
     required this.onSkipTap,
@@ -121,6 +137,7 @@ class _OnboardingPage extends StatelessWidget {
   final int index;
   final String title;
   final String description;
+  final List<String> features;
   final String buttonText;
   final VoidCallback onButtonTap;
   final VoidCallback onSkipTap;
@@ -134,6 +151,15 @@ class _OnboardingPage extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final compact = constraints.maxHeight < 730 || textScale > 1.25;
+        final baseTitleSize = constraints.maxWidth < 360 ? 34.0 : 36.0;
+        final scaledTitleSize =
+            baseTitleSize / textScale.clamp(1.0, 1.35).toDouble();
+        final titleSize = scaledTitleSize.clamp(24.0, 36.0).toDouble();
+        final accentColor = switch (index) {
+          0 => const Color(0xFF1D4ED8),
+          1 => SmokeUiPalette.accentDark,
+          _ => SmokeUiPalette.mint,
+        };
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -180,7 +206,7 @@ class _OnboardingPage extends StatelessWidget {
                       style: TextStyle(
                         color: ui.textPrimary,
                         fontFamily: 'Sora',
-                        fontSize: 40 / textScale.clamp(1.0, 1.4).toDouble(),
+                        fontSize: titleSize,
                         height: 1.05,
                         fontWeight: FontWeight.w700,
                       ),
@@ -196,36 +222,61 @@ class _OnboardingPage extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    SurfaceCard(
-                      padding: const EdgeInsets.all(14),
-                      cornerRadius: 16,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '• 빠른 기록(+1) / 되돌리기',
-                            style: TextStyle(
-                              color: ui.textSecondary,
-                              fontSize: 12,
+                    SizedBox(
+                      width: double.infinity,
+                      child: SurfaceCard(
+                        padding: const EdgeInsets.all(14),
+                        cornerRadius: 16,
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: List.generate(features.length, (
+                                  featureIndex,
+                                ) {
+                                  return Padding(
+                                    padding: EdgeInsets.only(
+                                      bottom:
+                                          featureIndex == features.length - 1
+                                          ? 0
+                                          : 8,
+                                    ),
+                                    child: Text(
+                                      '• ${features[featureIndex]}',
+                                      style: TextStyle(
+                                        color: ui.textSecondary,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  );
+                                }),
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            '• 기간별 기록 통계',
-                            style: TextStyle(
-                              color: ui.textSecondary,
-                              fontSize: 12,
+                            const SizedBox(width: 12),
+                            Container(
+                              width: 34,
+                              height: 34,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: accentColor.withValues(alpha: 0.24),
+                                border: Border.all(
+                                  color: accentColor.withValues(alpha: 0.55),
+                                  width: 1.5,
+                                ),
+                              ),
+                              child: Icon(
+                                index == 2
+                                    ? Icons.notifications_active_rounded
+                                    : Icons.radio_button_checked_rounded,
+                                size: 16,
+                                color: accentColor,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            '• 로컬 알림 스케줄',
-                            style: TextStyle(
-                              color: ui.textSecondary,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ],
@@ -288,6 +339,9 @@ class _RingHero extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ui = SmokeUiTheme.of(context);
+    final centerFill = Theme.of(context).brightness == Brightness.dark
+        ? const Color(0xFF0F1318)
+        : const Color(0xFF121417);
     return SurfaceCard(
       padding: const EdgeInsets.all(16),
       strokeColor: ui.border,
@@ -295,23 +349,64 @@ class _RingHero extends StatelessWidget {
       child: SizedBox(
         height: 160,
         child: Center(
-          child: RingGauge(
-            size: 160,
-            strokeWidth: 10,
-            trackColor: ui.ringTrack,
-            sweepAngle: 4.6,
-            value: '42',
-            label: '분 경과',
-            valueStyle: TextStyle(
-              color: ui.textPrimary,
-              fontFamily: 'Sora',
-              fontSize: 44,
-              fontWeight: FontWeight.w700,
-            ),
-            labelStyle: TextStyle(
-              color: ui.textSecondary,
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
+          child: SizedBox(
+            width: 116,
+            height: 116,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                RingGauge(
+                  size: 116,
+                  strokeWidth: 8,
+                  trackColor: ui.ringTrack,
+                  sweepAngle: 4.95,
+                  value: ' ',
+                  label: ' ',
+                  valueStyle: const TextStyle(
+                    color: Colors.transparent,
+                    fontSize: 1,
+                  ),
+                  labelStyle: const TextStyle(
+                    color: Colors.transparent,
+                    fontSize: 1,
+                  ),
+                ),
+                Container(
+                  width: 74,
+                  height: 74,
+                  decoration: BoxDecoration(
+                    color: centerFill,
+                    shape: BoxShape.circle,
+                  ),
+                  alignment: Alignment.center,
+                  child: const FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          '42',
+                          style: TextStyle(
+                            color: Color(0xFFF8FAFC),
+                            fontFamily: 'Sora',
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        SizedBox(height: 2),
+                        Text(
+                          '분 경과',
+                          style: TextStyle(
+                            color: Color(0xFFD0D7E2),
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -336,34 +431,42 @@ class _BarHero extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '오늘 평균 간격',
+              '최근 패턴 요약',
               style: TextStyle(
                 color: ui.textPrimary,
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 10),
             Expanded(
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: const [
-                  _BarChartPillar(height: 72, color: Color(0xFFFFD8B8)),
-                  _BarChartPillar(height: 102, color: Color(0xFFFFB67E)),
-                  _BarChartPillar(height: 58, color: Color(0xFFFFE4CE)),
-                  _BarChartPillar(height: 124, color: SmokeUiPalette.accent),
-                  _BarChartPillar(height: 84, color: SmokeUiPalette.mint),
+                  _BarChartPillar(height: 62, color: Color(0xFFFFD8B8)),
+                  _BarChartPillar(height: 94, color: Color(0xFFFFB67E)),
+                  _BarChartPillar(height: 52, color: Color(0xFFFFE4CE)),
+                  _BarChartPillar(height: 112, color: SmokeUiPalette.accent),
+                  _BarChartPillar(height: 74, color: SmokeUiPalette.mint),
                 ],
               ),
             ),
-            const SizedBox(height: 12),
-            const Text(
-              '최근 7일 대비 +18분',
-              style: TextStyle(
-                color: Color(0xFF5A6472),
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: ui.surfaceAlt,
+                borderRadius: BorderRadius.circular(999),
+                border: Border.all(color: ui.border),
+              ),
+              child: Text(
+                '최근 7일 대비 +18분',
+                style: TextStyle(
+                  color: ui.textSecondary,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ],
@@ -387,43 +490,104 @@ class _SummaryHero extends StatelessWidget {
         width: double.infinity,
         height: 160,
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(
-              width: 84,
-              height: 84,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: SmokeUiPalette.accentSoft,
-                  shape: BoxShape.circle,
+            Row(
+              children: [
+                Container(
+                  width: 34,
+                  height: 34,
+                  decoration: BoxDecoration(
+                    color: SmokeUiPalette.accentSoft,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.notifications_active_rounded,
+                    size: 18,
+                    color: SmokeUiPalette.accentDark,
+                  ),
                 ),
-                child: Icon(
-                  Icons.schedule_rounded,
-                  size: 30,
-                  color: SmokeUiPalette.accentDark,
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    '다음 알림 00:28:10',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: ui.textPrimary,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+              decoration: BoxDecoration(
+                color: ui.surfaceAlt,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: ui.border),
+              ),
+              child: Text(
+                '허용 시간대 06:00 ~ 23:30',
+                style: TextStyle(
+                  color: ui.textSecondary,
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ),
-            SizedBox(height: 12),
-            Text(
-              '오늘 누적 3회 기록',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: ui.textPrimary,
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            SizedBox(height: 12),
-            Text(
-              '최근 기록: 오전 09:40',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: ui.textSecondary,
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-              ),
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: ui.surfaceAlt,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: ui.border),
+                    ),
+                    child: Text(
+                      '반복 요일: 월~금',
+                      style: TextStyle(
+                        color: ui.textSecondary,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: ui.surfaceAlt,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: ui.border),
+                    ),
+                    child: Text(
+                      '미리 알림 5분 전',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: ui.textSecondary,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -441,7 +605,7 @@ class _BarChartPillar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 36,
+      width: 30,
       height: height,
       decoration: BoxDecoration(
         color: color,
