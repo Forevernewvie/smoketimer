@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:smoke_timer/main.dart';
+import 'package:smoke_timer/presentation/state/ads_providers.dart';
 import 'package:smoke_timer/presentation/state/app_config.dart';
 import 'package:smoke_timer/presentation/state/app_providers.dart';
+import 'package:smoke_timer/services/ads/ad_service.dart';
 import 'package:smoke_timer/services/notification_service.dart';
 
 void setTestViewport(
@@ -22,6 +25,7 @@ ProviderContainer createTestContainer({
   required SharedPreferences prefs,
   required DateTime Function() now,
   NotificationService? notificationService,
+  AdService? adService,
   bool autoDispose = true,
   AppConfig config = const AppConfig(
     splashDuration: Duration.zero,
@@ -34,6 +38,7 @@ ProviderContainer createTestContainer({
       notificationServiceProvider.overrideWithValue(
         notificationService ?? NoopNotificationService(),
       ),
+      adServiceProvider.overrideWithValue(adService ?? NoopAdService()),
       appConfigProvider.overrideWithValue(config),
       nowProvider.overrideWithValue(now),
     ],
@@ -100,5 +105,39 @@ class CapturingNotificationService implements NotificationService {
       'vibrationEnabled': vibrationEnabled,
       'soundType': soundType,
     });
+  }
+}
+
+class TestAdService implements AdService {
+  TestAdService({
+    BannerAdState initialState = const BannerAdState(
+      status: AdBannerStatus.idle,
+    ),
+  }) : _state = ValueNotifier<BannerAdState>(initialState);
+
+  final ValueNotifier<BannerAdState> _state;
+  int loadCalls = 0;
+  int disposeBannerCalls = 0;
+
+  @override
+  ValueListenable<BannerAdState> get bannerState => _state;
+
+  @override
+  void loadMainBanner() {
+    loadCalls += 1;
+  }
+
+  @override
+  void disposeBanner() {
+    disposeBannerCalls += 1;
+  }
+
+  @override
+  void disposeService() {
+    _state.dispose();
+  }
+
+  void setState(BannerAdState state) {
+    _state.value = state;
   }
 }

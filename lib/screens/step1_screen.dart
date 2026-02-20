@@ -6,11 +6,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../domain/app_defaults.dart';
 import '../domain/models/record_period.dart';
 import '../domain/models/smoking_record.dart';
+import '../presentation/state/ads_providers.dart';
 import '../presentation/state/app_providers.dart';
 import '../presentation/state/app_state.dart';
+import '../services/ads/ad_service.dart';
 import '../services/smoking_stats_service.dart';
 import '../services/time_formatter.dart';
 import '../widgets/allowed_time_window_sheet.dart';
+import '../widgets/main_banner_ad_slot.dart';
 import '../widgets/pen_design_widgets.dart';
 
 class Step1Screen extends ConsumerStatefulWidget {
@@ -34,9 +37,25 @@ class Step1Screen extends ConsumerStatefulWidget {
 
 class _Step1ScreenState extends ConsumerState<Step1Screen> {
   int _tabIndex = 0;
+  late final AdService _adService;
 
   static const _pagePadding = EdgeInsets.fromLTRB(24, 24, 24, 24);
   static const _maxContentWidth = 520.0;
+
+  /// Initializes tab-level dependencies and starts banner loading.
+  @override
+  void initState() {
+    super.initState();
+    _adService = ref.read(adServiceProvider);
+    _adService.loadMainBanner();
+  }
+
+  /// Releases ad resources when the main shell is removed.
+  @override
+  void dispose() {
+    _adService.disposeBanner();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -168,26 +187,32 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
           ],
         ),
       ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _tabIndex,
-        onDestinationSelected: (value) {
-          setState(() => _tabIndex = value);
-        },
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.timer_outlined),
-            selectedIcon: Icon(Icons.timer_rounded),
-            label: 'Home',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.receipt_long_outlined),
-            selectedIcon: Icon(Icons.receipt_long_rounded),
-            label: 'Record',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.settings_outlined),
-            selectedIcon: Icon(Icons.settings_rounded),
-            label: 'Settings',
+      bottomNavigationBar: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          MainBannerAdSlot(adService: _adService),
+          NavigationBar(
+            selectedIndex: _tabIndex,
+            onDestinationSelected: (value) {
+              setState(() => _tabIndex = value);
+            },
+            destinations: const [
+              NavigationDestination(
+                icon: Icon(Icons.timer_outlined),
+                selectedIcon: Icon(Icons.timer_rounded),
+                label: 'Home',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.receipt_long_outlined),
+                selectedIcon: Icon(Icons.receipt_long_rounded),
+                label: 'Record',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.settings_outlined),
+                selectedIcon: Icon(Icons.settings_rounded),
+                label: 'Settings',
+              ),
+            ],
           ),
         ],
       ),

@@ -5,6 +5,9 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+val defaultAndroidTestAppId = "ca-app-pub-3940256099942544~3347511713"
+val androidAdmobAppId = System.getenv("ADMOB_ANDROID_APP_ID") ?: defaultAndroidTestAppId
+
 android {
     namespace = "com.example.smoke_timer"
     compileSdk = flutter.compileSdkVersion
@@ -30,6 +33,9 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+
+        // AdMob app ID is environment-driven for secure release configuration.
+        manifestPlaceholders["admobAppId"] = androidAdmobAppId
     }
 
     buildTypes {

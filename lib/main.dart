@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'presentation/state/app_providers.dart';
@@ -7,9 +8,22 @@ import 'presentation/state/app_state.dart';
 import 'screens/step0_smoker_timer_screen.dart';
 import 'screens/step0_splash_screen.dart';
 import 'screens/step1_screen.dart';
+import 'services/logging/app_logger.dart';
 
+/// Bootstraps dependencies and starts the root app widget.
 Future<void> main() async {
+  const logger = AppLogger(namespace: 'bootstrap');
+
   WidgetsFlutterBinding.ensureInitialized();
+  try {
+    await MobileAds.instance.initialize();
+  } catch (error, stackTrace) {
+    logger.error(
+      'MobileAds initialization failed. The app will continue without ads.',
+      error: error,
+      stackTrace: stackTrace,
+    );
+  }
   final sharedPreferences = await SharedPreferences.getInstance();
 
   runApp(
@@ -25,6 +39,7 @@ Future<void> main() async {
 class SmokeTimerApp extends ConsumerWidget {
   const SmokeTimerApp({super.key});
 
+  /// Builds app-level theme and route graph.
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return MaterialApp(
@@ -49,6 +64,7 @@ class SmokeTimerApp extends ConsumerWidget {
 class RootStageScreen extends ConsumerWidget {
   const RootStageScreen({super.key});
 
+  /// Selects the current app stage screen from centralized state.
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(appControllerProvider);
