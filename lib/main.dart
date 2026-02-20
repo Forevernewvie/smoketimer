@@ -43,10 +43,15 @@ class SmokeTimerApp extends ConsumerWidget {
   /// Builds app-level theme and route graph.
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final darkModeEnabled = ref.watch(
+      appControllerProvider.select((state) => state.settings.darkModeEnabled),
+    );
+    final themeMode = darkModeEnabled ? ThemeMode.dark : ThemeMode.light;
+
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Smoke Timer UI',
-      themeMode: ThemeMode.system,
+      themeMode: themeMode,
       theme: ThemeData(
         useMaterial3: true,
         brightness: Brightness.light,

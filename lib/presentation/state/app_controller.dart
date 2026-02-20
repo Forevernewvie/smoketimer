@@ -362,6 +362,14 @@ class AppController extends StateNotifier<AppState> {
     await _updateSettings(updated);
   }
 
+  /// Toggles explicit dark mode preference.
+  Future<void> toggleDarkMode() async {
+    final updated = state.settings.copyWith(
+      darkModeEnabled: !state.settings.darkModeEnabled,
+    );
+    await _updateSettings(updated, reschedule: false);
+  }
+
   /// Updates pack price for cost tracking calculations.
   Future<void> setPackPrice(double packPrice) async {
     final normalized = CostStatsService.normalizePackPrice(packPrice);

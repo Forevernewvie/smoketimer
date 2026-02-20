@@ -232,6 +232,7 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
             _scrollableTab(
               key: const PageStorageKey('tab_settings'),
               child: _SettingsCard(
+                darkModeEnabled: state.settings.darkModeEnabled,
                 use24Hour: state.settings.use24Hour,
                 ringReferenceLabel: state.settings.ringReferenceLabel,
                 vibrationEnabled: state.settings.vibrationEnabled,
@@ -249,6 +250,7 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
                 cigarettesPerPack: state.settings.cigarettesPerPack,
                 currencyLabel: state.settings.currencyLabel,
                 onToggle24Hour: controller.toggleUse24Hour,
+                onToggleDarkMode: controller.toggleDarkMode,
                 onCycleRingReference: controller.cycleRingReference,
                 onToggleVibration: controller.toggleVibration,
                 onCycleSoundType: controller.cycleSoundType,
@@ -2163,6 +2165,7 @@ class _AlertCard extends StatelessWidget {
 
 class _SettingsCard extends StatelessWidget {
   const _SettingsCard({
+    required this.darkModeEnabled,
     required this.use24Hour,
     required this.ringReferenceLabel,
     required this.vibrationEnabled,
@@ -2172,6 +2175,7 @@ class _SettingsCard extends StatelessWidget {
     required this.packPriceText,
     required this.cigarettesPerPack,
     required this.currencyLabel,
+    required this.onToggleDarkMode,
     required this.onToggle24Hour,
     required this.onCycleRingReference,
     required this.onToggleVibration,
@@ -2183,6 +2187,7 @@ class _SettingsCard extends StatelessWidget {
     required this.onResetData,
   });
 
+  final bool darkModeEnabled;
   final bool use24Hour;
   final String ringReferenceLabel;
   final bool vibrationEnabled;
@@ -2192,6 +2197,7 @@ class _SettingsCard extends StatelessWidget {
   final String packPriceText;
   final int cigarettesPerPack;
   final String currencyLabel;
+  final Future<void> Function() onToggleDarkMode;
   final Future<void> Function() onToggle24Hour;
   final Future<void> Function() onCycleRingReference;
   final Future<void> Function() onToggleVibration;
@@ -2324,6 +2330,22 @@ class _SettingsCard extends StatelessWidget {
                 ),
                 trailing: TogglePill(isOn: use24Hour),
                 onTap: onToggle24Hour,
+              ),
+              _SettingRow(
+                height: 52,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
+                label: '다크 모드',
+                labelStyle: TextStyle(
+                  color: ui.textSecondary,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+                withTopBorder: true,
+                trailing: TogglePill(isOn: darkModeEnabled),
+                onTap: onToggleDarkMode,
               ),
               _SettingRow(
                 height: 52,

@@ -75,6 +75,7 @@ class AppDefaults {
       cigarettesPerPack: defaultCigarettesPerPack,
       currencyCode: defaultCurrencyCode,
       currencySymbol: defaultCurrencySymbol,
+      darkModeEnabled: false,
     );
   }
 

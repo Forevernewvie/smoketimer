@@ -19,6 +19,7 @@ class UserSettings {
     required this.cigarettesPerPack,
     required this.currencyCode,
     required this.currencySymbol,
+    this.darkModeEnabled = false,
   });
 
   final int intervalMinutes;
@@ -35,6 +36,7 @@ class UserSettings {
   final int cigarettesPerPack;
   final String currencyCode;
   final String currencySymbol;
+  final bool darkModeEnabled;
 
   /// Returns a copied settings object with selected overrides.
   UserSettings copyWith({
@@ -52,6 +54,7 @@ class UserSettings {
     int? cigarettesPerPack,
     String? currencyCode,
     String? currencySymbol,
+    bool? darkModeEnabled,
     bool clearCurrencySymbol = false,
   }) {
     return UserSettings(
@@ -71,6 +74,7 @@ class UserSettings {
       currencySymbol: clearCurrencySymbol
           ? ''
           : (currencySymbol ?? this.currencySymbol),
+      darkModeEnabled: darkModeEnabled ?? this.darkModeEnabled,
     );
   }
 
@@ -91,6 +95,7 @@ class UserSettings {
       'cigarettesPerPack': cigarettesPerPack,
       'currencyCode': currencyCode,
       'currencySymbol': currencySymbol,
+      'darkModeEnabled': darkModeEnabled,
     };
   }
 
@@ -154,6 +159,10 @@ class UserSettings {
           (json['currencySymbol'] as String?) ??
           defaults?.currencySymbol ??
           AppDefaults.defaultCurrencySymbol,
+      darkModeEnabled:
+          (json['darkModeEnabled'] as bool?) ??
+          defaults?.darkModeEnabled ??
+          false,
     );
   }
 
