@@ -265,6 +265,20 @@ class AppController extends StateNotifier<AppState> {
     await _updateSettings(updated);
   }
 
+  /// Sets pre-alert minutes within policy range.
+  Future<void> setPreAlertMinutes(int minutes) async {
+    final normalized = minutes
+        .clamp(AppDefaults.minPreAlertMinutes, AppDefaults.maxPreAlertMinutes)
+        .toInt();
+
+    if (normalized == state.settings.preAlertMinutes) {
+      return;
+    }
+
+    final updated = state.settings.copyWith(preAlertMinutes: normalized);
+    await _updateSettings(updated);
+  }
+
   /// Updates allowed notification time window.
   Future<void> updateAllowedTimeWindow({
     required int startMinutes,

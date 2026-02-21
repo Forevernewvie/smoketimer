@@ -27,6 +27,7 @@ ProviderContainer createTestContainer({
   NotificationService? notificationService,
   AdService? adService,
   bool autoDispose = true,
+  Locale? locale = const Locale('ko'),
   AppConfig config = const AppConfig(
     splashDuration: Duration.zero,
     scheduleCount: 3,
@@ -40,6 +41,7 @@ ProviderContainer createTestContainer({
       ),
       adServiceProvider.overrideWithValue(adService ?? NoopAdService()),
       appConfigProvider.overrideWithValue(config),
+      appLocaleProvider.overrideWithValue(locale),
       nowProvider.overrideWithValue(now),
     ],
   );

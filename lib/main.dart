@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'l10n/app_localizations.dart';
 import 'presentation/state/app_providers.dart';
 import 'presentation/state/app_state.dart';
 import 'screens/step0_smoker_timer_screen.dart';
@@ -46,11 +48,23 @@ class SmokeTimerApp extends ConsumerWidget {
     final darkModeEnabled = ref.watch(
       appControllerProvider.select((state) => state.settings.darkModeEnabled),
     );
+    final localeOverride = ref.watch(appLocaleProvider);
     final themeMode = darkModeEnabled ? ThemeMode.dark : ThemeMode.light;
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Smoke Timer UI',
+      locale: localeOverride,
+      supportedLocales: AppLocalizations.supportedLocales,
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      localeResolutionCallback: (locale, supportedLocales) {
+        return AppLocalizations.resolve(locale);
+      },
       themeMode: themeMode,
       theme: ThemeData(
         useMaterial3: true,

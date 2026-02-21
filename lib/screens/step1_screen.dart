@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../domain/app_defaults.dart';
 import '../domain/models/record_period.dart';
 import '../domain/models/smoking_record.dart';
+import '../l10n/app_localizations.dart';
 import '../presentation/state/ads_providers.dart';
 import '../presentation/state/app_providers.dart';
 import '../presentation/state/app_state.dart';
@@ -447,8 +448,8 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
                                     onSelected: controller.setIntervalMinutes,
                                   );
                                 },
-                                onCyclePreAlert:
-                                    controller.cyclePreAlertMinutes,
+                                onSetPreAlertMinutes:
+                                    controller.setPreAlertMinutes,
                                 onPickRange: () =>
                                     _pickAllowedWindow(context, appState),
                                 onToggleWeekday: controller.toggleWeekday,
@@ -1935,7 +1936,7 @@ class _AlertCard extends StatelessWidget {
     required this.activeWeekdays,
     required this.onToggleRepeat,
     required this.onPickInterval,
-    required this.onCyclePreAlert,
+    required this.onSetPreAlertMinutes,
     required this.onPickRange,
     required this.onToggleWeekday,
     required this.onRequestPermission,
@@ -1950,7 +1951,7 @@ class _AlertCard extends StatelessWidget {
   final Set<int> activeWeekdays;
   final Future<void> Function() onToggleRepeat;
   final Future<void> Function() onPickInterval;
-  final Future<void> Function() onCyclePreAlert;
+  final Future<void> Function(int minutes) onSetPreAlertMinutes;
   final Future<void> Function() onPickRange;
   final Future<void> Function(int weekday) onToggleWeekday;
   final Future<void> Function() onRequestPermission;
@@ -2033,21 +2034,65 @@ class _AlertCard extends StatelessWidget {
                 showChevron: true,
                 onTap: onPickInterval,
               ),
-              _SettingRow(
-                height: 52,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 10,
+              Container(
+                decoration: BoxDecoration(
+                  border: Border(top: BorderSide(color: ui.border, width: 1)),
                 ),
-                label: '미리 알림',
-                labelStyle: TextStyle(
-                  color: ui.textSecondary,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
+                padding: const EdgeInsets.fromLTRB(14, 10, 14, 4),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            '미리 알림',
+                            style: TextStyle(
+                              color: ui.textSecondary,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                        Text(
+                          '${preAlertMinutes.toString()}분 전',
+                          style: TextStyle(
+                            color: ui.textPrimary,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                    SliderTheme(
+                      data: SliderTheme.of(context).copyWith(
+                        trackHeight: 3,
+                        activeTrackColor: SmokeUiPalette.accent,
+                        inactiveTrackColor: ui.border,
+                        thumbColor: SmokeUiPalette.accent,
+                        overlayColor: SmokeUiPalette.accent.withValues(
+                          alpha: 0.14,
+                        ),
+                      ),
+                      child: Slider(
+                        key: const Key('pre_alert_slider'),
+                        min: AppDefaults.minPreAlertMinutes.toDouble(),
+                        max: AppDefaults.maxPreAlertMinutes.toDouble(),
+                        divisions:
+                            AppDefaults.maxPreAlertMinutes -
+                            AppDefaults.minPreAlertMinutes,
+                        value: preAlertMinutes.toDouble().clamp(
+                          AppDefaults.minPreAlertMinutes.toDouble(),
+                          AppDefaults.maxPreAlertMinutes.toDouble(),
+                        ),
+                        label: '${preAlertMinutes.toString()}분',
+                        onChanged: (value) {
+                          onSetPreAlertMinutes(value.round());
+                        },
+                      ),
+                    ),
+                  ],
                 ),
-                value: '${preAlertMinutes.toString()}분 전',
-                withTopBorder: true,
-                onTap: onCyclePreAlert,
               ),
               _SettingRow(
                 height: 52,
@@ -2211,11 +2256,12 @@ class _SettingsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ui = SmokeUiTheme.of(context);
+    final l10n = context.l10n;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          '설정',
+          l10n.settingsTitle,
           style: TextStyle(
             color: ui.textPrimary,
             fontFamily: 'Sora',
@@ -2337,7 +2383,7 @@ class _SettingsCard extends StatelessWidget {
                   horizontal: 14,
                   vertical: 10,
                 ),
-                label: '다크 모드',
+                label: l10n.darkModeLabel,
                 labelStyle: TextStyle(
                   color: ui.textSecondary,
                   fontSize: 14,

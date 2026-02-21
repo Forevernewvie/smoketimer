@@ -44,6 +44,9 @@ class AppDefaults {
 
   static const List<int> intervalOptions = [30, 45, 60, 90];
   static const List<int> preAlertOptions = [0, 5, 10, 15];
+  static const int minPreAlertMinutes = 0;
+  static const int maxPreAlertMinutes = 15;
+  static const int preAlertStepMinutes = 1;
   static const List<String> soundTypeOptions = ['default', 'silent'];
 
   /// Cost tracking policy:
