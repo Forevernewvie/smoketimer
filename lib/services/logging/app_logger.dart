@@ -43,11 +43,11 @@ class AppLogger {
     StackTrace? stackTrace,
   }) {
     final buffer = StringBuffer('[$namespace][$level] $message');
-    if (error != null) {
+    if (error != null && !kReleaseMode) {
       buffer.write(' | error=$error');
     }
     debugPrint(buffer.toString());
-    if (stackTrace != null) {
+    if (stackTrace != null && !kReleaseMode) {
       debugPrintStack(stackTrace: stackTrace);
     }
   }

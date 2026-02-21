@@ -1,3 +1,6 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
@@ -7,6 +10,16 @@ plugins {
 
 val defaultAndroidTestAppId = "ca-app-pub-3940256099942544~3347511713"
 val androidAdmobAppId = System.getenv("ADMOB_ANDROID_APP_ID") ?: defaultAndroidTestAppId
+val keystoreProperties = Properties()
+val keystorePropertiesFile = rootProject.file("key.properties")
+if (keystorePropertiesFile.exists()) {
+    FileInputStream(keystorePropertiesFile).use { keystoreProperties.load(it) }
+}
+val hasReleaseSigning = keystorePropertiesFile.exists() &&
+    keystoreProperties.containsKey("storeFile") &&
+    keystoreProperties.containsKey("storePassword") &&
+    keystoreProperties.containsKey("keyAlias") &&
+    keystoreProperties.containsKey("keyPassword")
 
 android {
     namespace = "com.example.smoke_timer"
@@ -38,11 +51,23 @@ android {
         manifestPlaceholders["admobAppId"] = androidAdmobAppId
     }
 
+    signingConfigs {
+        if (hasReleaseSigning) {
+            create("release") {
+                storeFile = file(keystoreProperties.getProperty("storeFile"))
+                storePassword = keystoreProperties.getProperty("storePassword")
+                keyAlias = keystoreProperties.getProperty("keyAlias")
+                keyPassword = keystoreProperties.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            // Use explicit release signing only when key.properties is configured.
+            if (hasReleaseSigning) {
+                signingConfig = signingConfigs.getByName("release")
+            }
         }
     }
 }

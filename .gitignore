@@ -43,3 +43,17 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Environment and local secret files
+.env
+.env.*
+**/.env
+**/.env.*
+*.local
+
+# Mobile signing / secret config artifacts
+android/key.properties
+android/**/*.jks
+android/**/*.keystore
+ios/**/*.p12
+ios/**/*.mobileprovision
