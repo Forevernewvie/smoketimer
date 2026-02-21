@@ -1,5 +1,6 @@
 import java.io.FileInputStream
 import java.util.Properties
+import org.gradle.api.GradleException
 
 plugins {
     id("com.android.application")
@@ -8,8 +9,9 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+val productionApplicationId = "com.forevernewvie.smoketimer"
 val defaultAndroidTestAppId = "ca-app-pub-3940256099942544~3347511713"
-val androidAdmobAppId = System.getenv("ADMOB_ANDROID_APP_ID") ?: defaultAndroidTestAppId
+val androidAdmobAppIdEnv = System.getenv("ADMOB_ANDROID_APP_ID")?.trim().orEmpty()
 val keystoreProperties = Properties()
 val keystorePropertiesFile = rootProject.file("key.properties")
 if (keystorePropertiesFile.exists()) {
@@ -20,9 +22,28 @@ val hasReleaseSigning = keystorePropertiesFile.exists() &&
     keystoreProperties.containsKey("storePassword") &&
     keystoreProperties.containsKey("keyAlias") &&
     keystoreProperties.containsKey("keyPassword")
+val isReleaseTaskRequested = gradle.startParameter.taskNames.any {
+    it.contains("Release", ignoreCase = true)
+}
+
+if (isReleaseTaskRequested && !hasReleaseSigning) {
+    throw GradleException(
+        "Release signing is required. Configure android/key.properties from android/key.properties.example.",
+    )
+}
+
+if (isReleaseTaskRequested && androidAdmobAppIdEnv.isEmpty()) {
+    throw GradleException("ADMOB_ANDROID_APP_ID is required for release builds.")
+}
+
+val androidAdmobAppId = if (androidAdmobAppIdEnv.isNotEmpty()) {
+    androidAdmobAppIdEnv
+} else {
+    defaultAndroidTestAppId
+}
 
 android {
-    namespace = "com.example.smoke_timer"
+    namespace = productionApplicationId
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -39,7 +60,7 @@ android {
 
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.smoke_timer"
+        applicationId = productionApplicationId
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdk = flutter.minSdkVersion

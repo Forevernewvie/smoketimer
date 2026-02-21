@@ -13,7 +13,6 @@
 * 실제 디바이스에서는 다음을 수동으로 확인합니다.
   * 권한 허용/거부 케이스에서 즉시 알림이 표시되는지
   * 예약 알림이 허용 시간대/요일에 맞게 오거나, 제한 조건에 의해 다음 슬롯으로 밀리는지
-  * (Android) “정확한 알림(Exact)”이 필요한 경우 OS 설정/권한 상태
 
 ## Android
 
@@ -24,8 +23,7 @@
 * 런타임 알림 권한(API 33+): `android.permission.POST_NOTIFICATIONS`
 * 진동(선택): `android.permission.VIBRATE`
 * 재부팅 후 재스케줄(예약 알림 유지 목적): `android.permission.RECEIVE_BOOT_COMPLETED`
-* 정확한 예약(Exact alarms): `android.permission.SCHEDULE_EXACT_ALARM`
-  * Android 14(API 34)부터는 “정확한 알람”이 제한될 수 있으며 사용자 승인/설정이 필요할 수 있습니다.
+* 예약 알림은 정책상 `inexactAllowWhileIdle` 모드로 동작합니다.
 
 그리고 예약 알림이 실제로 동작하려면 **Receiver** 2개가 `<application>`에 등록되어야 합니다.
 
@@ -39,10 +37,6 @@
 * Android 13+ (API 33+) 알림 권한:
   * 앱 첫 실행 시 권한 팝업을 “허용”했는지 확인
   * 거부했다면: 시스템 설정 -> 앱 -> Smoke Timer -> 알림 -> 허용
-* Android 12+ Exact alarms:
-  * 기기마다 UI는 다르지만 일반적으로:
-    * 설정 -> 앱 -> “특별한 앱 액세스” -> “알람 및 리마인더(정확한 알람)”에서 앱 허용 여부 확인
-  * 허용되지 않은 상태에서도 앱은 **inexact 예약**으로 동작하도록 폴백합니다(정확도가 떨어질 수 있음).
 * 배터리 최적화/절전:
   * 제조사/OS 정책에 따라 예약 알림이 지연될 수 있습니다.
   * 테스트 시 절전모드/배터리 최적화를 끄고 비교 검증하세요.
@@ -81,4 +75,3 @@ Debug 빌드에서는 “테스트 알림 보내기” 수행 시 콘솔 로그�
 * timezone local 설정 실패 시 UTC 폴백 여부
 
 CI에서는 이 로그 자체를 검증하지 않고, 스케줄 계산/호출 경로를 테스트로 검증합니다.
-

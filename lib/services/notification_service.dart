@@ -148,18 +148,7 @@ class FlutterNotificationService implements NotificationService {
       return;
     }
 
-    var scheduleMode = AndroidScheduleMode.exactAllowWhileIdle;
-    final androidPlugin = _plugin
-        .resolvePlatformSpecificImplementation<
-          AndroidFlutterLocalNotificationsPlugin
-        >();
-    if (androidPlugin != null) {
-      final canScheduleExact = await androidPlugin
-          .canScheduleExactNotifications();
-      if (canScheduleExact == false) {
-        scheduleMode = AndroidScheduleMode.inexactAllowWhileIdle;
-      }
-    }
+    const scheduleMode = AndroidScheduleMode.inexactAllowWhileIdle;
 
     for (final alert in alerts) {
       final details = _notificationDetails(
@@ -179,27 +168,6 @@ class FlutterNotificationService implements NotificationService {
           androidScheduleMode: scheduleMode,
         );
       } on PlatformException catch (e) {
-        // Android 12+ may disallow exact alarms unless user grants special access.
-        // In that case, fall back to inexact scheduling so the app still works.
-        if (e.code == 'exact_alarms_not_permitted' &&
-            scheduleMode != AndroidScheduleMode.inexactAllowWhileIdle) {
-          _logger.warning(
-            'Exact alarms are not permitted. Falling back to inexact mode.',
-            error: e,
-          );
-          scheduleMode = AndroidScheduleMode.inexactAllowWhileIdle;
-          await _plugin.zonedSchedule(
-            alert.id,
-            alert.title,
-            alert.body,
-            tz.TZDateTime.from(alert.at, tz.local),
-            details,
-            uiLocalNotificationDateInterpretation:
-                UILocalNotificationDateInterpretation.absoluteTime,
-            androidScheduleMode: scheduleMode,
-          );
-          continue;
-        }
         throw NotificationOperationException(
           code: 'schedule_platform_exception',
           message: 'Failed to schedule notification.',

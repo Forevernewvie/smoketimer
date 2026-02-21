@@ -1,4 +1,4 @@
-package com.example.smoke_timer
+package com.forevernewvie.smoketimer
 
 import io.flutter.embedding.android.FlutterActivity
 
