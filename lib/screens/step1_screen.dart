@@ -66,9 +66,18 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
     final state = ref.watch(appControllerProvider);
     final controller = ref.read(appControllerProvider.notifier);
 
+    final sortedRecords = [...state.records]
+      ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
+    List<SmokingRecord> recordsFor(RecordPeriod period) {
+      final start = SmokingStatsService.startOfPeriod(period, state.now);
+      return sortedRecords
+          .where((record) => !record.timestamp.isBefore(start))
+          .toList(growable: false);
+    }
+
     final lastSmokingAt = SmokingStatsService.resolveLastSmokingAt(
       state.meta.lastSmokingAt,
-      state.records,
+      sortedRecords,
     );
 
     final ringBaseTime = SmokingStatsService.resolveRingBaseTime(
@@ -92,24 +101,12 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
       intervalMinutes: state.settings.intervalMinutes,
     );
 
-    final todayRecords = SmokingStatsService.recordsForPeriod(
-      state.records,
-      RecordPeriod.today,
-      state.now,
-    );
-    final monthRecords = SmokingStatsService.recordsForPeriod(
-      state.records,
-      RecordPeriod.month,
-      state.now,
-    );
+    final todayRecords = recordsFor(RecordPeriod.today);
+    final monthRecords = recordsFor(RecordPeriod.month);
 
     final todayCount = SmokingStatsService.totalCount(todayRecords);
 
-    final periodRecords = SmokingStatsService.recordsForPeriod(
-      state.records,
-      state.recordPeriod,
-      state.now,
-    );
+    final periodRecords = recordsFor(state.recordPeriod);
 
     final totalCount = SmokingStatsService.totalCount(periodRecords);
     final averageInterval = SmokingStatsService.averageIntervalMinutes(

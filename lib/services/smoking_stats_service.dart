@@ -91,7 +91,15 @@ class SmokingStatsService {
   ) {
     final sorted = [...all]..sort((a, b) => b.timestamp.compareTo(a.timestamp));
 
-    final start = switch (period) {
+    final start = startOfPeriod(period, now);
+
+    return sorted
+        .where((record) => !record.timestamp.isBefore(start))
+        .toList(growable: false);
+  }
+
+  static DateTime startOfPeriod(RecordPeriod period, DateTime now) {
+    return switch (period) {
       RecordPeriod.today => DateTime(now.year, now.month, now.day),
       RecordPeriod.week => DateTime(
         now.year,
@@ -100,10 +108,6 @@ class SmokingStatsService {
       ).subtract(Duration(days: now.weekday - DateTime.monday)),
       RecordPeriod.month => DateTime(now.year, now.month, 1),
     };
-
-    return sorted
-        .where((record) => !record.timestamp.isBefore(start))
-        .toList(growable: false);
   }
 
   /// Returns total cigarette count in [records].
