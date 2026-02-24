@@ -4,31 +4,73 @@
 
 흡연 기록을 빠르게 남기고, 마지막 기록 기준 타이머와 로컬 알림으로 루틴을 관리하는 Flutter 앱입니다.
 
-## 핵심 기능
+## 한눈에 보기
 
 - 3탭 구조: `Home` / `Record` / `Settings`
 - 실시간 원형 타이머 + 빠른 기록/되돌리기
 - 알림 스케줄(반복, 간격, 미리 알림, 요일, 허용 시간대)
 - 비용 설정 기반 지출 요약
 - 다크모드 토글(영속 저장)
-- `ko/en` 로컬라이제이션(현재 다크모드/설정 핵심 라벨 반영)
-
-## 최근 반영 사항
-
-- 다크모드 설정 추가 및 재시작 후 유지
-- 다크모드 관련 UI 문구 로컬라이즈
-  - `다크 모드` / `Dark Mode`
-  - `설정` / `Settings`
-- 알림 설정의 `미리 알림` UX 개선
-  - 기존 단계형(0/5/10/15) 순환 방식 → `0~15분` 슬라이더
-- 다크모드/반응형/접근성 테스트 보강
+- `ko/en` 로컬라이제이션
 
 ## 앱 플로우
 
 - Splash → (최초 실행) Onboarding → Main
 - 온보딩 완료 여부는 로컬 저장소에 영속 저장
 
-## 화면별 동작
+## 개발 환경
+
+- Flutter `3.41.1`
+- Dart `3.11.0`
+
+## 빠른 실행
+
+```bash
+flutter pub get
+flutter run
+```
+
+### Android Emulator
+
+```bash
+flutter emulators
+flutter emulators --launch <emulator-id>
+flutter devices
+flutter run -d <device-id>
+```
+
+### iOS Simulator
+
+```bash
+open -a Simulator
+flutter devices
+flutter run -d <device-id>
+```
+
+## 테스트 / 품질
+
+```bash
+dart format --output=none --set-exit-if-changed lib test
+flutter analyze
+flutter test
+```
+
+## 릴리즈 준비 (Android)
+
+릴리즈 빌드는 다음 설정이 **필수**입니다.
+
+1. `android/key.properties` 구성
+   - 예시: `android/key.properties.example`
+2. `ADMOB_ANDROID_APP_ID` 환경변수 주입
+
+릴리즈 AAB 빌드:
+
+```bash
+export ADMOB_ANDROID_APP_ID="ca-app-pub-xxxxxxxxxxxxxxxx~yyyyyyyyyy"
+flutter build appbundle --release
+```
+
+## 주요 화면 기능
 
 ### Home
 
@@ -76,50 +118,6 @@
 - SharedPreferences (로컬 저장)
 - flutter_local_notifications (알림)
 - google_mobile_ads (광고)
-
-## 개발 환경
-
-- Flutter `3.41.1`
-- Dart `3.11.0`
-- Android Studio Emulator 또는 iOS Simulator
-
-## 실행
-
-```bash
-flutter pub get
-flutter run
-```
-
-### Android Emulator
-
-```bash
-flutter emulators
-flutter emulators --launch <emulator-id>
-flutter devices
-flutter run -d <device-id>
-```
-
-### iOS Simulator
-
-```bash
-open -a Simulator
-flutter devices
-flutter run -d <device-id>
-```
-
-## 테스트 / 품질
-
-```bash
-dart format --output=none --set-exit-if-changed lib test
-flutter analyze
-flutter test
-```
-
-검증 포인트:
-- 기능/플로우/데이터 로직 회귀 없음
-- 다크모드 토글 즉시 반영 + 영속성
-- `ko/en` 로컬라이제이션 표시 검증
-- 반응형/접근성 텍스트 스케일에서 overflow/clipping 방지
 
 ## CI
 
