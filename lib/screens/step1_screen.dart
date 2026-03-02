@@ -200,6 +200,7 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
                 intervalMinutes: state.settings.intervalMinutes,
                 ringProgress: ringProgress,
                 todayCount: todayCount,
+                canUndo: state.records.isNotEmpty,
                 nextAlertText: nextAlertText,
                 isCostConfigured: isCostConfigured,
                 todaySpendText: todaySpendText,
@@ -945,6 +946,7 @@ class _HomeCard extends StatelessWidget {
     required this.intervalMinutes,
     required this.ringProgress,
     required this.todayCount,
+    required this.canUndo,
     required this.nextAlertText,
     required this.isCostConfigured,
     required this.todaySpendText,
@@ -961,6 +963,7 @@ class _HomeCard extends StatelessWidget {
   final int intervalMinutes;
   final double ringProgress;
   final int todayCount;
+  final bool canUndo;
   final String nextAlertText;
   final bool isCostConfigured;
   final String todaySpendText;
@@ -1198,6 +1201,7 @@ class _HomeCard extends StatelessWidget {
                         foreground: ui.textSecondary,
                         background: ui.neutralSoft,
                         borderColor: ui.border,
+                        enabled: canUndo,
                         onTap: onUndoRecord,
                       ),
                     ),
@@ -1235,6 +1239,7 @@ class _HomeCard extends StatelessWidget {
                       foreground: ui.textSecondary,
                       background: ui.neutralSoft,
                       borderColor: ui.border,
+                      enabled: canUndo,
                       onTap: onUndoRecord,
                     ),
                     const SizedBox(width: 8),
@@ -1358,13 +1363,27 @@ class _HomeCard extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 14),
-        Text(
-          nextAlertText,
-          style: TextStyle(
-            color: ui.textSecondary,
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-          ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '알림 상태',
+              style: TextStyle(
+                color: ui.textMuted,
+                fontSize: 12,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              nextAlertText,
+              style: TextStyle(
+                color: ui.textSecondary,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -1378,32 +1397,48 @@ class _ActionButton extends StatelessWidget {
     required this.background,
     required this.onTap,
     this.borderColor,
+    this.enabled = true,
   });
 
   final String text;
   final Color foreground;
   final Color background;
   final Color? borderColor;
+  final bool enabled;
   final Future<void> Function() onTap;
 
   @override
   Widget build(BuildContext context) {
+    final effectiveForeground = enabled
+        ? foreground
+        : foreground.withValues(alpha: 0.45);
+    final effectiveBackground = enabled
+        ? background
+        : background.withValues(alpha: 0.45);
+    final effectiveBorderColor = borderColor == null
+        ? null
+        : enabled
+        ? borderColor!
+        : borderColor!.withValues(alpha: 0.45);
+
     return Material(
-      color: background,
+      color: effectiveBackground,
       borderRadius: BorderRadius.circular(9),
       child: InkWell(
-        onTap: () async {
-          await onTap();
-        },
+        onTap: enabled
+            ? () async {
+                await onTap();
+              }
+            : null,
         borderRadius: BorderRadius.circular(9),
         child: Container(
           constraints: const BoxConstraints(minHeight: 36),
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(9),
-            border: borderColor == null
+            border: effectiveBorderColor == null
                 ? null
-                : Border.all(color: borderColor!),
+                : Border.all(color: effectiveBorderColor),
           ),
           child: Text(
             text,
@@ -1411,7 +1446,7 @@ class _ActionButton extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: foreground,
+              color: effectiveForeground,
               fontSize: 12,
               fontWeight: FontWeight.w600,
             ),
@@ -1511,6 +1546,15 @@ class _RecordCard extends StatelessWidget {
                 fontSize: 32,
                 fontWeight: FontWeight.w700,
                 fontFamily: 'Sora',
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              '오늘/주간/월간 기록과 간격 통계를 확인합니다.',
+              style: TextStyle(
+                color: ui.textSecondary,
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
               ),
             ),
             const SizedBox(height: 16),
@@ -2264,6 +2308,15 @@ class _SettingsCard extends StatelessWidget {
             fontFamily: 'Sora',
             fontSize: 32,
             fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          '알림, 지출, 표시 옵션을 한 곳에서 관리합니다.',
+          style: TextStyle(
+            color: ui.textSecondary,
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
           ),
         ),
         const SizedBox(height: 16),
