@@ -60,6 +60,74 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
     super.dispose();
   }
 
+  void _showFeedback(
+    String message, {
+    Color? backgroundColor,
+    Color? foregroundColor,
+  }) {
+    if (!mounted) {
+      return;
+    }
+    final ui = SmokeUiTheme.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(
+      SnackBar(
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: backgroundColor ?? ui.surfaceAlt,
+        content: Text(
+          message,
+          style: TextStyle(
+            color: foregroundColor ?? ui.textPrimary,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _runSettingAction(
+    Future<void> Function() action,
+    String message,
+  ) async {
+    await action();
+    if (!mounted) {
+      return;
+    }
+    await HapticFeedback.selectionClick();
+    _showFeedback(message);
+  }
+
+  Future<void> _handleAddRecord() async {
+    await ref.read(appControllerProvider.notifier).addSmokingRecord();
+    if (!mounted) {
+      return;
+    }
+    await HapticFeedback.lightImpact();
+    _showFeedback('흡연 기록을 남겼어요.');
+  }
+
+  Future<void> _handleUndoRecord() async {
+    final canUndo = ref.read(appControllerProvider).records.isNotEmpty;
+    if (!canUndo) {
+      return;
+    }
+
+    await ref.read(appControllerProvider.notifier).undoLastRecord();
+    if (!mounted) {
+      return;
+    }
+    await HapticFeedback.selectionClick();
+    _showFeedback('방금 기록을 되돌렸어요.');
+  }
+
+  Future<void> _openHomeTab() async {
+    if (!mounted) {
+      return;
+    }
+    setState(() => _tabIndex = 0);
+  }
+
   @override
   Widget build(BuildContext context) {
     final ui = SmokeUiTheme.of(context);
@@ -168,24 +236,6 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
       state.settings,
     );
 
-    final nextAlertText = () {
-      if (!state.settings.repeatEnabled) {
-        return '알림 꺼짐';
-      }
-      if (lastSmokingAt == null) {
-        return '기록 후 알림이 시작돼요';
-      }
-      if (state.settings.activeWeekdays.isEmpty) {
-        return '알림 요일을 선택해주세요';
-      }
-      if (state.nextAlertAt == null) {
-        return '다음 알림 없음';
-      }
-
-      final prefix = state.settings.preAlertMinutes > 0 ? '미리 알림까지' : '다음 알림까지';
-      return '$prefix ${TimeFormatter.formatCountdown(state.now, state.nextAlertAt!)}';
-    }();
-
     return Scaffold(
       backgroundColor: ui.background,
       body: SafeArea(
@@ -201,13 +251,18 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
                 ringProgress: ringProgress,
                 todayCount: todayCount,
                 canUndo: state.records.isNotEmpty,
-                nextAlertText: nextAlertText,
+                now: state.now,
+                nextAlertAt: state.nextAlertAt,
+                repeatEnabled: state.settings.repeatEnabled,
+                hasSelectedWeekdays: state.settings.activeWeekdays.isNotEmpty,
+                preAlertMinutes: state.settings.preAlertMinutes,
+                use24Hour: state.settings.use24Hour,
                 isCostConfigured: isCostConfigured,
                 todaySpendText: todaySpendText,
                 monthSpendText: monthSpendText,
                 lifetimeSpendText: lifetimeSpendText,
-                onAddRecord: controller.addSmokingRecord,
-                onUndoRecord: controller.undoLastRecord,
+                onAddRecord: _handleAddRecord,
+                onUndoRecord: _handleUndoRecord,
                 onOpenAlertSettings: () => _openAlertSettings(context),
                 onOpenPricingSettings: _openCostSettingsTab,
               ),
@@ -217,6 +272,7 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
               child: _RecordCard(
                 period: state.recordPeriod,
                 records: periodRecords,
+                now: state.now,
                 totalCount: totalCount,
                 averageIntervalText: averageIntervalText,
                 maxIntervalText: maxIntervalText,
@@ -225,6 +281,7 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
                 periodSpendText: periodSpendText,
                 averageDailySpendText: averageDailySpendText,
                 onPeriodChanged: controller.setRecordPeriod,
+                onOpenHomeTab: _openHomeTab,
                 onOpenPricingSettings: _openCostSettingsTab,
               ),
             ),
@@ -248,11 +305,30 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
                     : '미설정',
                 cigarettesPerPack: state.settings.cigarettesPerPack,
                 currencyLabel: state.settings.currencyLabel,
-                onToggle24Hour: controller.toggleUse24Hour,
-                onToggleDarkMode: controller.toggleDarkMode,
-                onCycleRingReference: controller.cycleRingReference,
-                onToggleVibration: controller.toggleVibration,
-                onCycleSoundType: controller.cycleSoundType,
+                onToggle24Hour: () => _runSettingAction(
+                  controller.toggleUse24Hour,
+                  state.settings.use24Hour
+                      ? '12시간 표기로 바꿨어요.'
+                      : '24시간 표기로 바꿨어요.',
+                ),
+                onToggleDarkMode: () => _runSettingAction(
+                  controller.toggleDarkMode,
+                  state.settings.darkModeEnabled
+                      ? '라이트 모드로 전환했어요.'
+                      : '다크 모드로 전환했어요.',
+                ),
+                onCycleRingReference: () => _runSettingAction(
+                  controller.cycleRingReference,
+                  '홈 원형 기준을 변경했어요.',
+                ),
+                onToggleVibration: () => _runSettingAction(
+                  controller.toggleVibration,
+                  state.settings.vibrationEnabled ? '진동을 껐어요.' : '진동을 켰어요.',
+                ),
+                onCycleSoundType: () => _runSettingAction(
+                  controller.cycleSoundType,
+                  '알림 소리를 변경했어요.',
+                ),
                 onOpenAlertSettings: () => _openAlertSettings(context),
                 onEditPackPrice: () => _pickPackPrice(context, state),
                 onEditCigarettesPerPack: () =>
@@ -268,28 +344,44 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           MainBannerAdSlot(adService: _adService),
-          NavigationBar(
-            selectedIndex: _tabIndex,
-            onDestinationSelected: (value) {
-              setState(() => _tabIndex = value);
-            },
-            destinations: const [
-              NavigationDestination(
-                icon: Icon(Icons.timer_outlined),
-                selectedIcon: Icon(Icons.timer_rounded),
-                label: 'Home',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.receipt_long_outlined),
-                selectedIcon: Icon(Icons.receipt_long_rounded),
-                label: 'Record',
-              ),
-              NavigationDestination(
-                icon: Icon(Icons.settings_outlined),
-                selectedIcon: Icon(Icons.settings_rounded),
-                label: 'Settings',
-              ),
-            ],
+          NavigationBarTheme(
+            data: NavigationBarThemeData(
+              backgroundColor: ui.surface,
+              indicatorColor: Theme.of(context).brightness == Brightness.dark
+                  ? ui.neutralSoft
+                  : SmokeUiPalette.accentSoft,
+              labelTextStyle: WidgetStateProperty.resolveWith((states) {
+                final selected = states.contains(WidgetState.selected);
+                return TextStyle(
+                  color: selected ? ui.textPrimary : ui.textSecondary,
+                  fontSize: 12,
+                  fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
+                );
+              }),
+            ),
+            child: NavigationBar(
+              selectedIndex: _tabIndex,
+              onDestinationSelected: (value) {
+                setState(() => _tabIndex = value);
+              },
+              destinations: const [
+                NavigationDestination(
+                  icon: Icon(Icons.timer_outlined),
+                  selectedIcon: Icon(Icons.timer_rounded),
+                  label: 'Home',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.receipt_long_outlined),
+                  selectedIcon: Icon(Icons.receipt_long_rounded),
+                  label: 'Record',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.settings_outlined),
+                  selectedIcon: Icon(Icons.settings_rounded),
+                  label: 'Settings',
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -428,15 +520,20 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
                                 onToggleRepeat: () async {
                                   final ok = await controller
                                       .toggleRepeatEnabled();
-                                  if (!ok && context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text(
-                                          '알림 권한을 허용해야 반복 알림을 사용할 수 있어요.',
-                                        ),
-                                      ),
+                                  if (!ok) {
+                                    _showFeedback(
+                                      '알림 권한을 허용해야 반복 알림을 사용할 수 있어요.',
+                                      backgroundColor: routeUi.criticalSoft,
+                                      foregroundColor: routeUi.textPrimary,
                                     );
+                                    return;
                                   }
+                                  await HapticFeedback.selectionClick();
+                                  _showFeedback(
+                                    appState.settings.repeatEnabled
+                                        ? '반복 알림을 껐어요.'
+                                        : '반복 알림을 켰어요.',
+                                  );
                                 },
                                 onPickInterval: () async {
                                   await _pickIntervalMinutes(
@@ -454,29 +551,32 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
                                 onRequestPermission: () async {
                                   final ok = await controller
                                       .requestNotificationPermission();
-                                  if (!context.mounted) {
-                                    return;
+                                  if (ok) {
+                                    await HapticFeedback.selectionClick();
                                   }
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        ok
-                                            ? '알림 권한이 허용되었습니다.'
-                                            : '알림 권한을 허용해주세요. (시스템 설정)',
-                                      ),
-                                    ),
+                                  _showFeedback(
+                                    ok
+                                        ? '알림 권한이 허용되었습니다.'
+                                        : '알림 권한을 허용해주세요. (시스템 설정)',
+                                    backgroundColor: ok
+                                        ? null
+                                        : routeUi.criticalSoft,
+                                    foregroundColor: routeUi.textPrimary,
                                   );
                                 },
                                 onSendTest: () async {
                                   final ok = await controller
                                       .sendTestNotification();
-                                  if (!ok && context.mounted) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text('알림 권한이 필요합니다. (시스템 설정)'),
-                                      ),
+                                  if (!ok) {
+                                    _showFeedback(
+                                      '알림 권한이 필요합니다. (시스템 설정)',
+                                      backgroundColor: routeUi.criticalSoft,
+                                      foregroundColor: routeUi.textPrimary,
                                     );
+                                    return;
                                   }
+                                  await HapticFeedback.lightImpact();
+                                  _showFeedback('테스트 알림을 보냈어요.');
                                 },
                               );
                             },
@@ -619,6 +719,11 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
       return;
     }
     await onSelected(picked);
+    if (!mounted) {
+      return;
+    }
+    await HapticFeedback.selectionClick();
+    _showFeedback('알림 간격을 변경했어요.');
   }
 
   static String _formatIntervalLabel(int minutes) {
@@ -654,6 +759,11 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
           startMinutes: picked.startMinutes,
           endMinutes: picked.endMinutes,
         );
+    if (!mounted) {
+      return;
+    }
+    await HapticFeedback.selectionClick();
+    _showFeedback('허용 시간대를 저장했어요.');
   }
 
   Future<void> _pickPackPrice(BuildContext context, AppState state) async {
@@ -692,6 +802,11 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
     }
     final parsed = double.parse(raw);
     await ref.read(appControllerProvider.notifier).setPackPrice(parsed);
+    if (!mounted) {
+      return;
+    }
+    await HapticFeedback.selectionClick();
+    _showFeedback('갑당 가격을 저장했어요.');
   }
 
   Future<void> _pickCigarettesPerPack(
@@ -727,6 +842,11 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
     }
     final parsed = int.parse(raw);
     await ref.read(appControllerProvider.notifier).setCigarettesPerPack(parsed);
+    if (!mounted) {
+      return;
+    }
+    await HapticFeedback.selectionClick();
+    _showFeedback('한 갑 개비 수를 저장했어요.');
   }
 
   Future<void> _pickCurrencyCode(BuildContext context, AppState state) async {
@@ -784,6 +904,11 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
       return;
     }
     await ref.read(appControllerProvider.notifier).setCurrencyCode(picked);
+    if (!mounted) {
+      return;
+    }
+    await HapticFeedback.selectionClick();
+    _showFeedback('통화를 변경했어요.');
   }
 
   Future<String?> _showCostValueInputSheet({
@@ -933,6 +1058,11 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
 
     if (shouldReset == true) {
       await ref.read(appControllerProvider.notifier).resetAllData();
+      if (!mounted) {
+        return;
+      }
+      await HapticFeedback.mediumImpact();
+      _showFeedback('기록과 설정을 초기화했어요.');
     }
   }
 
@@ -947,7 +1077,12 @@ class _HomeCard extends StatelessWidget {
     required this.ringProgress,
     required this.todayCount,
     required this.canUndo,
-    required this.nextAlertText,
+    required this.now,
+    required this.nextAlertAt,
+    required this.repeatEnabled,
+    required this.hasSelectedWeekdays,
+    required this.preAlertMinutes,
+    required this.use24Hour,
     required this.isCostConfigured,
     required this.todaySpendText,
     required this.monthSpendText,
@@ -964,7 +1099,12 @@ class _HomeCard extends StatelessWidget {
   final double ringProgress;
   final int todayCount;
   final bool canUndo;
-  final String nextAlertText;
+  final DateTime now;
+  final DateTime? nextAlertAt;
+  final bool repeatEnabled;
+  final bool hasSelectedWeekdays;
+  final int preAlertMinutes;
+  final bool use24Hour;
   final bool isCostConfigured;
   final String todaySpendText;
   final String monthSpendText;
@@ -980,478 +1120,667 @@ class _HomeCard extends StatelessWidget {
     final ringCenterFill = Theme.of(context).brightness == Brightness.dark
         ? const Color(0xFF0F1318)
         : const Color(0xFF121417);
-    // Best-effort, user-facing ring meaning:
-    // - When there is a base time (usually last smoking), show minutes remaining
-    //   until the configured interval. This is the most actionable cue.
-    // - If the interval is already exceeded, show overtime minutes instead.
-    // - If no base time exists yet, fall back to "0분 경과" (waiting for first record).
-    final int ringValueMinutes;
-    final String ringLabel;
-    if (!hasRingBaseTime) {
-      ringValueMinutes = 0;
-      ringLabel = '분 경과';
-    } else if (intervalMinutes <= 0) {
-      ringValueMinutes = 0;
-      ringLabel = '분 남음';
-    } else if (elapsedMinutes <= intervalMinutes) {
-      ringValueMinutes = intervalMinutes - elapsedMinutes;
-      ringLabel = '분 남음';
-    } else {
-      ringValueMinutes = elapsedMinutes - intervalMinutes;
-      ringLabel = '분 초과';
-    }
-
     final textScale = MediaQuery.textScalerOf(context).scale(1);
-    final stackedTodayActions = textScale > 1.25;
-    final stackedSpendMetrics = textScale > 1.2;
+    final intervalPresentation = () {
+      if (!hasRingBaseTime) {
+        return const _StatusPresentation(
+          chipText: '기록 대기',
+          title: '첫 기록 후 타이머가 시작돼요',
+          detail: '기록하면 경과 시간이 움직여요.',
+          icon: Icons.play_circle_outline_rounded,
+          foregroundColor: SmokeUiPalette.info,
+          backgroundColor: SmokeUiPalette.infoSoft,
+          borderColor: Color(0xFF9BD9E8),
+        );
+      }
+      if (intervalMinutes <= 0) {
+        return const _StatusPresentation(
+          chipText: '설정 필요',
+          title: '알림 간격을 설정해 주세요',
+          detail: '간격이 있어야 남은 시간을 계산해요.',
+          icon: Icons.tune_rounded,
+          foregroundColor: SmokeUiPalette.warning,
+          backgroundColor: SmokeUiPalette.warningSoft,
+          borderColor: Color(0xFFF3C58F),
+        );
+      }
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Expanded(
-              child: Text(
-                '흡연 타이머',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: ui.textPrimary,
-                  fontFamily: 'Sora',
-                  fontSize: 32,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Material(
-              color: ui.surface,
-              borderRadius: BorderRadius.circular(10),
-              child: IconButton(
-                tooltip: '알림 설정',
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-                visualDensity: VisualDensity.compact,
-                splashRadius: 20,
-                onPressed: () async {
-                  await onOpenAlertSettings();
-                },
-                icon: const Icon(
-                  Icons.notifications_none_rounded,
-                  size: 20,
-                  color: Color(0xFF9CA3AF),
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 4),
-        Text(
-          '마지막 기록 기준 경과/남은 시간을 표시합니다.',
-          style: TextStyle(
-            color: ui.textSecondary,
-            fontSize: 13,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        const SizedBox(height: 14),
-        SurfaceCard(
-          color: ui.surface,
-          strokeColor: ui.border,
-          padding: const EdgeInsets.all(16),
-          cornerRadius: 16,
-          child: Column(
-            children: [
-              SizedBox(
-                height: 262,
-                child: Center(
-                  child: SizedBox(
-                    width: 250,
-                    height: 250,
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        RingGauge(
-                          size: 250,
-                          strokeWidth: 10,
-                          trackColor: ui.ringTrack,
-                          sweepAngle: ringProgress * 2 * pi,
-                          value: ' ',
-                          label: ' ',
-                          valueStyle: const TextStyle(
-                            color: Colors.transparent,
-                            fontSize: 1,
-                          ),
-                          labelStyle: const TextStyle(
-                            color: Colors.transparent,
-                            fontSize: 1,
-                          ),
-                        ),
-                        Container(
-                          width: 162,
-                          height: 162,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: ringCenterFill,
-                          ),
-                          alignment: Alignment.center,
-                          child: FittedBox(
-                            fit: BoxFit.scaleDown,
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  ringValueMinutes.toString(),
-                                  style: const TextStyle(
-                                    color: Color(0xFFF8FAFC),
-                                    fontFamily: 'Sora',
-                                    fontSize: 52,
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                                Text(
-                                  ringLabel,
-                                  style: const TextStyle(
-                                    color: Color(0xFFD0D7E2),
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              Text(
-                '설정 간격 ${intervalMinutes.toString()}분',
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: ui.textSecondary,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 12),
-              PrimaryButton(
-                text: '지금 흡연 기록',
-                color: SmokeUiPalette.accent,
-                textStyle: const TextStyle(
-                  color: Colors.black,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                ),
-                onTap: () async {
-                  await onAddRecord();
-                },
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 14),
-        SurfaceCard(
-          padding: const EdgeInsets.all(14),
-          cornerRadius: 16,
-          child: Column(
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.center,
+      final remainingMinutes = intervalMinutes - elapsedMinutes;
+      if (remainingMinutes > 0) {
+        return _StatusPresentation(
+          chipText: '진행 중',
+          title: '$remainingMinutes분 남았어요',
+          detail: '간격 ${intervalMinutes.toString()}분 기준',
+          icon: Icons.timer_outlined,
+          foregroundColor: SmokeUiPalette.mint,
+          backgroundColor: SmokeUiPalette.mintSoft,
+          borderColor: const Color(0xFF94E3CF),
+        );
+      }
+      if (remainingMinutes == 0) {
+        return const _StatusPresentation(
+          chipText: '확인 시점',
+          title: '지금 기록할 타이밍이에요',
+          detail: '설정한 간격에 도달했어요.',
+          icon: Icons.check_circle_outline_rounded,
+          foregroundColor: SmokeUiPalette.warning,
+          backgroundColor: SmokeUiPalette.warningSoft,
+          borderColor: Color(0xFFF3C58F),
+        );
+      }
+
+      final overdueMinutes = elapsedMinutes - intervalMinutes;
+      return _StatusPresentation(
+        chipText: '간격 초과',
+        title: '$overdueMinutes분 지났어요',
+        detail: '설정 간격보다 늦었어요.',
+        icon: Icons.warning_amber_rounded,
+        foregroundColor: SmokeUiPalette.risk,
+        backgroundColor: SmokeUiPalette.riskSoft,
+        borderColor: const Color(0xFFF4B6B3),
+      );
+    }();
+
+    final alertPresentation = () {
+      if (!repeatEnabled) {
+        return const _StatusPresentation(
+          chipText: '알림 꺼짐',
+          title: '반복 알림이 꺼져 있어요',
+          detail: '알림 설정에서 다시 켤 수 있어요.',
+          icon: Icons.notifications_off_outlined,
+          foregroundColor: SmokeUiPalette.warning,
+          backgroundColor: SmokeUiPalette.warningSoft,
+          borderColor: Color(0xFFF3C58F),
+        );
+      }
+      if (!hasRingBaseTime) {
+        return const _StatusPresentation(
+          chipText: '기록 후 시작',
+          title: '첫 기록 후 알림이 시작돼요',
+          detail: '기준 기록이 아직 없어요.',
+          icon: Icons.notifications_paused_outlined,
+          foregroundColor: SmokeUiPalette.info,
+          backgroundColor: SmokeUiPalette.infoSoft,
+          borderColor: Color(0xFF9BD9E8),
+        );
+      }
+      if (!hasSelectedWeekdays) {
+        return const _StatusPresentation(
+          chipText: '요일 필요',
+          title: '알림 요일을 선택해 주세요',
+          detail: '요일이 없으면 다음 알림이 없어요.',
+          icon: Icons.calendar_month_outlined,
+          foregroundColor: SmokeUiPalette.warning,
+          backgroundColor: SmokeUiPalette.warningSoft,
+          borderColor: Color(0xFFF3C58F),
+        );
+      }
+      if (nextAlertAt == null) {
+        return const _StatusPresentation(
+          chipText: '다음 알림 없음',
+          title: '다음 알림을 계산할 수 없어요',
+          detail: '시간대와 간격을 확인해 주세요.',
+          icon: Icons.schedule_rounded,
+          foregroundColor: SmokeUiPalette.risk,
+          backgroundColor: SmokeUiPalette.riskSoft,
+          borderColor: Color(0xFFF4B6B3),
+        );
+      }
+
+      final countdown = TimeFormatter.formatCountdown(now, nextAlertAt!);
+      final alertClock = TimeFormatter.formatDayAwareClock(
+        now,
+        nextAlertAt!,
+        use24Hour: use24Hour,
+      );
+      return _StatusPresentation(
+        chipText: preAlertMinutes > 0 ? '미리 알림' : '다음 알림',
+        title: '$alertClock 예정',
+        detail: '$countdown 남았어요.',
+        icon: Icons.notifications_active_outlined,
+        foregroundColor: SmokeUiPalette.mint,
+        backgroundColor: SmokeUiPalette.mintSoft,
+        borderColor: const Color(0xFF94E3CF),
+      );
+    }();
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxWidth < 390 || textScale > 1.15;
+        final tightHeight = MediaQuery.sizeOf(context).height < 760;
+        final stackedInsights = constraints.maxWidth < 460 || textScale > 1.2;
+        final stackStatusPanels =
+            (constraints.maxWidth < 340 && !tightHeight) || textScale > 1.25;
+        final ringSize = compact
+            ? min(
+                    constraints.maxWidth - (tightHeight ? 88 : 72),
+                    tightHeight ? 184.0 : 196.0,
+                  )
+                  .clamp(
+                    tightHeight ? 164.0 : 176.0,
+                    tightHeight ? 184.0 : 196.0,
+                  )
+                  .toDouble()
+            : min(constraints.maxWidth - 48, tightHeight ? 208.0 : 228.0)
+                  .clamp(
+                    tightHeight ? 184.0 : 188.0,
+                    tightHeight ? 208.0 : 228.0,
+                  )
+                  .toDouble();
+
+        final actions = compact
+            ? Column(
                 children: [
-                  Text(
-                    '오늘 흡연',
-                    style: TextStyle(
-                      color: ui.textSecondary,
-                      fontSize: 14,
+                  PrimaryButton(
+                    text: '지금 흡연 기록',
+                    icon: Icons.add_rounded,
+                    color: SmokeUiPalette.accent,
+                    textStyle: const TextStyle(
+                      color: Colors.black,
+                      fontSize: 15,
                       fontWeight: FontWeight.w700,
                     ),
+                    onTap: () async {
+                      await onAddRecord();
+                    },
                   ),
-                  Icon(
-                    Icons.smoking_rooms_rounded,
-                    size: 18,
-                    color: ui.textSecondary,
+                  const SizedBox(height: SmokeUiSpacing.sm),
+                  SecondaryButton(
+                    text: '되돌리기',
+                    icon: Icons.undo_rounded,
+                    foregroundColor: ui.textSecondary,
+                    backgroundColor: ui.surfaceAlt,
+                    borderColor: ui.border,
+                    onTap: canUndo
+                        ? () async {
+                            await onUndoRecord();
+                          }
+                        : null,
                   ),
                 ],
-              ),
-              const SizedBox(height: 10),
-              if (stackedTodayActions) ...[
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    '${todayCount.toString()}개비',
-                    style: TextStyle(
-                      color: ui.textPrimary,
-                      fontFamily: 'Sora',
-                      fontSize: 32,
-                      fontWeight: FontWeight.w700,
+              )
+            : Row(
+                children: [
+                  Expanded(
+                    flex: 3,
+                    child: PrimaryButton(
+                      text: '지금 흡연 기록',
+                      icon: Icons.add_rounded,
+                      color: SmokeUiPalette.accent,
+                      textStyle: const TextStyle(
+                        color: Colors.black,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                      ),
+                      onTap: () async {
+                        await onAddRecord();
+                      },
                     ),
                   ),
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _ActionButton(
-                        text: '되돌리기',
-                        foreground: ui.textSecondary,
-                        background: ui.neutralSoft,
-                        borderColor: ui.border,
-                        enabled: canUndo,
-                        onTap: onUndoRecord,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: _ActionButton(
-                        text: '+1 추가',
-                        foreground: Colors.white,
-                        background: const Color(0xFF1D4ED8),
-                        onTap: onAddRecord,
-                      ),
-                    ),
-                  ],
-                ),
-              ] else ...[
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        '${todayCount.toString()}개비',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: ui.textPrimary,
-                          fontFamily: 'Sora',
-                          fontSize: 34,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    _ActionButton(
+                  const SizedBox(width: SmokeUiSpacing.sm),
+                  Expanded(
+                    flex: 2,
+                    child: SecondaryButton(
                       text: '되돌리기',
-                      foreground: ui.textSecondary,
-                      background: ui.neutralSoft,
+                      icon: Icons.undo_rounded,
+                      foregroundColor: ui.textSecondary,
+                      backgroundColor: ui.surfaceAlt,
                       borderColor: ui.border,
-                      enabled: canUndo,
-                      onTap: onUndoRecord,
+                      onTap: canUndo
+                          ? () async {
+                              await onUndoRecord();
+                            }
+                          : null,
                     ),
-                    const SizedBox(width: 8),
-                    _ActionButton(
-                      text: '+1 추가',
-                      foreground: Colors.white,
-                      background: const Color(0xFF1D4ED8),
-                      onTap: onAddRecord,
-                    ),
-                  ],
+                  ),
+                ],
+              );
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SurfaceCard(
+              color: ui.surface,
+              strokeColor: ui.border,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.03),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
                 ),
               ],
-            ],
-          ),
-        ),
-        const SizedBox(height: 14),
-        SurfaceCard(
-          padding: const EdgeInsets.all(14),
-          cornerRadius: 16,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '지출 요약',
-                style: TextStyle(
-                  color: ui.textSecondary,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: 10),
-              if (!isCostConfigured) ...[
-                Text(
-                  '가격 정보를 설정하면 지출을 계산할 수 있어요.',
-                  key: Key('cost_empty_state_text'),
-                  style: TextStyle(
-                    color: ui.textSecondary,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: GestureDetector(
-                    key: const Key('set_pricing_cta'),
-                    onTap: () async {
-                      await onOpenPricingSettings();
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: ui.neutralSoft,
-                        borderRadius: BorderRadius.circular(9),
-                        border: Border.all(color: ui.border),
-                      ),
-                      child: Text(
-                        '가격 설정',
-                        style: TextStyle(
-                          color: ui.textPrimary,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ] else ...[
-                if (stackedSpendMetrics) ...[
-                  SizedBox(
-                    width: double.infinity,
-                    child: _SpendMetric(label: '오늘 지출', value: todaySpendText),
-                  ),
-                  const SizedBox(height: 8),
-                  SizedBox(
-                    width: double.infinity,
-                    child: _SpendMetric(
-                      label: '이번 달 지출',
-                      value: monthSpendText,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  SizedBox(
-                    width: double.infinity,
-                    child: _SpendMetric(
-                      label: '누적 지출',
-                      value: lifetimeSpendText,
-                    ),
-                  ),
-                ] else ...[
+              padding: EdgeInsets.all(tightHeight ? 14 : SmokeUiSpacing.md),
+              cornerRadius: SmokeUiRadius.lg,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
-                        child: _SpendMetric(
-                          label: '오늘 지출',
-                          value: todaySpendText,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '흡연 타이머',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: ui.textPrimary,
+                                fontFamily: 'Sora',
+                                fontSize: tightHeight ? 28 : 30,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            const SizedBox(height: SmokeUiSpacing.xxs),
+                            Text(
+                              '지금 상태를 빠르게 확인하고 바로 기록하세요.',
+                              style: TextStyle(
+                                color: ui.textSecondary,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: _SpendMetric(
-                          label: '이번 달 지출',
-                          value: monthSpendText,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: _SpendMetric(
-                          label: '누적 지출',
-                          value: lifetimeSpendText,
+                      const SizedBox(width: SmokeUiSpacing.sm),
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 128),
+                        child: SecondaryButton(
+                          text: '알림 설정',
+                          icon: Icons.notifications_none_rounded,
+                          height: 40,
+                          foregroundColor: ui.textPrimary,
+                          backgroundColor: ui.surfaceAlt,
+                          borderColor: ui.border,
+                          onTap: () async {
+                            await onOpenAlertSettings();
+                          },
                         ),
                       ),
                     ],
                   ),
+                  SizedBox(height: tightHeight ? 12 : SmokeUiSpacing.md),
+                  Center(
+                    child: SizedBox(
+                      width: ringSize,
+                      height: ringSize,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          RingGauge(
+                            size: ringSize,
+                            strokeWidth: 12,
+                            trackColor: ui.ringTrack,
+                            sweepAngle: ringProgress * 2 * pi,
+                            value: ' ',
+                            label: ' ',
+                            valueStyle: const TextStyle(
+                              color: Colors.transparent,
+                              fontSize: 1,
+                            ),
+                            labelStyle: const TextStyle(
+                              color: Colors.transparent,
+                              fontSize: 1,
+                            ),
+                          ),
+                          Container(
+                            width: ringSize * 0.66,
+                            height: ringSize * 0.66,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: ringCenterFill,
+                            ),
+                            alignment: Alignment.center,
+                            child: FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    elapsedMinutes.toString(),
+                                    style: const TextStyle(
+                                      color: Color(0xFFF8FAFC),
+                                      fontFamily: 'Sora',
+                                      fontSize: 52,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  const Text(
+                                    '분 경과',
+                                    style: TextStyle(
+                                      color: Color(0xFFD0D7E2),
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: tightHeight ? 8 : SmokeUiSpacing.sm),
+                  Center(
+                    child: Text(
+                      hasRingBaseTime
+                          ? '마지막 기록 후 ${elapsedMinutes.toString()}분 지났어요.'
+                          : '첫 기록을 남기면 타이머가 시작돼요.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        color: ui.textSecondary,
+                        fontSize: tightHeight ? 12 : 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: tightHeight ? 12 : SmokeUiSpacing.md),
+                  if (compact) ...[
+                    actions,
+                    SizedBox(height: tightHeight ? 12 : SmokeUiSpacing.md),
+                    _HomeStatusPanel(
+                      label: '지금 상태',
+                      presentation: intervalPresentation,
+                    ),
+                    const SizedBox(height: SmokeUiSpacing.sm),
+                    _HomeStatusPanel(
+                      label: '다음 알림',
+                      presentation: alertPresentation,
+                    ),
+                  ] else if (stackStatusPanels) ...[
+                    _HomeStatusPanel(
+                      label: '지금 상태',
+                      presentation: intervalPresentation,
+                    ),
+                    const SizedBox(height: SmokeUiSpacing.sm),
+                    _HomeStatusPanel(
+                      label: '다음 알림',
+                      presentation: alertPresentation,
+                    ),
+                    SizedBox(height: tightHeight ? 12 : SmokeUiSpacing.md),
+                    actions,
+                  ] else ...[
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: _HomeStatusPanel(
+                            label: '지금 상태',
+                            presentation: intervalPresentation,
+                          ),
+                        ),
+                        const SizedBox(width: SmokeUiSpacing.sm),
+                        Expanded(
+                          child: _HomeStatusPanel(
+                            label: '다음 알림',
+                            presentation: alertPresentation,
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: tightHeight ? 12 : SmokeUiSpacing.md),
+                    actions,
+                  ],
                 ],
-              ],
+              ),
+            ),
+            const SizedBox(height: SmokeUiSpacing.lg),
+            const SectionLabel(text: '오늘 요약'),
+            const SizedBox(height: SmokeUiSpacing.xs),
+            if (stackedInsights) ...[
+              _HomeTodaySummaryCard(todayCount: todayCount),
+              const SizedBox(height: SmokeUiSpacing.sm),
+              _HomeCostSummaryCard(
+                isCostConfigured: isCostConfigured,
+                todaySpendText: todaySpendText,
+                monthSpendText: monthSpendText,
+                lifetimeSpendText: lifetimeSpendText,
+                onOpenPricingSettings: onOpenPricingSettings,
+              ),
+            ] else ...[
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: _HomeTodaySummaryCard(todayCount: todayCount),
+                  ),
+                  const SizedBox(width: SmokeUiSpacing.sm),
+                  Expanded(
+                    child: _HomeCostSummaryCard(
+                      isCostConfigured: isCostConfigured,
+                      todaySpendText: todaySpendText,
+                      monthSpendText: monthSpendText,
+                      lifetimeSpendText: lifetimeSpendText,
+                      onOpenPricingSettings: onOpenPricingSettings,
+                    ),
+                  ),
+                ],
+              ),
             ],
-          ),
-        ),
-        const SizedBox(height: 14),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              '알림 상태',
-              style: TextStyle(
-                color: ui.textMuted,
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              nextAlertText,
-              style: TextStyle(
-                color: ui.textSecondary,
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
           ],
-        ),
-      ],
+        );
+      },
     );
   }
 }
 
-class _ActionButton extends StatelessWidget {
-  const _ActionButton({
-    required this.text,
-    required this.foreground,
-    required this.background,
-    required this.onTap,
-    this.borderColor,
-    this.enabled = true,
+class _StatusPresentation {
+  const _StatusPresentation({
+    required this.chipText,
+    required this.title,
+    required this.detail,
+    required this.icon,
+    required this.foregroundColor,
+    required this.backgroundColor,
+    required this.borderColor,
   });
 
-  final String text;
-  final Color foreground;
-  final Color background;
-  final Color? borderColor;
-  final bool enabled;
-  final Future<void> Function() onTap;
+  final String chipText;
+  final String title;
+  final String detail;
+  final IconData icon;
+  final Color foregroundColor;
+  final Color backgroundColor;
+  final Color borderColor;
+}
+
+class _HomeStatusPanel extends StatelessWidget {
+  const _HomeStatusPanel({required this.label, required this.presentation});
+
+  final String label;
+  final _StatusPresentation presentation;
 
   @override
   Widget build(BuildContext context) {
-    final effectiveForeground = enabled
-        ? foreground
-        : foreground.withValues(alpha: 0.45);
-    final effectiveBackground = enabled
-        ? background
-        : background.withValues(alpha: 0.45);
-    final effectiveBorderColor = borderColor == null
-        ? null
-        : enabled
-        ? borderColor!
-        : borderColor!.withValues(alpha: 0.45);
-
-    return Material(
-      color: effectiveBackground,
-      borderRadius: BorderRadius.circular(9),
-      child: InkWell(
-        onTap: enabled
-            ? () async {
-                await onTap();
-              }
-            : null,
-        borderRadius: BorderRadius.circular(9),
-        child: Container(
-          constraints: const BoxConstraints(minHeight: 36),
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(9),
-            border: effectiveBorderColor == null
-                ? null
-                : Border.all(color: effectiveBorderColor),
+    final ui = SmokeUiTheme.of(context);
+    return SurfaceCard(
+      color: ui.surfaceAlt,
+      strokeColor: ui.border,
+      padding: const EdgeInsets.all(10),
+      cornerRadius: SmokeUiRadius.md,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    color: ui.textMuted,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              const SizedBox(width: SmokeUiSpacing.xs),
+              Flexible(
+                child: StatusChip(
+                  text: presentation.chipText,
+                  icon: presentation.icon,
+                  foregroundColor: presentation.foregroundColor,
+                  backgroundColor: presentation.backgroundColor,
+                  borderColor: presentation.borderColor,
+                ),
+              ),
+            ],
           ),
-          child: Text(
-            text,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.center,
+          const SizedBox(height: 6),
+          Text(
+            presentation.title,
             style: TextStyle(
-              color: effectiveForeground,
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
+              color: ui.textPrimary,
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
             ),
           ),
-        ),
+          const SizedBox(height: 2),
+          Text(
+            presentation.detail,
+            style: TextStyle(
+              color: ui.textSecondary,
+              fontSize: 11,
+              height: 1.35,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HomeTodaySummaryCard extends StatelessWidget {
+  const _HomeTodaySummaryCard({required this.todayCount});
+
+  final int todayCount;
+
+  @override
+  Widget build(BuildContext context) {
+    final ui = SmokeUiTheme.of(context);
+    return SurfaceCard(
+      padding: const EdgeInsets.all(SmokeUiSpacing.sm),
+      cornerRadius: SmokeUiRadius.md,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  '오늘 흡연',
+                  style: TextStyle(
+                    color: ui.textSecondary,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              Icon(
+                Icons.smoking_rooms_rounded,
+                size: 18,
+                color: ui.textSecondary,
+              ),
+            ],
+          ),
+          const SizedBox(height: SmokeUiSpacing.xs),
+          Text(
+            '${todayCount.toString()}개비',
+            style: TextStyle(
+              color: ui.textPrimary,
+              fontFamily: 'Sora',
+              fontSize: 32,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: SmokeUiSpacing.xxs),
+          Text(
+            todayCount == 0 ? '아직 오늘 기록이 없어요.' : '오늘 남긴 기록이 바로 반영됐어요.',
+            style: TextStyle(
+              color: ui.textSecondary,
+              fontSize: 12,
+              height: 1.45,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HomeCostSummaryCard extends StatelessWidget {
+  const _HomeCostSummaryCard({
+    required this.isCostConfigured,
+    required this.todaySpendText,
+    required this.monthSpendText,
+    required this.lifetimeSpendText,
+    required this.onOpenPricingSettings,
+  });
+
+  final bool isCostConfigured;
+  final String todaySpendText;
+  final String monthSpendText;
+  final String lifetimeSpendText;
+  final Future<void> Function() onOpenPricingSettings;
+
+  @override
+  Widget build(BuildContext context) {
+    final ui = SmokeUiTheme.of(context);
+    return SurfaceCard(
+      padding: const EdgeInsets.all(SmokeUiSpacing.sm),
+      cornerRadius: SmokeUiRadius.md,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '지출 요약',
+            style: TextStyle(
+              color: ui.textSecondary,
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: SmokeUiSpacing.xs),
+          if (!isCostConfigured) ...[
+            Text(
+              '가격 정보를 설정하면 지출을 계산할 수 있어요.',
+              key: const Key('cost_empty_state_text'),
+              style: TextStyle(
+                color: ui.textSecondary,
+                fontSize: 13,
+                height: 1.45,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: SmokeUiSpacing.sm),
+            SizedBox(
+              width: double.infinity,
+              child: SecondaryButton(
+                key: const Key('set_pricing_cta'),
+                text: '가격 설정',
+                icon: Icons.toll_outlined,
+                foregroundColor: ui.textPrimary,
+                backgroundColor: ui.surfaceAlt,
+                borderColor: ui.border,
+                onTap: () async {
+                  await onOpenPricingSettings();
+                },
+              ),
+            ),
+          ] else ...[
+            _SpendMetric(label: '오늘 지출', value: todaySpendText),
+            const SizedBox(height: SmokeUiSpacing.xs),
+            _SpendMetric(label: '이번 달 지출', value: monthSpendText),
+            const SizedBox(height: SmokeUiSpacing.xs),
+            _SpendMetric(label: '누적 지출', value: lifetimeSpendText),
+          ],
+        ],
       ),
     );
   }
@@ -1469,7 +1798,7 @@ class _SpendMetric extends StatelessWidget {
     return SurfaceCard(
       cornerRadius: 10,
       strokeColor: ui.border,
-      color: ui.surface,
+      color: ui.surfaceAlt,
       padding: const EdgeInsets.fromLTRB(8, 8, 8, 10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1505,6 +1834,7 @@ class _RecordCard extends StatelessWidget {
   const _RecordCard({
     required this.period,
     required this.records,
+    required this.now,
     required this.totalCount,
     required this.averageIntervalText,
     required this.maxIntervalText,
@@ -1513,11 +1843,13 @@ class _RecordCard extends StatelessWidget {
     required this.periodSpendText,
     required this.averageDailySpendText,
     required this.onPeriodChanged,
+    required this.onOpenHomeTab,
     required this.onOpenPricingSettings,
   });
 
   final RecordPeriod period;
   final List<SmokingRecord> records;
+  final DateTime now;
   final int totalCount;
   final String averageIntervalText;
   final String maxIntervalText;
@@ -1526,6 +1858,7 @@ class _RecordCard extends StatelessWidget {
   final String periodSpendText;
   final String averageDailySpendText;
   final ValueChanged<RecordPeriod> onPeriodChanged;
+  final Future<void> Function() onOpenHomeTab;
   final Future<void> Function() onOpenPricingSettings;
 
   @override
@@ -1535,7 +1868,7 @@ class _RecordCard extends StatelessWidget {
     return LayoutBuilder(
       builder: (context, constraints) {
         final stackedSummaryCards =
-            constraints.maxWidth < 340 || textScale > 1.25;
+            constraints.maxWidth < 380 || textScale > 1.15;
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -1550,7 +1883,7 @@ class _RecordCard extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              '오늘/주간/월간 기록과 간격 통계를 확인합니다.',
+              '기간별 기록 흐름과 간격 변화를 빠르게 확인합니다.',
               style: TextStyle(
                 color: ui.textSecondary,
                 fontSize: 13,
@@ -1558,79 +1891,73 @@ class _RecordCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            SizedBox(
-              height: 42,
-              child: Row(
-                children: [
-                  Expanded(
-                    child: _PeriodTab(
-                      text: '오늘',
-                      selected: period == RecordPeriod.today,
-                      onTap: () => onPeriodChanged(RecordPeriod.today),
+            SurfaceCard(
+              color: ui.surface,
+              strokeColor: ui.border,
+              padding: const EdgeInsets.all(SmokeUiSpacing.xs),
+              cornerRadius: SmokeUiRadius.md,
+              child: SizedBox(
+                height: 46,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _PeriodTab(
+                        text: '오늘',
+                        selected: period == RecordPeriod.today,
+                        onTap: () => onPeriodChanged(RecordPeriod.today),
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _PeriodTab(
-                      text: '주간',
-                      selected: period == RecordPeriod.week,
-                      onTap: () => onPeriodChanged(RecordPeriod.week),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _PeriodTab(
+                        text: '주간',
+                        selected: period == RecordPeriod.week,
+                        onTap: () => onPeriodChanged(RecordPeriod.week),
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _PeriodTab(
-                      text: '월간',
-                      selected: period == RecordPeriod.month,
-                      onTap: () => onPeriodChanged(RecordPeriod.month),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _PeriodTab(
+                        text: '월간',
+                        selected: period == RecordPeriod.month,
+                        onTap: () => onPeriodChanged(RecordPeriod.month),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 16),
+            _SummaryItem(
+              label: '총 개비',
+              value: '$totalCount개비',
+              detail: '선택한 기간 동안 남긴 총 기록 수예요.',
+              valueFontSize: 28,
+              emphasized: true,
+            ),
+            const SizedBox(height: 8),
             if (stackedSummaryCards) ...[
-              SizedBox(
-                width: double.infinity,
-                child: _SummaryItem(
-                  label: '총 개비',
-                  value: '$totalCount',
-                  valueFontSize: 24,
-                ),
+              _SummaryItem(
+                label: '평균 간격',
+                value: averageIntervalText,
+                detail: '기록 사이 평균 간격',
+                valueFontSize: 20,
               ),
               const SizedBox(height: 8),
-              SizedBox(
-                width: double.infinity,
-                child: _SummaryItem(
-                  label: '평균 간격',
-                  value: averageIntervalText,
-                  valueFontSize: 20,
-                ),
-              ),
-              const SizedBox(height: 8),
-              SizedBox(
-                width: double.infinity,
-                child: _SummaryItem(
-                  label: '최장 간격',
-                  value: maxIntervalText,
-                  valueFontSize: 20,
-                ),
+              _SummaryItem(
+                label: '최장 간격',
+                value: maxIntervalText,
+                detail: '가장 길었던 간격',
+                valueFontSize: 20,
               ),
             ] else ...[
               Row(
                 children: [
                   Expanded(
                     child: _SummaryItem(
-                      label: '총 개비',
-                      value: '$totalCount',
-                      valueFontSize: 24,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: _SummaryItem(
                       label: '평균 간격',
                       value: averageIntervalText,
+                      detail: '기록 사이 평균 간격',
                       valueFontSize: 20,
                     ),
                   ),
@@ -1639,6 +1966,7 @@ class _RecordCard extends StatelessWidget {
                     child: _SummaryItem(
                       label: '최장 간격',
                       value: maxIntervalText,
+                      detail: '가장 길었던 간격',
                       valueFontSize: 20,
                     ),
                   ),
@@ -1650,17 +1978,11 @@ class _RecordCard extends StatelessWidget {
               color: ui.surface,
               strokeColor: ui.border,
               padding: const EdgeInsets.all(12),
+              cornerRadius: SmokeUiRadius.md,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    '비용 인사이트',
-                    style: TextStyle(
-                      color: ui.textSecondary,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
+                  const SectionLabel(text: '비용 인사이트'),
                   const SizedBox(height: 10),
                   if (!isCostConfigured) ...[
                     Text(
@@ -1672,31 +1994,17 @@ class _RecordCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 10),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: GestureDetector(
+                    SizedBox(
+                      width: double.infinity,
+                      child: SecondaryButton(
+                        text: '가격 설정',
+                        icon: Icons.toll_outlined,
+                        foregroundColor: ui.textPrimary,
+                        backgroundColor: ui.surfaceAlt,
+                        borderColor: ui.border,
                         onTap: () async {
                           await onOpenPricingSettings();
                         },
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
-                          ),
-                          decoration: BoxDecoration(
-                            color: ui.neutralSoft,
-                            borderRadius: BorderRadius.circular(9),
-                            border: Border.all(color: ui.border),
-                          ),
-                          child: Text(
-                            '가격 설정',
-                            style: TextStyle(
-                              color: ui.textPrimary,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
                       ),
                     ),
                   ] else ...[
@@ -1705,7 +2013,8 @@ class _RecordCard extends StatelessWidget {
                         width: double.infinity,
                         child: _SummaryItem(
                           label: '흡연 개비',
-                          value: '$totalCount',
+                          value: '$totalCount개비',
+                          detail: '선택한 기간 합계',
                           valueFontSize: 18,
                         ),
                       ),
@@ -1715,6 +2024,7 @@ class _RecordCard extends StatelessWidget {
                         child: _SummaryItem(
                           label: '예상 지출',
                           value: periodSpendText,
+                          detail: '선택한 기간 기준',
                           valueFontSize: 16,
                         ),
                       ),
@@ -1724,6 +2034,7 @@ class _RecordCard extends StatelessWidget {
                         child: _SummaryItem(
                           label: '일 평균',
                           value: averageDailySpendText,
+                          detail: '하루 평균 예상 지출',
                           valueFontSize: 16,
                         ),
                       ),
@@ -1733,7 +2044,8 @@ class _RecordCard extends StatelessWidget {
                           Expanded(
                             child: _SummaryItem(
                               label: '흡연 개비',
-                              value: '$totalCount',
+                              value: '$totalCount개비',
+                              detail: '선택한 기간 합계',
                               valueFontSize: 18,
                             ),
                           ),
@@ -1742,6 +2054,7 @@ class _RecordCard extends StatelessWidget {
                             child: _SummaryItem(
                               label: '예상 지출',
                               value: periodSpendText,
+                              detail: '선택한 기간 기준',
                               valueFontSize: 16,
                             ),
                           ),
@@ -1750,6 +2063,7 @@ class _RecordCard extends StatelessWidget {
                             child: _SummaryItem(
                               label: '일 평균',
                               value: averageDailySpendText,
+                              detail: '하루 평균 예상 지출',
                               valueFontSize: 16,
                             ),
                           ),
@@ -1765,7 +2079,12 @@ class _RecordCard extends StatelessWidget {
               cornerRadius: 16,
               color: ui.surface,
               strokeColor: ui.border,
-              child: _RecordList(records: records, use24Hour: use24Hour),
+              child: _RecordList(
+                now: now,
+                records: records,
+                use24Hour: use24Hour,
+                onOpenHomeTab: onOpenHomeTab,
+              ),
             ),
           ],
         );
@@ -1788,23 +2107,30 @@ class _PeriodTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ui = SmokeUiTheme.of(context);
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        constraints: const BoxConstraints(minHeight: 42),
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: selected ? SmokeUiPalette.accentDark : ui.neutralSoft,
-          borderRadius: BorderRadius.circular(11),
-          border: selected ? null : Border.all(color: ui.border),
-        ),
-        child: Text(
-          text,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            color: selected ? Colors.white : ui.textSecondary,
-            fontSize: 13,
-            fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
+    return Material(
+      color: selected ? SmokeUiPalette.accentSoft : ui.surface,
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 42),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: selected ? SmokeUiPalette.accentDark : ui.border,
+              width: selected ? 1.4 : 1,
+            ),
+          ),
+          child: Text(
+            text,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: selected ? SmokeUiPalette.accentDark : ui.textSecondary,
+              fontSize: 13,
+              fontWeight: selected ? FontWeight.w700 : FontWeight.w600,
+            ),
           ),
         ),
       ),
@@ -1816,12 +2142,16 @@ class _SummaryItem extends StatelessWidget {
   const _SummaryItem({
     required this.label,
     required this.value,
+    this.detail,
     required this.valueFontSize,
+    this.emphasized = false,
   });
 
   final String label;
   final String value;
+  final String? detail;
   final double valueFontSize;
+  final bool emphasized;
 
   @override
   Widget build(BuildContext context) {
@@ -1829,8 +2159,8 @@ class _SummaryItem extends StatelessWidget {
     return SurfaceCard(
       cornerRadius: 12,
       strokeColor: ui.border,
-      color: ui.surface,
-      padding: const EdgeInsets.all(10),
+      color: emphasized ? ui.surfaceAlt : ui.surface,
+      padding: const EdgeInsets.all(12),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1856,6 +2186,18 @@ class _SummaryItem extends StatelessWidget {
               fontWeight: FontWeight.w700,
             ),
           ),
+          if (detail != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              detail!,
+              style: TextStyle(
+                color: ui.textSecondary,
+                fontSize: 12,
+                height: 1.45,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -1863,26 +2205,60 @@ class _SummaryItem extends StatelessWidget {
 }
 
 class _RecordList extends StatelessWidget {
-  const _RecordList({required this.records, required this.use24Hour});
+  const _RecordList({
+    required this.now,
+    required this.records,
+    required this.use24Hour,
+    required this.onOpenHomeTab,
+  });
 
+  final DateTime now;
   final List<SmokingRecord> records;
   final bool use24Hour;
+  final Future<void> Function() onOpenHomeTab;
 
   @override
   Widget build(BuildContext context) {
     final ui = SmokeUiTheme.of(context);
     if (records.isEmpty) {
-      return SizedBox(
-        height: 144,
-        child: Center(
-          child: Text(
-            '기록이 없습니다',
-            style: TextStyle(
-              color: ui.textSecondary,
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
+      return Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          children: [
+            const SizedBox(height: 8),
+            Icon(Icons.receipt_long_outlined, size: 26, color: ui.textMuted),
+            const SizedBox(height: 10),
+            Text(
+              '기록이 없습니다',
+              style: TextStyle(
+                color: ui.textPrimary,
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+              ),
             ),
-          ),
+            const SizedBox(height: 6),
+            Text(
+              'Home 탭에서 지금 흡연 기록을 누르면 여기에 쌓여요.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: ui.textSecondary,
+                fontSize: 13,
+                height: 1.45,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 12),
+            SecondaryButton(
+              text: 'Home로 이동',
+              icon: Icons.timer_outlined,
+              foregroundColor: ui.textPrimary,
+              backgroundColor: ui.surfaceAlt,
+              borderColor: ui.border,
+              onTap: () async {
+                await onOpenHomeTab();
+              },
+            ),
+          ],
         ),
       );
     }
@@ -1891,19 +2267,35 @@ class _RecordList extends StatelessWidget {
     final visibleCount = min(records.length, maxVisible);
 
     return Column(
-      children: List.generate(visibleCount, (index) {
-        final record = records[index];
-        final time = TimeFormatter.formatClock(
-          record.timestamp,
-          use24Hour: use24Hour,
-        );
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(14, 14, 14, 6),
+          child: Text(
+            '최근 기록',
+            style: TextStyle(
+              color: ui.textSecondary,
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+        ...List.generate(visibleCount, (index) {
+          final record = records[index];
+          final time = TimeFormatter.formatDayAwareClock(
+            now,
+            record.timestamp,
+            use24Hour: use24Hour,
+          );
 
-        return _RecordListRow(
-          time: time,
-          amount: '+${record.count}개비',
-          withTopBorder: index > 0,
-        );
-      }),
+          return _RecordListRow(
+            time: time,
+            amount: '${record.count}개비',
+            sameDay: DateUtils.isSameDay(now, record.timestamp),
+            withTopBorder: index > 0,
+          );
+        }),
+      ],
     );
   }
 }
@@ -1912,11 +2304,13 @@ class _RecordListRow extends StatelessWidget {
   const _RecordListRow({
     required this.time,
     required this.amount,
+    required this.sameDay,
     required this.withTopBorder,
   });
 
   final String time;
   final String amount;
+  final bool sameDay;
   final bool withTopBorder;
 
   @override
@@ -1932,23 +2326,42 @@ class _RecordListRow extends StatelessWidget {
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        crossAxisAlignment: CrossAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
-            child: Text(
-              time,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: ui.textPrimary,
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-              ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  time,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: ui.textPrimary,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  sameDay ? '오늘 기록' : '이전 기록',
+                  style: TextStyle(
+                    color: ui.textMuted,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
             ),
           ),
           const SizedBox(width: 8),
-          Flexible(
-            fit: FlexFit.loose,
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: ui.surfaceAlt,
+              borderRadius: BorderRadius.circular(999),
+              border: Border.all(color: ui.border),
+            ),
             child: Text(
               amount,
               maxLines: 1,
@@ -1956,8 +2369,8 @@ class _RecordListRow extends StatelessWidget {
               textAlign: TextAlign.right,
               style: TextStyle(
                 color: ui.textSecondary,
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ),
@@ -2001,6 +2414,23 @@ class _AlertCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ui = SmokeUiTheme.of(context);
+    final textScale = MediaQuery.textScalerOf(context).scale(1);
+    final compact = MediaQuery.sizeOf(context).width < 400 || textScale > 1.15;
+    final intervalLabel = () {
+      final hours = intervalMinutes ~/ 60;
+      final minutes = intervalMinutes % 60;
+      if (hours <= 0) {
+        return '${intervalMinutes.toString()}분';
+      }
+      if (minutes == 0) {
+        return '${hours.toString()}시간';
+      }
+      return '${hours.toString()}시간 ${minutes.toString()}분';
+    }();
+    final weekdayCountText = activeWeekdays.isEmpty
+        ? '없음'
+        : '${activeWeekdays.length}일';
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -2023,6 +2453,94 @@ class _AlertCard extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 16),
+        SurfaceCard(
+          color: ui.surfaceAlt,
+          strokeColor: ui.border,
+          padding: const EdgeInsets.all(14),
+          cornerRadius: SmokeUiRadius.md,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  StatusChip(
+                    text: repeatEnabled ? '반복 알림 켜짐' : '반복 알림 꺼짐',
+                    icon: repeatEnabled
+                        ? Icons.notifications_active_outlined
+                        : Icons.notifications_off_outlined,
+                    foregroundColor: repeatEnabled
+                        ? SmokeUiPalette.mint
+                        : SmokeUiPalette.warning,
+                    backgroundColor: repeatEnabled
+                        ? SmokeUiPalette.mintSoft
+                        : SmokeUiPalette.warningSoft,
+                    borderColor: repeatEnabled
+                        ? const Color(0xFF94E3CF)
+                        : const Color(0xFFF3C58F),
+                  ),
+                  StatusChip(
+                    text: preAlertMinutes > 0
+                        ? '${preAlertMinutes.toString()}분 미리 알림'
+                        : '정시 알림',
+                    icon: Icons.schedule_rounded,
+                    foregroundColor: SmokeUiPalette.info,
+                    backgroundColor: SmokeUiPalette.infoSoft,
+                    borderColor: const Color(0xFF9BD9E8),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              const SectionLabel(text: '다음 일정'),
+              const SizedBox(height: 4),
+              Text(
+                nextAlertPreviewText,
+                style: TextStyle(
+                  color: ui.textPrimary,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 12),
+              if (compact) ...[
+                _AlertOverviewMetric(label: '간격', value: intervalLabel),
+                const SizedBox(height: 8),
+                _AlertOverviewMetric(label: '시간대', value: rangeText),
+                const SizedBox(height: 8),
+                _AlertOverviewMetric(label: '활성 요일', value: weekdayCountText),
+              ] else ...[
+                Row(
+                  children: [
+                    Expanded(
+                      child: _AlertOverviewMetric(
+                        label: '간격',
+                        value: intervalLabel,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _AlertOverviewMetric(
+                        label: '시간대',
+                        value: rangeText,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _AlertOverviewMetric(
+                        label: '활성 요일',
+                        value: weekdayCountText,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        const SectionLabel(text: '기본'),
+        const SizedBox(height: 8),
         SurfaceCard(
           child: Column(
             children: [
@@ -2070,10 +2588,57 @@ class _AlertCard extends StatelessWidget {
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                 ),
-                value: '${intervalMinutes.toString()}분',
+                value: intervalLabel,
                 withTopBorder: true,
                 showChevron: true,
                 onTap: onPickInterval,
+              ),
+              _SettingRow(
+                height: 52,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
+                label: preAlertMinutes > 0 ? '미리 알림' : '다음 알림',
+                labelStyle: TextStyle(
+                  color: ui.textSecondary,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+                value: nextAlertPreviewText,
+                valueMaxLines: 2,
+                valueStyle: TextStyle(
+                  color: ui.textPrimary,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                ),
+                withTopBorder: true,
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        const SectionLabel(text: '시간과 요일'),
+        const SizedBox(height: 8),
+        SurfaceCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _SettingRow(
+                height: 52,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
+                label: '허용 시간대',
+                labelStyle: TextStyle(
+                  color: ui.textSecondary,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+                value: rangeText,
+                showChevron: true,
+                onTap: onPickRange,
               ),
               Container(
                 decoration: BoxDecoration(
@@ -2135,87 +2700,71 @@ class _AlertCard extends StatelessWidget {
                   ],
                 ),
               ),
-              _SettingRow(
-                height: 52,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 10,
-                ),
-                label: preAlertMinutes > 0 ? '미리 알림' : '다음 알림',
-                labelStyle: TextStyle(
-                  color: ui.textSecondary,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-                value: nextAlertPreviewText,
-                withTopBorder: true,
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 16),
-        SurfaceCard(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _SettingRow(
-                height: 52,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 10,
-                ),
-                label: '허용 시간대',
-                labelStyle: TextStyle(
-                  color: ui.textSecondary,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-                value: rangeText,
-                showChevron: true,
-                onTap: onPickRange,
-              ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(14, 10, 14, 14),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      '요일',
-                      style: TextStyle(
-                        color: ui.textSecondary,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            '요일',
+                            style: TextStyle(
+                              color: ui.textSecondary,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                        StatusChip(
+                          text: weekdayCountText,
+                          icon: Icons.calendar_month_outlined,
+                          foregroundColor: activeWeekdays.isEmpty
+                              ? SmokeUiPalette.warning
+                              : SmokeUiPalette.info,
+                          backgroundColor: activeWeekdays.isEmpty
+                              ? SmokeUiPalette.warningSoft
+                              : SmokeUiPalette.infoSoft,
+                          borderColor: activeWeekdays.isEmpty
+                              ? const Color(0xFFF3C58F)
+                              : const Color(0xFF9BD9E8),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 10),
-                    SizedBox(
-                      height: 32,
-                      child: Row(
-                        children: Step1Screen._weekdayLabels.entries
-                            .map(
-                              (entry) => Expanded(
-                                child: Padding(
-                                  padding: EdgeInsets.only(
-                                    left: entry.key == DateTime.monday ? 0 : 3,
-                                    right: entry.key == DateTime.sunday ? 0 : 3,
-                                  ),
-                                  child: GestureDetector(
-                                    onTap: () async {
-                                      await onToggleWeekday(entry.key);
-                                    },
-                                    child: DayChip(
-                                      text: entry.value,
-                                      active: activeWeekdays.contains(
-                                        entry.key,
-                                      ),
-                                    ),
-                                  ),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      children: Step1Screen._weekdayLabels.entries
+                          .map(
+                            (entry) => GestureDetector(
+                              onTap: () async {
+                                await onToggleWeekday(entry.key);
+                              },
+                              child: SizedBox(
+                                width: 38,
+                                child: DayChip(
+                                  text: entry.value,
+                                  active: activeWeekdays.contains(entry.key),
                                 ),
                               ),
-                            )
-                            .toList(growable: false),
-                      ),
+                            ),
+                          )
+                          .toList(growable: false),
                     ),
+                    if (activeWeekdays.isEmpty) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        '반복할 요일을 하나 이상 선택해야 다음 알림을 만들 수 있어요.',
+                        style: TextStyle(
+                          color: ui.textMuted,
+                          fontSize: 12,
+                          height: 1.45,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
@@ -2223,28 +2772,120 @@ class _AlertCard extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 16),
-        PrimaryButton(
-          text: '테스트 알림 보내기',
-          color: SmokeUiPalette.accent,
-          textStyle: const TextStyle(
-            color: Colors.black,
-            fontSize: 14,
-            fontWeight: FontWeight.w700,
+        const SectionLabel(text: '테스트'),
+        const SizedBox(height: 8),
+        if (compact) ...[
+          SecondaryButton(
+            text: '알림 권한',
+            icon: Icons.shield_outlined,
+            foregroundColor: ui.textPrimary,
+            backgroundColor: ui.surfaceAlt,
+            borderColor: ui.border,
+            onTap: () async {
+              await onRequestPermission();
+            },
           ),
-          onTap: () async {
-            await onSendTest();
-          },
-        ),
-        const SizedBox(height: 16),
+          const SizedBox(height: 8),
+          PrimaryButton(
+            text: '테스트 알림 보내기',
+            icon: Icons.notifications_active_rounded,
+            color: SmokeUiPalette.accent,
+            textStyle: const TextStyle(
+              color: Colors.black,
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+            ),
+            onTap: () async {
+              await onSendTest();
+            },
+          ),
+        ] else ...[
+          Row(
+            children: [
+              Expanded(
+                child: SecondaryButton(
+                  text: '알림 권한',
+                  icon: Icons.shield_outlined,
+                  foregroundColor: ui.textPrimary,
+                  backgroundColor: ui.surfaceAlt,
+                  borderColor: ui.border,
+                  onTap: () async {
+                    await onRequestPermission();
+                  },
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: PrimaryButton(
+                  text: '테스트 알림 보내기',
+                  icon: Icons.notifications_active_rounded,
+                  color: SmokeUiPalette.accent,
+                  textStyle: const TextStyle(
+                    color: Colors.black,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  onTap: () async {
+                    await onSendTest();
+                  },
+                ),
+              ),
+            ],
+          ),
+        ],
+        const SizedBox(height: 12),
         Text(
-          '알림 권한이 꺼져 있으면 시스템 설정에서 켜주세요.',
+          '알림이 예상과 다르면 권한, 요일, 허용 시간대 순서로 확인해 주세요.',
           style: TextStyle(
             color: ui.textMuted,
             fontSize: 12,
+            height: 1.45,
             fontWeight: FontWeight.w500,
           ),
         ),
       ],
+    );
+  }
+}
+
+class _AlertOverviewMetric extends StatelessWidget {
+  const _AlertOverviewMetric({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final ui = SmokeUiTheme.of(context);
+    return SurfaceCard(
+      color: ui.surface,
+      strokeColor: ui.border,
+      cornerRadius: SmokeUiRadius.sm,
+      padding: const EdgeInsets.fromLTRB(10, 10, 10, 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              color: ui.textMuted,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            value,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: ui.textPrimary,
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -2312,7 +2953,7 @@ class _SettingsCard extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         Text(
-          '알림, 지출, 표시 옵션을 한 곳에서 관리합니다.',
+          '알림, 비용, 표시 방식을 섹션별로 관리합니다.',
           style: TextStyle(
             color: ui.textSecondary,
             fontSize: 13,
@@ -2320,6 +2961,8 @@ class _SettingsCard extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 16),
+        const SectionLabel(text: '알림'),
+        const SizedBox(height: 8),
         SurfaceCard(
           child: _SettingRow(
             height: 52,
@@ -2336,6 +2979,8 @@ class _SettingsCard extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 16),
+        const SectionLabel(text: '비용'),
+        const SizedBox(height: 8),
         SurfaceCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -2409,6 +3054,8 @@ class _SettingsCard extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 16),
+        const SectionLabel(text: '표시'),
+        const SizedBox(height: 8),
         SurfaceCard(
           child: Column(
             children: [
@@ -2460,6 +3107,15 @@ class _SettingsCard extends StatelessWidget {
                 showChevron: true,
                 onTap: onCycleRingReference,
               ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        const SectionLabel(text: '피드백'),
+        const SizedBox(height: 8),
+        SurfaceCard(
+          child: Column(
+            children: [
               _SettingRow(
                 height: 52,
                 padding: const EdgeInsets.symmetric(
@@ -2497,17 +3153,38 @@ class _SettingsCard extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 16),
+        const SectionLabel(text: '데이터'),
+        const SizedBox(height: 8),
         SurfaceCard(
-          child: _SettingRow(
-            height: 52,
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            label: '데이터 초기화',
-            labelStyle: const TextStyle(
-              color: Color(0xFFD95B57),
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-            ),
-            onTap: onResetData,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _SettingRow(
+                height: 52,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
+                label: '데이터 초기화',
+                labelStyle: const TextStyle(
+                  color: Color(0xFFD95B57),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+                onTap: onResetData,
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+                child: Text(
+                  '기록과 설정을 모두 지우는 작업입니다.',
+                  style: TextStyle(
+                    color: ui.textMuted,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ],
@@ -2523,6 +3200,8 @@ class _SettingRow extends StatelessWidget {
     required this.label,
     required this.labelStyle,
     this.value,
+    this.valueMaxLines = 1,
+    this.valueStyle,
     this.trailing,
     this.withTopBorder = false,
     this.showChevron = false,
@@ -2535,6 +3214,8 @@ class _SettingRow extends StatelessWidget {
   final String label;
   final TextStyle labelStyle;
   final String? value;
+  final int valueMaxLines;
+  final TextStyle? valueStyle;
   final Widget? trailing;
   final bool withTopBorder;
   final bool showChevron;
@@ -2571,14 +3252,16 @@ class _SettingRow extends StatelessWidget {
               fit: FlexFit.loose,
               child: Text(
                 value!,
-                maxLines: 1,
+                maxLines: valueMaxLines,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.right,
-                style: TextStyle(
-                  color: ui.textPrimary,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                ),
+                style:
+                    valueStyle ??
+                    TextStyle(
+                      color: ui.textPrimary,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
               ),
             ),
           if (value != null && showChevron) const SizedBox(width: 8),

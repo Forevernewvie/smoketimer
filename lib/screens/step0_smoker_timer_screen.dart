@@ -68,12 +68,12 @@ class _Step0SmokerTimerScreenState
                 children: [
                   _OnboardingPage(
                     index: 0,
-                    title: '경과 시간을 한눈에',
-                    description: '마지막 기록 시점부터 자동으로 카운트됩니다.',
+                    title: '지금 얼마나 지났는지 바로 확인',
+                    description: '마지막 기록 후 경과 시간을 홈에서 바로 보여줘요.',
                     features: const [
-                      '빠른 기록(+1) / 되돌리기',
-                      '다음 흡연까지 남은 시간 확인',
-                      '오늘 페이스를 직관적으로 확인',
+                      '기록과 되돌리기 한 번에',
+                      '다음 알림 상태 확인',
+                      '오늘 흐름 빠르게 파악',
                     ],
                     buttonText: '다음',
                     onButtonTap: _next,
@@ -83,12 +83,12 @@ class _Step0SmokerTimerScreenState
                   ),
                   _OnboardingPage(
                     index: 1,
-                    title: '기록을 흐름으로 파악',
-                    description: '하루 흡연 횟수와 시간대를 자동으로 정리합니다.',
+                    title: '기록은 빠르게, 흐름은 자동으로',
+                    description: '오늘, 주간, 월간 기록을 보기 쉽게 정리해요.',
                     features: const [
-                      '오늘/주간/월간 탭 전환',
-                      '총 개비 · 평균 간격 · 최장 간격',
-                      '최근 기록 최대 20건 확인',
+                      '총 개비와 간격 통계',
+                      '최근 기록 최대 20건',
+                      '패턴 변화를 한눈에 확인',
                     ],
                     buttonText: '다음',
                     onButtonTap: _next,
@@ -98,12 +98,12 @@ class _Step0SmokerTimerScreenState
                   ),
                   _OnboardingPage(
                     index: 2,
-                    title: '알림 간격을 내 루틴에 맞게',
-                    description: '다음 흡연 알림 시간을 자유롭게 설정하세요.',
+                    title: '알림은 생활 리듬에 맞게',
+                    description: '간격, 요일, 허용 시간대를 내 일정에 맞춰 조정해요.',
                     features: const [
-                      '반복 간격(30분~4시간) 설정',
-                      '요일/허용 시간대 커스터마이즈',
-                      '테스트 알림으로 즉시 확인',
+                      '30분~4시간 간격 설정',
+                      '요일과 시간대 세부 조정',
+                      '테스트 알림으로 바로 확인',
                     ],
                     buttonText: '시작하기',
                     onButtonTap: _next,
@@ -222,9 +222,13 @@ class _OnboardingPage extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 14),
+                    const SectionLabel(text: '이 화면에서 할 수 있는 것'),
+                    const SizedBox(height: 8),
                     SizedBox(
                       width: double.infinity,
                       child: SurfaceCard(
+                        color: ui.surfaceAlt,
+                        strokeColor: ui.border,
                         padding: const EdgeInsets.all(14),
                         cornerRadius: 16,
                         child: Row(
@@ -291,6 +295,9 @@ class _OnboardingPage extends StatelessWidget {
             const SizedBox(height: 10),
             PrimaryButton(
               text: buttonText,
+              icon: index == 2
+                  ? Icons.arrow_forward_rounded
+                  : Icons.chevron_right_rounded,
               height: 48,
               color: SmokeUiPalette.accent,
               textStyle: const TextStyle(
@@ -301,30 +308,15 @@ class _OnboardingPage extends StatelessWidget {
               onTap: onButtonTap,
             ),
             const SizedBox(height: 10),
-            Material(
-              color: compact ? ui.surface : ui.surfaceAlt,
-              borderRadius: BorderRadius.circular(24),
-              child: InkWell(
-                borderRadius: BorderRadius.circular(24),
-                onTap: onStartTap,
-                child: Container(
-                  height: 48,
-                  width: double.infinity,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: ui.border),
-                  ),
-                  child: Text(
-                    '앱 시작',
-                    style: TextStyle(
-                      color: ui.textPrimary,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
+            SecondaryButton(
+              text: '앱 시작',
+              icon: Icons.play_arrow_rounded,
+              height: 48,
+              radius: 24,
+              foregroundColor: ui.textPrimary,
+              backgroundColor: compact ? ui.surface : ui.surfaceAlt,
+              borderColor: ui.border,
+              onTap: onStartTap,
             ),
           ],
         );

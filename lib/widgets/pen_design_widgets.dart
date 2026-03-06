@@ -15,8 +15,34 @@ class SmokeUiPalette {
   static const accentDark = Color(0xFFE7792F);
   static const accentSoft = Color(0xFFFFE9D8);
   static const mint = Color(0xFF14B88F);
+  static const mintSoft = Color(0xFFDDF8F0);
+  static const info = Color(0xFF0891B2);
+  static const infoSoft = Color(0xFFDDF4FA);
+  static const warning = Color(0xFFB45309);
+  static const warningSoft = Color(0xFFFFEDD5);
   static const risk = Color(0xFFD95B57);
+  static const riskSoft = Color(0xFFFEE2E2);
   static const neutralSoft = Color(0xFFEEF2F7);
+}
+
+class SmokeUiSpacing {
+  const SmokeUiSpacing._();
+
+  static const xxs = 4.0;
+  static const xs = 8.0;
+  static const sm = 12.0;
+  static const md = 16.0;
+  static const lg = 20.0;
+  static const xl = 24.0;
+}
+
+class SmokeUiRadius {
+  const SmokeUiRadius._();
+
+  static const sm = 10.0;
+  static const md = 16.0;
+  static const lg = 20.0;
+  static const pill = 999.0;
 }
 
 class SmokeUiTheme {
@@ -88,6 +114,7 @@ class SurfaceCard extends StatelessWidget {
     this.strokeColor,
     this.strokeWidth = 1,
     this.cornerRadius = 16,
+    this.boxShadow,
     super.key,
   });
 
@@ -97,6 +124,7 @@ class SurfaceCard extends StatelessWidget {
   final Color? strokeColor;
   final double strokeWidth;
   final double cornerRadius;
+  final List<BoxShadow>? boxShadow;
 
   @override
   Widget build(BuildContext context) {
@@ -113,6 +141,7 @@ class SurfaceCard extends StatelessWidget {
         color: resolvedColor,
         borderRadius: BorderRadius.circular(cornerRadius),
         border: border,
+        boxShadow: boxShadow,
       ),
       child: child,
     );
@@ -276,6 +305,8 @@ class TogglePill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ui = SmokeUiTheme.of(context);
+    final reduceMotion =
+        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
     return Container(
       width: 44,
       height: 24,
@@ -286,7 +317,9 @@ class TogglePill extends StatelessWidget {
       child: Stack(
         children: [
           AnimatedPositioned(
-            duration: const Duration(milliseconds: 120),
+            duration: reduceMotion
+                ? Duration.zero
+                : const Duration(milliseconds: 180),
             curve: Curves.easeOut,
             left: isOn ? 22 : 2,
             top: 2,
@@ -340,6 +373,7 @@ class PrimaryButton extends StatelessWidget {
     this.height = 48,
     this.color = SmokeUiPalette.accent,
     this.radius = 12,
+    this.icon,
     this.onTap,
     this.textStyle = const TextStyle(
       color: Colors.white,
@@ -353,13 +387,19 @@ class PrimaryButton extends StatelessWidget {
   final double height;
   final Color color;
   final double radius;
+  final IconData? icon;
   final VoidCallback? onTap;
   final TextStyle textStyle;
 
   @override
   Widget build(BuildContext context) {
+    final enabled = onTap != null;
+    final background = enabled ? color : color.withValues(alpha: 0.45);
+    final foreground = enabled
+        ? textStyle.color ?? Colors.white
+        : (textStyle.color ?? Colors.white).withValues(alpha: 0.72);
     return Material(
-      color: color,
+      color: background,
       borderRadius: BorderRadius.circular(radius),
       child: InkWell(
         onTap: onTap,
@@ -372,15 +412,176 @@ class PrimaryButton extends StatelessWidget {
             width: double.infinity,
             alignment: Alignment.center,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            child: Text(
-              text,
-              style: textStyle,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (icon != null) ...[
+                  Icon(icon, size: 18, color: foreground),
+                  const SizedBox(width: SmokeUiSpacing.xs),
+                ],
+                Flexible(
+                  child: Text(
+                    text,
+                    style: textStyle.copyWith(color: foreground),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ],
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class SecondaryButton extends StatelessWidget {
+  const SecondaryButton({
+    required this.text,
+    this.height = 44,
+    this.radius = SmokeUiRadius.md,
+    this.foregroundColor,
+    this.backgroundColor,
+    this.borderColor,
+    this.icon,
+    this.onTap,
+    super.key,
+  });
+
+  final String text;
+  final double height;
+  final double radius;
+  final Color? foregroundColor;
+  final Color? backgroundColor;
+  final Color? borderColor;
+  final IconData? icon;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final ui = SmokeUiTheme.of(context);
+    final enabled = onTap != null;
+    final foreground = enabled
+        ? (foregroundColor ?? ui.textPrimary)
+        : (foregroundColor ?? ui.textPrimary).withValues(alpha: 0.45);
+    final background = enabled
+        ? (backgroundColor ?? ui.surfaceAlt)
+        : (backgroundColor ?? ui.surfaceAlt).withValues(alpha: 0.6);
+    final stroke = enabled
+        ? (borderColor ?? ui.border)
+        : (borderColor ?? ui.border).withValues(alpha: 0.45);
+
+    return Material(
+      color: background,
+      borderRadius: BorderRadius.circular(radius),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(radius),
+        child: Container(
+          width: double.infinity,
+          constraints: BoxConstraints(minHeight: height),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(radius),
+            border: Border.all(color: stroke),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (icon != null) ...[
+                Icon(icon, size: 18, color: foreground),
+                const SizedBox(width: SmokeUiSpacing.xs),
+              ],
+              Flexible(
+                child: Text(
+                  text,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: foreground,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class StatusChip extends StatelessWidget {
+  const StatusChip({
+    required this.text,
+    this.icon,
+    required this.foregroundColor,
+    required this.backgroundColor,
+    this.borderColor,
+    super.key,
+  });
+
+  final String text;
+  final IconData? icon;
+  final Color foregroundColor;
+  final Color backgroundColor;
+  final Color? borderColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(SmokeUiRadius.pill),
+        border: borderColor == null ? null : Border.all(color: borderColor!),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (icon != null) ...[
+            Icon(icon, size: 14, color: foregroundColor),
+            const SizedBox(width: SmokeUiSpacing.xxs),
+          ],
+          Flexible(
+            child: Text(
+              text,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: foregroundColor,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class SectionLabel extends StatelessWidget {
+  const SectionLabel({required this.text, super.key});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final ui = SmokeUiTheme.of(context);
+    return Text(
+      text,
+      style: TextStyle(
+        color: ui.textMuted,
+        fontSize: 12,
+        fontWeight: FontWeight.w700,
+        letterSpacing: 0.2,
       ),
     );
   }
