@@ -71,4 +71,46 @@ void main() {
     container.dispose();
     adService.disposeService();
   });
+
+  testWidgets('home remains actionable while banner placeholder is visible', (
+    WidgetTester tester,
+  ) async {
+    setTestViewport(tester, size: const Size(320, 690));
+
+    SharedPreferences.setMockInitialValues(<String, Object>{});
+    final prefs = await SharedPreferences.getInstance();
+    final adService = TestAdService(
+      initialState: const BannerAdState(status: AdBannerStatus.loading),
+    );
+
+    final container = createTestContainer(
+      prefs: prefs,
+      now: () => DateTime(2026, 2, 17, 9, 0),
+      adService: adService,
+      autoDispose: false,
+    );
+
+    await pumpApp(tester, container);
+    await tester.tap(find.text('건너뛰기'));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('main_banner_placeholder')), findsOneWidget);
+
+    final addFinder = find.text('지금 흡연 기록').first;
+    await tester.ensureVisible(addFinder);
+    await tester.tap(addFinder);
+    await tester.pumpAndSettle();
+
+    final undoFinder = find.text('되돌리기').first;
+    await tester.ensureVisible(undoFinder);
+    await tester.tap(undoFinder);
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pumpAndSettle();
+    container.dispose();
+    adService.disposeService();
+  });
 }
