@@ -1450,6 +1450,8 @@ class _HomeCard extends StatelessWidget {
 class _HomeStatusPanel extends StatelessWidget {
   const _HomeStatusPanel({required this.label, required this.presentation});
 
+  static const double _headerMinHeight = 28;
+
   final String label;
   final HomeStatusPresentation presentation;
 
@@ -1465,30 +1467,34 @@ class _HomeStatusPanel extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Text(
-                  label,
-                  style: TextStyle(
-                    color: ui.textMuted,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
+          SizedBox(
+            width: double.infinity,
+            height: _headerMinHeight,
+            child: Stack(
+              children: [
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    label,
+                    style: TextStyle(
+                      color: ui.textMuted,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(width: SmokeUiSpacing.xs),
-              Flexible(
-                child: StatusChip(
-                  text: presentation.chipText,
-                  icon: presentation.icon,
-                  foregroundColor: tonePalette.foregroundColor,
-                  backgroundColor: tonePalette.backgroundColor,
-                  borderColor: tonePalette.borderColor,
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: StatusChip(
+                    text: presentation.chipText,
+                    icon: presentation.icon,
+                    foregroundColor: tonePalette.foregroundColor,
+                    backgroundColor: tonePalette.backgroundColor,
+                    borderColor: tonePalette.borderColor,
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           const SizedBox(height: 6),
           Text(
@@ -1839,18 +1845,24 @@ class _RecordCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             if (stackedSummaryCards) ...[
-              _SummaryItem(
-                label: '평균 간격',
-                value: averageIntervalText,
-                detail: '기록 사이 평균 간격',
-                valueFontSize: 20,
+              SizedBox(
+                width: double.infinity,
+                child: _SummaryItem(
+                  label: '평균 간격',
+                  value: averageIntervalText,
+                  detail: '기록 사이 평균 간격',
+                  valueFontSize: 20,
+                ),
               ),
               const SizedBox(height: 8),
-              _SummaryItem(
-                label: '최장 간격',
-                value: maxIntervalText,
-                detail: '가장 길었던 간격',
-                valueFontSize: 20,
+              SizedBox(
+                width: double.infinity,
+                child: _SummaryItem(
+                  label: '최장 간격',
+                  value: maxIntervalText,
+                  detail: '가장 길었던 간격',
+                  valueFontSize: 20,
+                ),
               ),
             ] else ...[
               Row(
