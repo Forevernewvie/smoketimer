@@ -8,6 +8,7 @@ import '../domain/app_defaults.dart';
 import '../domain/models/record_period.dart';
 import '../domain/models/smoking_record.dart';
 import '../l10n/app_localizations.dart';
+import '../presentation/alert/alert_settings_presenter.dart';
 import '../presentation/home/home_status_presenter.dart';
 import '../presentation/state/ads_providers.dart';
 import '../presentation/state/app_providers.dart';
@@ -294,9 +295,20 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
                 ringReferenceLabel: state.settings.ringReferenceLabel,
                 vibrationEnabled: state.settings.vibrationEnabled,
                 soundTypeLabel: state.settings.soundTypeLabel,
-                alertSummary: state.settings.repeatEnabled
-                    ? '켜짐 · ${_formatIntervalLabel(state.settings.intervalMinutes)}'
-                    : '꺼짐',
+                alertSummary: AlertSettingsPresenter.build(
+                  AlertSettingsInput(
+                    repeatEnabled: state.settings.repeatEnabled,
+                    intervalMinutes: state.settings.intervalMinutes,
+                    preAlertMinutes: state.settings.preAlertMinutes,
+                    allowedStartMinutes: state.settings.allowedStartMinutes,
+                    allowedEndMinutes: state.settings.allowedEndMinutes,
+                    use24Hour: state.settings.use24Hour,
+                    hasRingBaseTime: ringBaseTime != null,
+                    activeWeekdayCount: state.settings.activeWeekdays.length,
+                    now: state.now,
+                    nextAlertAt: state.nextAlertAt,
+                  ),
+                ).settingsSummary,
                 isCostConfigured: isCostConfigured,
                 packPriceText: state.settings.packPrice > 0
                     ? CostStatsService.formatCurrency(
@@ -469,53 +481,35 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
                                 appControllerProvider.notifier,
                               );
 
-                              final rangeText = TimeFormatter.formatRange(
-                                startMinutes:
-                                    appState.settings.allowedStartMinutes,
-                                endMinutes: appState.settings.allowedEndMinutes,
-                                use24Hour: appState.settings.use24Hour,
-                              );
-
                               final resolvedLastSmokingAt =
                                   SmokingStatsService.resolveLastSmokingAt(
                                     appState.meta.lastSmokingAt,
                                     appState.records,
                                   );
-
-                              final nextAlertPreviewText = () {
-                                if (!appState.settings.repeatEnabled) {
-                                  return '꺼짐';
-                                }
-                                if (resolvedLastSmokingAt == null) {
-                                  return '기록 후 시작';
-                                }
-                                if (appState.settings.activeWeekdays.isEmpty) {
-                                  return '요일 필요';
-                                }
-                                if (appState.nextAlertAt == null) {
-                                  return '없음';
-                                }
-
-                                final at = TimeFormatter.formatDayAwareClock(
-                                  appState.now,
-                                  appState.nextAlertAt!,
+                              final presentation = AlertSettingsPresenter.build(
+                                AlertSettingsInput(
+                                  repeatEnabled:
+                                      appState.settings.repeatEnabled,
+                                  intervalMinutes:
+                                      appState.settings.intervalMinutes,
+                                  preAlertMinutes:
+                                      appState.settings.preAlertMinutes,
+                                  allowedStartMinutes:
+                                      appState.settings.allowedStartMinutes,
+                                  allowedEndMinutes:
+                                      appState.settings.allowedEndMinutes,
                                   use24Hour: appState.settings.use24Hour,
-                                );
-                                final countdown = TimeFormatter.formatCountdown(
-                                  appState.now,
-                                  appState.nextAlertAt!,
-                                );
-                                return '$at · $countdown';
-                              }();
+                                  hasRingBaseTime:
+                                      resolvedLastSmokingAt != null,
+                                  activeWeekdayCount:
+                                      appState.settings.activeWeekdays.length,
+                                  now: appState.now,
+                                  nextAlertAt: appState.nextAlertAt,
+                                ),
+                              );
 
                               return _AlertCard(
-                                repeatEnabled: appState.settings.repeatEnabled,
-                                intervalMinutes:
-                                    appState.settings.intervalMinutes,
-                                preAlertMinutes:
-                                    appState.settings.preAlertMinutes,
-                                rangeText: rangeText,
-                                nextAlertPreviewText: nextAlertPreviewText,
+                                presentation: presentation,
                                 activeWeekdays:
                                     appState.settings.activeWeekdays,
                                 onToggleRepeat: () async {
@@ -618,7 +612,7 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
         final ui = SmokeUiTheme.of(context);
         return StatefulBuilder(
           builder: (context, setModalState) {
-            String label = _formatIntervalLabel(minutes);
+            String label = AlertSettingsPresenter.formatIntervalLabel(minutes);
             return SingleChildScrollView(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
@@ -669,7 +663,7 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          _formatIntervalLabel(min),
+                          AlertSettingsPresenter.formatIntervalLabel(min),
                           style: TextStyle(
                             color: ui.textMuted,
                             fontSize: 12,
@@ -677,7 +671,7 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
                           ),
                         ),
                         Text(
-                          _formatIntervalLabel(max),
+                          AlertSettingsPresenter.formatIntervalLabel(max),
                           style: TextStyle(
                             color: ui.textMuted,
                             fontSize: 12,
@@ -725,19 +719,6 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
     }
     await HapticFeedback.selectionClick();
     _showFeedback('알림 간격을 변경했어요.');
-  }
-
-  static String _formatIntervalLabel(int minutes) {
-    final clamped = minutes.clamp(0, 24 * 60).toInt();
-    final hours = clamped ~/ 60;
-    final remain = clamped % 60;
-    if (hours <= 0) {
-      return '${clamped.toString()}분';
-    }
-    if (remain == 0) {
-      return '${hours.toString()}시간';
-    }
-    return '${hours.toString()}시간 ${remain.toString()}분';
   }
 
   Future<void> _pickAllowedWindow(BuildContext context, AppState state) async {
@@ -2303,11 +2284,7 @@ class _RecordListRow extends StatelessWidget {
 
 class _AlertCard extends StatelessWidget {
   const _AlertCard({
-    required this.repeatEnabled,
-    required this.intervalMinutes,
-    required this.preAlertMinutes,
-    required this.rangeText,
-    required this.nextAlertPreviewText,
+    required this.presentation,
     required this.activeWeekdays,
     required this.onToggleRepeat,
     required this.onPickInterval,
@@ -2318,11 +2295,7 @@ class _AlertCard extends StatelessWidget {
     required this.onSendTest,
   });
 
-  final bool repeatEnabled;
-  final int intervalMinutes;
-  final int preAlertMinutes;
-  final String rangeText;
-  final String nextAlertPreviewText;
+  final AlertSettingsPresentation presentation;
   final Set<int> activeWeekdays;
   final Future<void> Function() onToggleRepeat;
   final Future<void> Function() onPickInterval;
@@ -2337,20 +2310,15 @@ class _AlertCard extends StatelessWidget {
     final ui = SmokeUiTheme.of(context);
     final textScale = MediaQuery.textScalerOf(context).scale(1);
     final compact = MediaQuery.sizeOf(context).width < 400 || textScale > 1.15;
-    final intervalLabel = () {
-      final hours = intervalMinutes ~/ 60;
-      final minutes = intervalMinutes % 60;
-      if (hours <= 0) {
-        return '${intervalMinutes.toString()}분';
-      }
-      if (minutes == 0) {
-        return '${hours.toString()}시간';
-      }
-      return '${hours.toString()}시간 ${minutes.toString()}분';
-    }();
-    final weekdayCountText = activeWeekdays.isEmpty
-        ? '없음'
-        : '${activeWeekdays.length}일';
+    final repeatTonePalette = _AlertTonePalette.fromTone(
+      presentation.repeatChipTone,
+    );
+    final scheduleTonePalette = _AlertTonePalette.fromTone(
+      presentation.scheduleChipTone,
+    );
+    final weekdayTonePalette = _AlertTonePalette.fromTone(
+      presentation.weekdayTone,
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -2387,28 +2355,18 @@ class _AlertCard extends StatelessWidget {
                 runSpacing: 8,
                 children: [
                   StatusChip(
-                    text: repeatEnabled ? '반복 알림 켜짐' : '반복 알림 꺼짐',
-                    icon: repeatEnabled
-                        ? Icons.notifications_active_outlined
-                        : Icons.notifications_off_outlined,
-                    foregroundColor: repeatEnabled
-                        ? SmokeUiPalette.mint
-                        : SmokeUiPalette.warning,
-                    backgroundColor: repeatEnabled
-                        ? SmokeUiPalette.mintSoft
-                        : SmokeUiPalette.warningSoft,
-                    borderColor: repeatEnabled
-                        ? const Color(0xFF94E3CF)
-                        : const Color(0xFFF3C58F),
+                    text: presentation.repeatChipText,
+                    icon: presentation.repeatChipIcon,
+                    foregroundColor: repeatTonePalette.foregroundColor,
+                    backgroundColor: repeatTonePalette.backgroundColor,
+                    borderColor: repeatTonePalette.borderColor,
                   ),
                   StatusChip(
-                    text: preAlertMinutes > 0
-                        ? '${preAlertMinutes.toString()}분 미리 알림'
-                        : '정시 알림',
+                    text: presentation.scheduleChipText,
                     icon: Icons.schedule_rounded,
-                    foregroundColor: SmokeUiPalette.info,
-                    backgroundColor: SmokeUiPalette.infoSoft,
-                    borderColor: const Color(0xFF9BD9E8),
+                    foregroundColor: scheduleTonePalette.foregroundColor,
+                    backgroundColor: scheduleTonePalette.backgroundColor,
+                    borderColor: scheduleTonePalette.borderColor,
                   ),
                 ],
               ),
@@ -2416,7 +2374,7 @@ class _AlertCard extends StatelessWidget {
               const SectionLabel(text: '다음 일정'),
               const SizedBox(height: 4),
               Text(
-                nextAlertPreviewText,
+                presentation.nextAlertPreviewText,
                 style: TextStyle(
                   color: ui.textPrimary,
                   fontSize: 16,
@@ -2425,32 +2383,41 @@ class _AlertCard extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               if (compact) ...[
-                _AlertOverviewMetric(label: '간격', value: intervalLabel),
+                _AlertOverviewMetric(
+                  label: '간격',
+                  value: presentation.intervalLabel,
+                ),
                 const SizedBox(height: 8),
-                _AlertOverviewMetric(label: '시간대', value: rangeText),
+                _AlertOverviewMetric(
+                  label: '시간대',
+                  value: presentation.rangeText,
+                ),
                 const SizedBox(height: 8),
-                _AlertOverviewMetric(label: '활성 요일', value: weekdayCountText),
+                _AlertOverviewMetric(
+                  label: '활성 요일',
+                  value: presentation.weekdayCountText,
+                ),
               ] else ...[
                 Row(
                   children: [
                     Expanded(
                       child: _AlertOverviewMetric(
                         label: '간격',
-                        value: intervalLabel,
+                        value: presentation.intervalLabel,
                       ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: _AlertOverviewMetric(
                         label: '시간대',
-                        value: rangeText,
+                        value: presentation.rangeText,
                       ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: _AlertOverviewMetric(
                         label: '활성 요일',
-                        value: weekdayCountText,
+                        value: presentation.weekdayCountText,
                       ),
                     ),
                   ],
@@ -2477,7 +2444,7 @@ class _AlertCard extends StatelessWidget {
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
                 ),
-                trailing: TogglePill(isOn: repeatEnabled),
+                trailing: TogglePill(isOn: presentation.repeatEnabled),
                 onTap: onToggleRepeat,
               ),
               _SettingRow(
@@ -2509,7 +2476,7 @@ class _AlertCard extends StatelessWidget {
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                 ),
-                value: intervalLabel,
+                value: presentation.intervalLabel,
                 withTopBorder: true,
                 showChevron: true,
                 onTap: onPickInterval,
@@ -2520,13 +2487,13 @@ class _AlertCard extends StatelessWidget {
                   horizontal: 14,
                   vertical: 10,
                 ),
-                label: preAlertMinutes > 0 ? '미리 알림' : '다음 알림',
+                label: presentation.nextAlertRowLabel,
                 labelStyle: TextStyle(
                   color: ui.textSecondary,
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                 ),
-                value: nextAlertPreviewText,
+                value: presentation.nextAlertPreviewText,
                 valueMaxLines: 2,
                 valueStyle: TextStyle(
                   color: ui.textPrimary,
@@ -2557,7 +2524,7 @@ class _AlertCard extends StatelessWidget {
                   fontSize: 14,
                   fontWeight: FontWeight.w500,
                 ),
-                value: rangeText,
+                value: presentation.rangeText,
                 showChevron: true,
                 onTap: onPickRange,
               ),
@@ -2582,7 +2549,7 @@ class _AlertCard extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          '${preAlertMinutes.toString()}분 전',
+                          presentation.preAlertValueText,
                           style: TextStyle(
                             color: ui.textPrimary,
                             fontSize: 14,
@@ -2608,11 +2575,11 @@ class _AlertCard extends StatelessWidget {
                         divisions:
                             AppDefaults.maxPreAlertMinutes -
                             AppDefaults.minPreAlertMinutes,
-                        value: preAlertMinutes.toDouble().clamp(
+                        value: presentation.preAlertMinutes.toDouble().clamp(
                           AppDefaults.minPreAlertMinutes.toDouble(),
                           AppDefaults.maxPreAlertMinutes.toDouble(),
                         ),
-                        label: '${preAlertMinutes.toString()}분',
+                        label: '${presentation.preAlertMinutes}분',
                         onChanged: (value) {
                           onSetPreAlertMinutes(value.round());
                         },
@@ -2639,17 +2606,11 @@ class _AlertCard extends StatelessWidget {
                           ),
                         ),
                         StatusChip(
-                          text: weekdayCountText,
+                          text: presentation.weekdayCountText,
                           icon: Icons.calendar_month_outlined,
-                          foregroundColor: activeWeekdays.isEmpty
-                              ? SmokeUiPalette.warning
-                              : SmokeUiPalette.info,
-                          backgroundColor: activeWeekdays.isEmpty
-                              ? SmokeUiPalette.warningSoft
-                              : SmokeUiPalette.infoSoft,
-                          borderColor: activeWeekdays.isEmpty
-                              ? const Color(0xFFF3C58F)
-                              : const Color(0xFF9BD9E8),
+                          foregroundColor: weekdayTonePalette.foregroundColor,
+                          backgroundColor: weekdayTonePalette.backgroundColor,
+                          borderColor: weekdayTonePalette.borderColor,
                         ),
                       ],
                     ),
@@ -2674,7 +2635,7 @@ class _AlertCard extends StatelessWidget {
                           )
                           .toList(growable: false),
                     ),
-                    if (activeWeekdays.isEmpty) ...[
+                    if (presentation.showWeekdayHint) ...[
                       const SizedBox(height: 8),
                       Text(
                         '반복할 요일을 하나 이상 선택해야 다음 알림을 만들 수 있어요.',
@@ -2766,6 +2727,48 @@ class _AlertCard extends StatelessWidget {
         ),
       ],
     );
+  }
+}
+
+class _AlertTonePalette {
+  const _AlertTonePalette({
+    required this.foregroundColor,
+    required this.backgroundColor,
+    required this.borderColor,
+  });
+
+  final Color foregroundColor;
+  final Color backgroundColor;
+  final Color borderColor;
+
+  /// Maps semantic alert tones to the shared settings chip palette.
+  factory _AlertTonePalette.fromTone(AlertSettingsTone tone) {
+    switch (tone) {
+      case AlertSettingsTone.info:
+        return const _AlertTonePalette(
+          foregroundColor: SmokeUiPalette.info,
+          backgroundColor: SmokeUiPalette.infoSoft,
+          borderColor: Color(0xFF9BD9E8),
+        );
+      case AlertSettingsTone.warning:
+        return const _AlertTonePalette(
+          foregroundColor: SmokeUiPalette.warning,
+          backgroundColor: SmokeUiPalette.warningSoft,
+          borderColor: Color(0xFFF3C58F),
+        );
+      case AlertSettingsTone.success:
+        return const _AlertTonePalette(
+          foregroundColor: SmokeUiPalette.mint,
+          backgroundColor: SmokeUiPalette.mintSoft,
+          borderColor: Color(0xFF94E3CF),
+        );
+      case AlertSettingsTone.risk:
+        return const _AlertTonePalette(
+          foregroundColor: SmokeUiPalette.risk,
+          backgroundColor: SmokeUiPalette.riskSoft,
+          borderColor: Color(0xFFF4B6B3),
+        );
+    }
   }
 }
 
