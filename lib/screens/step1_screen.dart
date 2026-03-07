@@ -8,6 +8,7 @@ import '../domain/app_defaults.dart';
 import '../domain/models/record_period.dart';
 import '../domain/models/smoking_record.dart';
 import '../l10n/app_localizations.dart';
+import '../presentation/home/home_status_presenter.dart';
 import '../presentation/state/ads_providers.dart';
 import '../presentation/state/app_providers.dart';
 import '../presentation/state/app_state.dart';
@@ -1121,128 +1122,25 @@ class _HomeCard extends StatelessWidget {
         ? const Color(0xFF0F1318)
         : const Color(0xFF121417);
     final textScale = MediaQuery.textScalerOf(context).scale(1);
-    final intervalPresentation = () {
-      if (!hasRingBaseTime) {
-        return const _StatusPresentation(
-          chipText: '기록 대기',
-          title: '첫 기록 후 타이머가 시작돼요',
-          detail: '기록하면 경과 시간이 움직여요.',
-          icon: Icons.play_circle_outline_rounded,
-          foregroundColor: SmokeUiPalette.info,
-          backgroundColor: SmokeUiPalette.infoSoft,
-          borderColor: Color(0xFF9BD9E8),
-        );
-      }
-      if (intervalMinutes <= 0) {
-        return const _StatusPresentation(
-          chipText: '설정 필요',
-          title: '알림 간격을 설정해 주세요',
-          detail: '간격이 있어야 남은 시간을 계산해요.',
-          icon: Icons.tune_rounded,
-          foregroundColor: SmokeUiPalette.warning,
-          backgroundColor: SmokeUiPalette.warningSoft,
-          borderColor: Color(0xFFF3C58F),
-        );
-      }
+    final intervalPresentation = HomeStatusPresenter.buildIntervalStatus(
+      HomeIntervalStatusInput(
+        hasRingBaseTime: hasRingBaseTime,
+        elapsedMinutes: elapsedMinutes,
+        intervalMinutes: intervalMinutes,
+      ),
+    );
 
-      final remainingMinutes = intervalMinutes - elapsedMinutes;
-      if (remainingMinutes > 0) {
-        return _StatusPresentation(
-          chipText: '진행 중',
-          title: '$remainingMinutes분 남았어요',
-          detail: '간격 ${intervalMinutes.toString()}분 기준',
-          icon: Icons.timer_outlined,
-          foregroundColor: SmokeUiPalette.mint,
-          backgroundColor: SmokeUiPalette.mintSoft,
-          borderColor: const Color(0xFF94E3CF),
-        );
-      }
-      if (remainingMinutes == 0) {
-        return const _StatusPresentation(
-          chipText: '확인 시점',
-          title: '지금 기록할 타이밍이에요',
-          detail: '설정한 간격에 도달했어요.',
-          icon: Icons.check_circle_outline_rounded,
-          foregroundColor: SmokeUiPalette.warning,
-          backgroundColor: SmokeUiPalette.warningSoft,
-          borderColor: Color(0xFFF3C58F),
-        );
-      }
-
-      final overdueMinutes = elapsedMinutes - intervalMinutes;
-      return _StatusPresentation(
-        chipText: '간격 초과',
-        title: '$overdueMinutes분 지났어요',
-        detail: '설정 간격보다 늦었어요.',
-        icon: Icons.warning_amber_rounded,
-        foregroundColor: SmokeUiPalette.risk,
-        backgroundColor: SmokeUiPalette.riskSoft,
-        borderColor: const Color(0xFFF4B6B3),
-      );
-    }();
-
-    final alertPresentation = () {
-      if (!repeatEnabled) {
-        return const _StatusPresentation(
-          chipText: '알림 꺼짐',
-          title: '반복 알림이 꺼져 있어요',
-          detail: '알림 설정에서 다시 켤 수 있어요.',
-          icon: Icons.notifications_off_outlined,
-          foregroundColor: SmokeUiPalette.warning,
-          backgroundColor: SmokeUiPalette.warningSoft,
-          borderColor: Color(0xFFF3C58F),
-        );
-      }
-      if (!hasRingBaseTime) {
-        return const _StatusPresentation(
-          chipText: '기록 후 시작',
-          title: '첫 기록 후 알림이 시작돼요',
-          detail: '기준 기록이 아직 없어요.',
-          icon: Icons.notifications_paused_outlined,
-          foregroundColor: SmokeUiPalette.info,
-          backgroundColor: SmokeUiPalette.infoSoft,
-          borderColor: Color(0xFF9BD9E8),
-        );
-      }
-      if (!hasSelectedWeekdays) {
-        return const _StatusPresentation(
-          chipText: '요일 필요',
-          title: '알림 요일을 선택해 주세요',
-          detail: '요일이 없으면 다음 알림이 없어요.',
-          icon: Icons.calendar_month_outlined,
-          foregroundColor: SmokeUiPalette.warning,
-          backgroundColor: SmokeUiPalette.warningSoft,
-          borderColor: Color(0xFFF3C58F),
-        );
-      }
-      if (nextAlertAt == null) {
-        return const _StatusPresentation(
-          chipText: '다음 알림 없음',
-          title: '다음 알림을 계산할 수 없어요',
-          detail: '시간대와 간격을 확인해 주세요.',
-          icon: Icons.schedule_rounded,
-          foregroundColor: SmokeUiPalette.risk,
-          backgroundColor: SmokeUiPalette.riskSoft,
-          borderColor: Color(0xFFF4B6B3),
-        );
-      }
-
-      final countdown = TimeFormatter.formatCountdown(now, nextAlertAt!);
-      final alertClock = TimeFormatter.formatDayAwareClock(
-        now,
-        nextAlertAt!,
+    final alertPresentation = HomeStatusPresenter.buildAlertStatus(
+      HomeAlertStatusInput(
+        hasRingBaseTime: hasRingBaseTime,
+        repeatEnabled: repeatEnabled,
+        hasSelectedWeekdays: hasSelectedWeekdays,
+        preAlertMinutes: preAlertMinutes,
+        now: now,
+        nextAlertAt: nextAlertAt,
         use24Hour: use24Hour,
-      );
-      return _StatusPresentation(
-        chipText: preAlertMinutes > 0 ? '미리 알림' : '다음 알림',
-        title: '$alertClock 예정',
-        detail: '$countdown 남았어요.',
-        icon: Icons.notifications_active_outlined,
-        foregroundColor: SmokeUiPalette.mint,
-        backgroundColor: SmokeUiPalette.mintSoft,
-        borderColor: const Color(0xFF94E3CF),
-      );
-    }();
+      ),
+    );
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -1568,35 +1466,16 @@ class _HomeCard extends StatelessWidget {
   }
 }
 
-class _StatusPresentation {
-  const _StatusPresentation({
-    required this.chipText,
-    required this.title,
-    required this.detail,
-    required this.icon,
-    required this.foregroundColor,
-    required this.backgroundColor,
-    required this.borderColor,
-  });
-
-  final String chipText;
-  final String title;
-  final String detail;
-  final IconData icon;
-  final Color foregroundColor;
-  final Color backgroundColor;
-  final Color borderColor;
-}
-
 class _HomeStatusPanel extends StatelessWidget {
   const _HomeStatusPanel({required this.label, required this.presentation});
 
   final String label;
-  final _StatusPresentation presentation;
+  final HomeStatusPresentation presentation;
 
   @override
   Widget build(BuildContext context) {
     final ui = SmokeUiTheme.of(context);
+    final tonePalette = _StatusTonePalette.fromTone(presentation.tone);
     return SurfaceCard(
       color: ui.surfaceAlt,
       strokeColor: ui.border,
@@ -1623,9 +1502,9 @@ class _HomeStatusPanel extends StatelessWidget {
                 child: StatusChip(
                   text: presentation.chipText,
                   icon: presentation.icon,
-                  foregroundColor: presentation.foregroundColor,
-                  backgroundColor: presentation.backgroundColor,
-                  borderColor: presentation.borderColor,
+                  foregroundColor: tonePalette.foregroundColor,
+                  backgroundColor: tonePalette.backgroundColor,
+                  borderColor: tonePalette.borderColor,
                 ),
               ),
             ],
@@ -1652,6 +1531,48 @@ class _HomeStatusPanel extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+class _StatusTonePalette {
+  const _StatusTonePalette({
+    required this.foregroundColor,
+    required this.backgroundColor,
+    required this.borderColor,
+  });
+
+  final Color foregroundColor;
+  final Color backgroundColor;
+  final Color borderColor;
+
+  /// Maps semantic status tone to the shared chip color system.
+  factory _StatusTonePalette.fromTone(HomeStatusTone tone) {
+    switch (tone) {
+      case HomeStatusTone.info:
+        return const _StatusTonePalette(
+          foregroundColor: SmokeUiPalette.info,
+          backgroundColor: SmokeUiPalette.infoSoft,
+          borderColor: Color(0xFF9BD9E8),
+        );
+      case HomeStatusTone.warning:
+        return const _StatusTonePalette(
+          foregroundColor: SmokeUiPalette.warning,
+          backgroundColor: SmokeUiPalette.warningSoft,
+          borderColor: Color(0xFFF3C58F),
+        );
+      case HomeStatusTone.success:
+        return const _StatusTonePalette(
+          foregroundColor: SmokeUiPalette.mint,
+          backgroundColor: SmokeUiPalette.mintSoft,
+          borderColor: Color(0xFF94E3CF),
+        );
+      case HomeStatusTone.risk:
+        return const _StatusTonePalette(
+          foregroundColor: SmokeUiPalette.risk,
+          backgroundColor: SmokeUiPalette.riskSoft,
+          borderColor: Color(0xFFF4B6B3),
+        );
+    }
   }
 }
 
