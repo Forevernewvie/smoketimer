@@ -11,6 +11,7 @@ import 'screens/step0_smoker_timer_screen.dart';
 import 'screens/step0_splash_screen.dart';
 import 'screens/step1_screen.dart';
 import 'services/logging/app_logger.dart';
+import 'widgets/home_widget_sync_scope.dart';
 import 'widgets/pen_design_widgets.dart';
 
 /// Bootstraps dependencies and starts the root app widget.
@@ -34,7 +35,7 @@ Future<void> main() async {
       overrides: [
         sharedPreferencesProvider.overrideWithValue(sharedPreferences),
       ],
-      child: const SmokeTimerApp(),
+      child: const HomeWidgetSyncScope(child: SmokeTimerApp()),
     ),
   );
 }

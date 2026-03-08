@@ -304,4 +304,13 @@ extension _Step1ScreenSettingsActions on _Step1ScreenState {
     await HapticFeedback.mediumImpact();
     _showFeedback('기록과 설정을 초기화했어요.');
   }
+
+  /// Opens the bundled privacy policy document in a dedicated reader screen.
+  Future<void> _openPrivacyPolicy(BuildContext context) async {
+    await Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (context) => const PrivacyPolicyScreen(),
+      ),
+    );
+  }
 }

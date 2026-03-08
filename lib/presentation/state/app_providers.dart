@@ -6,6 +6,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../data/repositories/settings_repository.dart';
 import '../../data/repositories/smoking_repository.dart';
 import '../../services/alert_scheduler.dart';
+import '../../services/home_screen_widget_service.dart';
+import '../../services/home_widget_platform_adapter.dart';
 import '../../services/notification_service.dart';
 import 'app_bootstrap_loader.dart';
 import 'app_config.dart';
@@ -32,6 +34,12 @@ final nowProvider = Provider<DateTime Function()>((ref) {
 
 final notificationServiceProvider = Provider<NotificationService>((ref) {
   return FlutterNotificationService();
+});
+
+final homeWidgetPlatformAdapterProvider = Provider<HomeWidgetPlatformAdapter>((
+  ref,
+) {
+  return const HomeWidgetPackageAdapter();
 });
 
 final smokingRepositoryProvider = Provider<SmokingRepository>((ref) {
@@ -74,6 +82,15 @@ final appNotificationCoordinatorProvider = Provider<AppNotificationCoordinator>(
     );
   },
 );
+
+final homeScreenWidgetServiceProvider = Provider<HomeScreenWidgetService>((
+  ref,
+) {
+  return HomeScreenWidgetService(
+    platformAdapter: ref.watch(homeWidgetPlatformAdapterProvider),
+    config: ref.watch(appConfigProvider),
+  );
+});
 
 final appControllerProvider = StateNotifierProvider<AppController, AppState>((
   ref,

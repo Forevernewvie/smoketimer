@@ -297,8 +297,12 @@ class _SettingsFeedbackSection extends StatelessWidget {
 }
 
 class _SettingsDataSection extends StatelessWidget {
-  const _SettingsDataSection({required this.onResetData});
+  const _SettingsDataSection({
+    required this.onOpenPrivacyPolicy,
+    required this.onResetData,
+  });
 
+  final Future<void> Function() onOpenPrivacyPolicy;
   final Future<void> Function() onResetData;
 
   /// Isolates destructive data-reset affordances from normal preferences.
@@ -320,23 +324,56 @@ class _SettingsDataSection extends StatelessWidget {
                   horizontal: 14,
                   vertical: 10,
                 ),
+                label: '개인정보처리방침',
+                labelStyle: TextStyle(
+                  color: ui.textPrimary,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+                value: '광고 및 로컬 저장 정보 안내',
+                valueMaxLines: 2,
+                withTopBorder: false,
+                showChevron: true,
+                onTap: onOpenPrivacyPolicy,
+              ),
+              _SettingRow(
+                height: 52,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
                 label: '데이터 초기화',
                 labelStyle: const TextStyle(
                   color: Color(0xFFD95B57),
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                 ),
+                withTopBorder: true,
                 onTap: onResetData,
               ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
-                child: Text(
-                  '기록과 설정을 모두 지우는 작업입니다.',
-                  style: TextStyle(
-                    color: ui.textMuted,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'AdMob 사용 시 공개 정책 문서가 필요할 수 있습니다.',
+                      style: TextStyle(
+                        color: ui.textSecondary,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      '기록과 설정을 모두 지우는 작업입니다.',
+                      style: TextStyle(
+                        color: ui.textMuted,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
