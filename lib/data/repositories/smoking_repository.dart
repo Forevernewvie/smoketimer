@@ -4,9 +4,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../domain/errors/app_exceptions.dart';
 import '../../domain/models/smoking_record.dart';
+import '../../presentation/state/app_ports.dart';
 import '../../services/logging/app_logger.dart';
 
-class SmokingRepository {
+class SmokingRepository implements SmokingRecordsStore {
   /// Creates repository that persists smoking records in shared preferences.
   SmokingRepository(this._prefs);
 
@@ -18,6 +19,7 @@ class SmokingRepository {
   /// Loads all stored smoking records sorted by timestamp (desc).
   ///
   /// Returns empty list when storage is empty or payload is invalid.
+  @override
   Future<List<SmokingRecord>> loadRecords() async {
     try {
       final raw = _prefs.getString(_recordsKey);
@@ -40,6 +42,7 @@ class SmokingRepository {
   }
 
   /// Saves smoking records after normalizing order by timestamp (desc).
+  @override
   Future<void> saveRecords(List<SmokingRecord> records) async {
     final normalized = [...records]
       ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
@@ -58,6 +61,7 @@ class SmokingRepository {
   }
 
   /// Clears all smoking records from local storage.
+  @override
   Future<void> clear() async {
     final success = await _prefs.remove(_recordsKey);
     if (!success) {

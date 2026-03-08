@@ -6,9 +6,10 @@ import '../../domain/app_defaults.dart';
 import '../../domain/errors/app_exceptions.dart';
 import '../../domain/models/app_meta.dart';
 import '../../domain/models/user_settings.dart';
+import '../../presentation/state/app_ports.dart';
 import '../../services/logging/app_logger.dart';
 
-class SettingsRepository {
+class SettingsRepository implements SettingsStore {
   /// Creates repository that persists settings/meta into shared preferences.
   SettingsRepository(this._prefs);
 
@@ -21,6 +22,7 @@ class SettingsRepository {
   /// Loads user settings from local storage.
   ///
   /// Returns default settings when storage is empty or payload is invalid.
+  @override
   Future<UserSettings> loadSettings() async {
     try {
       final raw = _prefs.getString(_settingsKey);
@@ -45,6 +47,7 @@ class SettingsRepository {
   }
 
   /// Persists user settings as JSON.
+  @override
   Future<void> saveSettings(UserSettings settings) async {
     final success = await _prefs.setString(
       _settingsKey,
@@ -61,6 +64,7 @@ class SettingsRepository {
   /// Loads app metadata from local storage.
   ///
   /// Returns defaults when storage is empty or payload is invalid.
+  @override
   Future<AppMeta> loadMeta() async {
     try {
       final raw = _prefs.getString(_metaKey);
@@ -78,6 +82,7 @@ class SettingsRepository {
   }
 
   /// Persists app metadata as JSON.
+  @override
   Future<void> saveMeta(AppMeta meta) async {
     final success = await _prefs.setString(_metaKey, jsonEncode(meta.toJson()));
     if (!success) {
@@ -89,6 +94,7 @@ class SettingsRepository {
   }
 
   /// Clears settings and metadata payloads from local storage.
+  @override
   Future<void> clear() async {
     final removeSettings = await _prefs.remove(_settingsKey);
     final removeMeta = await _prefs.remove(_metaKey);
