@@ -13,6 +13,7 @@ import '../presentation/home/home_status_presenter.dart';
 import '../presentation/state/ads_providers.dart';
 import '../presentation/state/app_providers.dart';
 import '../presentation/state/app_state.dart';
+import 'privacy_policy_screen.dart';
 import '../services/ads/ad_service.dart';
 import '../services/cost_stats_service.dart';
 import '../services/smoking_stats_service.dart';
@@ -84,8 +85,10 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
   Widget build(BuildContext context) {
     final ui = SmokeUiTheme.of(context);
     final state = ref.watch(appControllerProvider);
+    final appConfig = ref.watch(appConfigProvider);
     final controller = ref.read(appControllerProvider.notifier);
     final viewData = _Step1ScreenViewData.fromState(state);
+    final monetization = appConfig.monetization;
 
     return Scaffold(
       backgroundColor: ui.background,
@@ -178,6 +181,7 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
                 onEditCigarettesPerPack: () =>
                     _pickCigarettesPerPack(context, state),
                 onEditCurrency: () => _pickCurrencyCode(context, state),
+                onOpenPrivacyPolicy: () => _openPrivacyPolicy(context),
                 onResetData: () => _confirmReset(context),
               ),
             ),
@@ -187,7 +191,8 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
       bottomNavigationBar: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          MainBannerAdSlot(adService: _adService),
+          if (monetization.shouldShowBannerForTab(_tabIndex))
+            MainBannerAdSlot(adService: _adService),
           NavigationBarTheme(
             data: NavigationBarThemeData(
               backgroundColor: ui.surface,

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:smoke_timer/presentation/state/app_config.dart';
 import 'package:smoke_timer/services/ads/ad_service.dart';
 import 'package:smoke_timer/widgets/main_banner_ad_slot.dart';
 
@@ -56,6 +57,11 @@ void main() {
       now: () => DateTime(2026, 2, 17, 9, 0),
       adService: adService,
       autoDispose: false,
+      config: const AppConfig(
+        splashDuration: Duration.zero,
+        scheduleCount: 3,
+        monetization: MonetizationConfig(showBannerOnHomeTab: true),
+      ),
     );
 
     await pumpApp(tester, container);
@@ -88,6 +94,11 @@ void main() {
       now: () => DateTime(2026, 2, 17, 9, 0),
       adService: adService,
       autoDispose: false,
+      config: const AppConfig(
+        splashDuration: Duration.zero,
+        scheduleCount: 3,
+        monetization: MonetizationConfig(showBannerOnHomeTab: true),
+      ),
     );
 
     await pumpApp(tester, container);
@@ -107,6 +118,51 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(tester.takeException(), isNull);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pumpAndSettle();
+    container.dispose();
+    adService.disposeService();
+  });
+
+  testWidgets('banner is suppressed on home and shown on settings by policy', (
+    WidgetTester tester,
+  ) async {
+    setTestViewport(tester, size: const Size(390, 844));
+
+    SharedPreferences.setMockInitialValues(<String, Object>{});
+    final prefs = await SharedPreferences.getInstance();
+    final adService = TestAdService(
+      initialState: const BannerAdState(status: AdBannerStatus.loading),
+    );
+
+    final container = createTestContainer(
+      prefs: prefs,
+      now: () => DateTime(2026, 2, 17, 9, 0),
+      adService: adService,
+      autoDispose: false,
+      config: const AppConfig(
+        splashDuration: Duration.zero,
+        scheduleCount: 3,
+        monetization: MonetizationConfig(
+          showBannerOnHomeTab: false,
+          showBannerOnRecordTab: true,
+          showBannerOnSettingsTab: true,
+        ),
+      ),
+    );
+
+    await pumpApp(tester, container);
+    await tester.tap(find.text('건너뛰기'));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('main_banner_placeholder')), findsNothing);
+    expect(find.byKey(const Key('main_banner_hidden')), findsNothing);
+
+    await tester.tap(find.text('Settings'));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('main_banner_placeholder')), findsOneWidget);
 
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pumpAndSettle();

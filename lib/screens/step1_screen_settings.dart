@@ -21,6 +21,7 @@ class _SettingsCard extends StatelessWidget {
     required this.onEditPackPrice,
     required this.onEditCigarettesPerPack,
     required this.onEditCurrency,
+    required this.onOpenPrivacyPolicy,
     required this.onResetData,
   });
 
@@ -43,6 +44,7 @@ class _SettingsCard extends StatelessWidget {
   final Future<void> Function() onEditPackPrice;
   final Future<void> Function() onEditCigarettesPerPack;
   final Future<void> Function() onEditCurrency;
+  final Future<void> Function() onOpenPrivacyPolicy;
   final Future<void> Function() onResetData;
 
   /// Builds the grouped settings screen for alert, cost, display, and data.
@@ -104,7 +106,10 @@ class _SettingsCard extends StatelessWidget {
           onCycleSoundType: onCycleSoundType,
         ),
         const SizedBox(height: 16),
-        _SettingsDataSection(onResetData: onResetData),
+        _SettingsDataSection(
+          onOpenPrivacyPolicy: onOpenPrivacyPolicy,
+          onResetData: onResetData,
+        ),
       ],
     );
   }
