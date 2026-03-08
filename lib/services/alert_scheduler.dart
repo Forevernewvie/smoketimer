@@ -1,7 +1,8 @@
 import '../domain/app_defaults.dart';
 import '../domain/models/user_settings.dart';
+import '../presentation/state/app_ports.dart';
 
-class AlertScheduler {
+class AlertScheduler implements AlertSchedulingPolicy {
   const AlertScheduler();
 
   /// Builds upcoming alert timestamps using current settings policy.
@@ -10,6 +11,7 @@ class AlertScheduler {
   /// 1) repeat flag and required inputs guard
   /// 2) interval/pre-alert offset
   /// 3) allowed weekday/time window alignment
+  @override
   List<DateTime> buildUpcomingAlerts({
     required DateTime now,
     required DateTime? lastSmokingAt,

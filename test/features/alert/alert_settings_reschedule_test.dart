@@ -6,6 +6,8 @@ import 'package:smoke_timer/data/repositories/smoking_repository.dart';
 import 'package:smoke_timer/domain/app_defaults.dart';
 import 'package:smoke_timer/domain/models/app_meta.dart';
 import 'package:smoke_timer/domain/models/smoking_record.dart';
+import 'package:smoke_timer/presentation/state/app_bootstrap_loader.dart';
+import 'package:smoke_timer/presentation/state/app_notification_coordinator.dart';
 import 'package:smoke_timer/presentation/state/app_config.dart';
 import 'package:smoke_timer/presentation/state/app_controller.dart';
 import 'package:smoke_timer/services/alert_scheduler.dart';
@@ -37,7 +39,18 @@ void main() {
     final controller = AppController(
       smokingRepository: smokingRepo,
       settingsRepository: settingsRepo,
-      scheduler: const AlertScheduler(),
+      bootstrapLoader: AppBootstrapLoader(
+        smokingRepository: smokingRepo,
+        settingsRepository: settingsRepo,
+      ),
+      notificationCoordinator: AppNotificationCoordinator(
+        scheduler: const AlertScheduler(),
+        notificationService: notifications,
+        config: const AppConfig(
+          splashDuration: Duration.zero,
+          scheduleCount: 3,
+        ),
+      ),
       notificationService: notifications,
       now: () => now,
       config: const AppConfig(splashDuration: Duration.zero, scheduleCount: 3),

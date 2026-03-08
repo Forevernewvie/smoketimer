@@ -2,42 +2,43 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../data/repositories/settings_repository.dart';
-import '../../data/repositories/smoking_repository.dart';
 import '../../domain/app_defaults.dart';
 import '../../domain/errors/app_exceptions.dart';
-import '../../domain/models/app_meta.dart';
 import '../../domain/models/record_period.dart';
-import '../../domain/models/smoking_record.dart';
 import '../../domain/models/user_settings.dart';
-import '../../services/alert_scheduler.dart';
-import '../../services/cost_stats_service.dart';
 import '../../services/logging/app_logger.dart';
 import '../../services/notification_service.dart';
-import '../../services/smoking_stats_service.dart';
+import 'app_bootstrap_loader.dart';
 import 'app_config.dart';
+import 'app_notification_coordinator.dart';
+import 'app_ports.dart';
+import 'app_record_policy.dart';
+import 'app_settings_policy.dart';
 import 'app_state.dart';
 
 class AppController extends StateNotifier<AppState> {
   /// Creates application controller coordinating state, persistence and alerts.
   AppController({
-    required SmokingRepository smokingRepository,
-    required SettingsRepository settingsRepository,
-    required AlertScheduler scheduler,
+    required SmokingRecordsStore smokingRepository,
+    required SettingsStore settingsRepository,
+    required AppBootstrapLoader bootstrapLoader,
+    required AppNotificationCoordinator notificationCoordinator,
     required NotificationService notificationService,
     required DateTime Function() now,
     required AppConfig config,
   }) : _smokingRepository = smokingRepository,
        _settingsRepository = settingsRepository,
-       _scheduler = scheduler,
+       _bootstrapLoader = bootstrapLoader,
+       _notificationCoordinator = notificationCoordinator,
        _notificationService = notificationService,
        _now = now,
        _config = config,
        super(AppState.initial(now()));
 
-  final SmokingRepository _smokingRepository;
-  final SettingsRepository _settingsRepository;
-  final AlertScheduler _scheduler;
+  final SmokingRecordsStore _smokingRepository;
+  final SettingsStore _settingsRepository;
+  final AppBootstrapLoader _bootstrapLoader;
+  final AppNotificationCoordinator _notificationCoordinator;
   final NotificationService _notificationService;
   final DateTime Function() _now;
   final AppConfig _config;
@@ -47,7 +48,7 @@ class AppController extends StateNotifier<AppState> {
   bool _disposed = false;
   bool _didBootstrap = false;
 
-  /// Bootstraps persisted data and transitions splash to onboarding/main.
+  /// Bootstraps persisted data and transitions splash to onboarding or main.
   Future<void> bootstrap() async {
     if (_didBootstrap) {
       return;
@@ -56,36 +57,14 @@ class AppController extends StateNotifier<AppState> {
 
     try {
       await _notificationService.initialize();
-
-      final results = await Future.wait<dynamic>([
-        _smokingRepository.loadRecords(),
-        _settingsRepository.loadSettings(),
-        _settingsRepository.loadMeta(),
-      ]);
-
-      final loadedRecords = results[0] as List<SmokingRecord>;
-      final loadedSettings = results[1] as UserSettings;
-      var loadedMeta = results[2] as AppMeta;
-
-      final normalizedLastSmokingAt = SmokingStatsService.resolveLastSmokingAt(
-        loadedMeta.lastSmokingAt,
-        loadedRecords,
-      );
-
-      if (normalizedLastSmokingAt != loadedMeta.lastSmokingAt) {
-        loadedMeta = loadedMeta.copyWith(
-          lastSmokingAt: normalizedLastSmokingAt,
-          clearLastSmokingAt: normalizedLastSmokingAt == null,
-        );
-        await _settingsRepository.saveMeta(loadedMeta);
-      }
+      final snapshot = await _bootstrapLoader.load();
 
       state = state.copyWith(
         isInitialized: true,
         now: _now(),
-        records: loadedRecords,
-        settings: loadedSettings,
-        meta: loadedMeta,
+        records: snapshot.records,
+        settings: snapshot.settings,
+        meta: snapshot.meta,
         stage: AppStage.splash,
       );
 
@@ -95,14 +74,13 @@ class AppController extends StateNotifier<AppState> {
       if (_config.splashDuration > Duration.zero) {
         await Future<void>.delayed(_config.splashDuration);
       }
-
       if (_disposed) {
         return;
       }
 
       state = state.copyWith(
         now: _now(),
-        stage: loadedMeta.hasCompletedOnboarding
+        stage: snapshot.meta.hasCompletedOnboarding
             ? AppStage.main
             : AppStage.onboarding,
       );
@@ -111,6 +89,7 @@ class AppController extends StateNotifier<AppState> {
       if (_disposed) {
         return;
       }
+
       // Fail-safe: keep app interactive with defaults instead of crashing.
       state = state.copyWith(
         isInitialized: true,
@@ -121,7 +100,7 @@ class AppController extends StateNotifier<AppState> {
     }
   }
 
-  /// Starts one-second ticker that updates reactive "now" state.
+  /// Starts a one-second ticker that refreshes the reactive current time.
   void _startTicker() {
     _ticker?.cancel();
     _ticker = Timer.periodic(const Duration(seconds: 1), (_) {
@@ -132,7 +111,7 @@ class AppController extends StateNotifier<AppState> {
     });
   }
 
-  /// Marks onboarding complete and persists metadata.
+  /// Marks onboarding complete and persists the onboarding flag.
   Future<void> completeOnboarding() async {
     final updatedMeta = state.meta.copyWith(hasCompletedOnboarding: true);
     state = state.copyWith(meta: updatedMeta, stage: AppStage.main);
@@ -142,37 +121,32 @@ class AppController extends StateNotifier<AppState> {
     );
   }
 
-  /// Updates selected record period filter.
+  /// Updates the selected record-period filter used by the history tab.
   void setRecordPeriod(RecordPeriod period) {
     state = state.copyWith(recordPeriod: period);
   }
 
-  /// Adds a smoking record and re-registers next alert schedules.
+  /// Adds a smoking record, persists it, and refreshes alert schedules.
   Future<void> addSmokingRecord() async {
     final previousState = state;
     final now = _now();
-    final newRecord = SmokingRecord(
-      id: 'record_${now.microsecondsSinceEpoch}',
-      timestamp: now,
-      count: 1,
+    final mutation = AppRecordPolicy.addRecord(
+      currentRecords: state.records,
+      currentMeta: state.meta,
+      now: now,
     );
-
-    final updatedRecords = [newRecord, ...state.records]
-      ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
-
-    final updatedMeta = state.meta.copyWith(lastSmokingAt: now);
 
     state = state.copyWith(
       now: now,
-      records: updatedRecords,
-      meta: updatedMeta,
+      records: mutation.records,
+      meta: mutation.meta,
     );
 
     await _runGuarded(
       operation: 'add_smoking_record',
       action: () async {
-        await _smokingRepository.saveRecords(updatedRecords);
-        await _settingsRepository.saveMeta(updatedMeta);
+        await _smokingRepository.saveRecords(mutation.records);
+        await _settingsRepository.saveMeta(mutation.meta);
         await _rescheduleNotifications();
       },
       onError: () {
@@ -181,31 +155,24 @@ class AppController extends StateNotifier<AppState> {
     );
   }
 
-  /// Removes latest smoking record and re-registers next alert schedules.
+  /// Removes the latest smoking record, persists the rollback, and reschedules.
   Future<void> undoLastRecord() async {
-    if (state.records.isEmpty) {
+    final mutation = AppRecordPolicy.undoLastRecord(
+      currentRecords: state.records,
+      currentMeta: state.meta,
+    );
+    if (mutation == null) {
       return;
     }
 
     final previousState = state;
-    final updatedRecords = state.records.sublist(1);
-    final updatedLastSmokingAt = SmokingStatsService.resolveLastSmokingAt(
-      null,
-      updatedRecords,
-    );
-
-    final updatedMeta = state.meta.copyWith(
-      lastSmokingAt: updatedLastSmokingAt,
-      clearLastSmokingAt: updatedLastSmokingAt == null,
-    );
-
-    state = state.copyWith(records: updatedRecords, meta: updatedMeta);
+    state = state.copyWith(records: mutation.records, meta: mutation.meta);
 
     await _runGuarded(
       operation: 'undo_last_record',
       action: () async {
-        await _smokingRepository.saveRecords(updatedRecords);
-        await _settingsRepository.saveMeta(updatedMeta);
+        await _smokingRepository.saveRecords(mutation.records);
+        await _settingsRepository.saveMeta(mutation.meta);
         await _rescheduleNotifications();
       },
       onError: () {
@@ -214,7 +181,7 @@ class AppController extends StateNotifier<AppState> {
     );
   }
 
-  /// Toggles repeat alert setting with permission gate when enabling.
+  /// Toggles repeat alerts after checking notification permission when enabling.
   Future<bool> toggleRepeatEnabled() async {
     final enabling = !state.settings.repeatEnabled;
     if (enabling) {
@@ -224,105 +191,71 @@ class AppController extends StateNotifier<AppState> {
       }
     }
 
-    final updated = state.settings.copyWith(repeatEnabled: enabling);
-    await _updateSettings(updated);
+    await _applySettingsUpdate(
+      AppSettingsPolicy.toggleRepeatEnabled(state.settings),
+    );
     return true;
   }
 
-  /// Cycles interval through predefined options.
+  /// Cycles alert interval through the supported preset values.
   Future<void> cycleIntervalMinutes() async {
-    final current = state.settings.intervalMinutes;
-    final options = AppDefaults.intervalOptions;
-    final index = options.indexOf(current);
-    final next = options[(index + 1) % options.length];
-
-    final updated = state.settings.copyWith(intervalMinutes: next);
-    await _updateSettings(updated);
+    await _applySettingsUpdate(
+      AppSettingsPolicy.cycleIntervalMinutes(state.settings),
+    );
   }
 
-  /// Sets interval minutes within policy range.
+  /// Sets alert interval minutes within the supported policy range.
   Future<void> setIntervalMinutes(int minutes) async {
-    final normalized = minutes
-        .clamp(AppDefaults.minIntervalMinutes, AppDefaults.maxIntervalMinutes)
-        .toInt();
-
-    if (normalized == state.settings.intervalMinutes) {
-      return;
-    }
-
-    final updated = state.settings.copyWith(intervalMinutes: normalized);
-    await _updateSettings(updated);
+    await _applySettingsUpdate(
+      AppSettingsPolicy.setIntervalMinutes(state.settings, minutes),
+    );
   }
 
-  /// Cycles pre-alert minute options.
+  /// Cycles pre-alert lead time through the supported preset values.
   Future<void> cyclePreAlertMinutes() async {
-    final current = state.settings.preAlertMinutes;
-    final options = AppDefaults.preAlertOptions;
-    final index = options.indexOf(current);
-    final next = options[(index + 1) % options.length];
-
-    final updated = state.settings.copyWith(preAlertMinutes: next);
-    await _updateSettings(updated);
+    await _applySettingsUpdate(
+      AppSettingsPolicy.cyclePreAlertMinutes(state.settings),
+    );
   }
 
-  /// Sets pre-alert minutes within policy range.
+  /// Sets pre-alert lead time within the supported policy range.
   Future<void> setPreAlertMinutes(int minutes) async {
-    final normalized = minutes
-        .clamp(AppDefaults.minPreAlertMinutes, AppDefaults.maxPreAlertMinutes)
-        .toInt();
-
-    if (normalized == state.settings.preAlertMinutes) {
-      return;
-    }
-
-    final updated = state.settings.copyWith(preAlertMinutes: normalized);
-    await _updateSettings(updated);
+    await _applySettingsUpdate(
+      AppSettingsPolicy.setPreAlertMinutes(state.settings, minutes),
+    );
   }
 
-  /// Updates allowed notification time window.
+  /// Updates the allowed notification time window if the range is valid.
   Future<void> updateAllowedTimeWindow({
     required int startMinutes,
     required int endMinutes,
   }) async {
-    if (startMinutes < AppDefaults.allowedWindowMinMinutes ||
-        endMinutes > AppDefaults.allowedWindowMaxMinutes ||
-        endMinutes <= startMinutes) {
-      return;
-    }
-
-    final updated = state.settings.copyWith(
-      allowedStartMinutes: startMinutes,
-      allowedEndMinutes: endMinutes,
+    await _applySettingsUpdate(
+      AppSettingsPolicy.updateAllowedTimeWindow(
+        state.settings,
+        startMinutes: startMinutes,
+        endMinutes: endMinutes,
+      ),
     );
-
-    await _updateSettings(updated);
   }
 
-  /// Toggles active status of a weekday in alert schedule.
+  /// Toggles active status of a weekday in the alert schedule.
   Future<void> toggleWeekday(int weekday) async {
-    final updatedWeekdays = {...state.settings.activeWeekdays};
-    if (updatedWeekdays.contains(weekday)) {
-      updatedWeekdays.remove(weekday);
-    } else {
-      updatedWeekdays.add(weekday);
-    }
-
-    final updated = state.settings.copyWith(activeWeekdays: updatedWeekdays);
-    await _updateSettings(updated);
+    await _applySettingsUpdate(
+      AppSettingsPolicy.toggleWeekday(state.settings, weekday),
+    );
   }
 
-  /// Requests permission and refreshes schedules when granted.
+  /// Requests notification permission and refreshes schedules when granted.
   Future<bool> requestNotificationPermission() async {
     final granted = await _notificationService.requestPermission();
     if (granted) {
-      // Re-register schedules after permission is granted so users don't have to
-      // "toggle" any settings to start receiving alerts.
       await _rescheduleNotifications();
     }
     return granted;
   }
 
-  /// Sends immediate test notification with current sound/vibration settings.
+  /// Sends an immediate test notification using the current feedback settings.
   Future<bool> sendTestNotification() async {
     final granted = await _notificationService.requestPermission();
     if (!granted) {
@@ -338,97 +271,69 @@ class AppController extends StateNotifier<AppState> {
     return true;
   }
 
-  /// Toggles 24-hour display preference.
+  /// Toggles the 24-hour display preference without rescheduling alerts.
   Future<void> toggleUse24Hour() async {
-    final updated = state.settings.copyWith(
-      use24Hour: !state.settings.use24Hour,
+    await _applySettingsUpdate(
+      AppSettingsPolicy.toggleUse24Hour(state.settings),
+      reschedule: false,
     );
-    await _updateSettings(updated, reschedule: false);
   }
 
-  /// Cycles ring reference mode for home progress gauge.
+  /// Cycles the ring reference mode used by the home progress gauge.
   Future<void> cycleRingReference() async {
-    final updated = state.settings.copyWith(
-      ringReference: state.settings.ringReference == RingReference.lastSmoking
-          ? RingReference.dayStart
-          : RingReference.lastSmoking,
+    await _applySettingsUpdate(
+      AppSettingsPolicy.cycleRingReference(state.settings),
+      reschedule: false,
     );
-
-    await _updateSettings(updated, reschedule: false);
   }
 
-  /// Toggles vibration preference.
+  /// Toggles vibration feedback for alerts.
   Future<void> toggleVibration() async {
-    final updated = state.settings.copyWith(
-      vibrationEnabled: !state.settings.vibrationEnabled,
+    await _applySettingsUpdate(
+      AppSettingsPolicy.toggleVibration(state.settings),
     );
-
-    await _updateSettings(updated);
   }
 
-  /// Cycles sound type preference.
+  /// Cycles the sound type used for local notifications.
   Future<void> cycleSoundType() async {
-    final options = AppDefaults.soundTypeOptions;
-    final index = options.indexOf(state.settings.soundType);
-    final next = options[(index + 1) % options.length];
-    final updated = state.settings.copyWith(soundType: next);
-
-    await _updateSettings(updated);
+    await _applySettingsUpdate(
+      AppSettingsPolicy.cycleSoundType(state.settings),
+    );
   }
 
-  /// Toggles explicit dark mode preference.
+  /// Toggles the explicit dark-mode preference without rescheduling alerts.
   Future<void> toggleDarkMode() async {
-    final updated = state.settings.copyWith(
-      darkModeEnabled: !state.settings.darkModeEnabled,
+    await _applySettingsUpdate(
+      AppSettingsPolicy.toggleDarkMode(state.settings),
+      reschedule: false,
     );
-    await _updateSettings(updated, reschedule: false);
   }
 
-  /// Updates pack price for cost tracking calculations.
+  /// Updates the pack price used for cost tracking.
   Future<void> setPackPrice(double packPrice) async {
-    final normalized = CostStatsService.normalizePackPrice(packPrice);
-    if (normalized == state.settings.packPrice) {
-      return;
-    }
-
-    final updated = state.settings.copyWith(packPrice: normalized);
-    await _updateSettings(updated, reschedule: false);
+    await _applySettingsUpdate(
+      AppSettingsPolicy.setPackPrice(state.settings, packPrice),
+      reschedule: false,
+    );
   }
 
-  /// Updates cigarettes-per-pack for cost tracking calculations.
+  /// Updates the cigarettes-per-pack value used for cost tracking.
   Future<void> setCigarettesPerPack(int cigarettesPerPack) async {
-    final normalized = CostStatsService.normalizeCigarettesPerPack(
-      cigarettesPerPack,
+    await _applySettingsUpdate(
+      AppSettingsPolicy.setCigarettesPerPack(state.settings, cigarettesPerPack),
+      reschedule: false,
     );
-    if (normalized == state.settings.cigarettesPerPack) {
-      return;
-    }
-
-    final updated = state.settings.copyWith(cigarettesPerPack: normalized);
-    await _updateSettings(updated, reschedule: false);
   }
 
-  /// Updates currency code and symbol used in cost display formatting.
+  /// Updates the currency code and symbol used for cost formatting.
   Future<void> setCurrencyCode(String currencyCode) async {
-    final normalized = currencyCode.trim().toUpperCase();
-    final nextCode = normalized.isEmpty
-        ? AppDefaults.defaultCurrencyCode
-        : normalized;
-    final nextSymbol = CostStatsService.resolveCurrencySymbol(nextCode);
-
-    if (nextCode == state.settings.currencyCode &&
-        nextSymbol == state.settings.currencySymbol) {
-      return;
-    }
-
-    final updated = state.settings.copyWith(
-      currencyCode: nextCode,
-      currencySymbol: nextSymbol,
+    await _applySettingsUpdate(
+      AppSettingsPolicy.setCurrencyCode(state.settings, currencyCode),
+      reschedule: false,
     );
-    await _updateSettings(updated, reschedule: false);
   }
 
-  /// Clears all app data and resets app state to onboarding stage.
+  /// Clears all app data and resets the app to the onboarding stage.
   Future<void> resetAllData() async {
     await _runGuarded(
       operation: 'reset_all_data',
@@ -444,6 +349,17 @@ class AppController extends StateNotifier<AppState> {
     state = AppState.initial(
       now,
     ).copyWith(isInitialized: true, stage: AppStage.onboarding);
+  }
+
+  /// Persists a possibly-null settings update and skips work for invalid input.
+  Future<void> _applySettingsUpdate(
+    UserSettings? settings, {
+    bool reschedule = true,
+  }) async {
+    if (settings == null) {
+      return;
+    }
+    await _updateSettings(settings, reschedule: reschedule);
   }
 
   /// Persists settings and optionally reschedules alerts.
@@ -467,43 +383,18 @@ class AppController extends StateNotifier<AppState> {
     );
   }
 
-  /// Rebuilds and re-registers upcoming alerts from current state.
+  /// Rebuilds and re-registers upcoming alerts from the current state snapshot.
   Future<void> _rescheduleNotifications() async {
-    final lastSmokingAt = SmokingStatsService.resolveLastSmokingAt(
-      state.meta.lastSmokingAt,
-      state.records,
-    );
-
-    final upcoming = _scheduler.buildUpcomingAlerts(
+    final result = await _notificationCoordinator.reschedule(
       now: state.now,
-      lastSmokingAt: lastSmokingAt,
+      lastSmokingAt: state.meta.lastSmokingAt,
+      records: state.records,
       settings: state.settings,
-      count: _config.scheduleCount,
     );
 
-    if (upcoming.isEmpty) {
-      state = state.copyWith(clearNextAlertAt: true);
-    } else {
-      state = state.copyWith(nextAlertAt: upcoming.first);
-    }
-
-    final alerts = <ScheduledAlert>[];
-    for (var index = 0; index < upcoming.length; index += 1) {
-      alerts.add(
-        ScheduledAlert(
-          id: AppDefaults.scheduledAlertIdBase + index,
-          at: upcoming[index],
-          title: AppDefaults.alertNotificationTitle,
-          body: AppDefaults.alertNotificationBody,
-        ),
-      );
-    }
-
-    await _notificationService.scheduleAlerts(
-      alerts: alerts,
-      vibrationEnabled: state.settings.vibrationEnabled,
-      soundType: state.settings.soundType,
-    );
+    state = result.nextAlertAt == null
+        ? state.copyWith(clearNextAlertAt: true)
+        : state.copyWith(nextAlertAt: result.nextAlertAt);
   }
 
   /// Executes a stateful async operation with standardized logging and fallback.
