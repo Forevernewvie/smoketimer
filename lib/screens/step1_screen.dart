@@ -84,8 +84,10 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
   Widget build(BuildContext context) {
     final ui = SmokeUiTheme.of(context);
     final state = ref.watch(appControllerProvider);
+    final appConfig = ref.watch(appConfigProvider);
     final controller = ref.read(appControllerProvider.notifier);
     final viewData = _Step1ScreenViewData.fromState(state);
+    final monetization = appConfig.monetization;
 
     return Scaffold(
       backgroundColor: ui.background,
@@ -187,7 +189,8 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
       bottomNavigationBar: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          MainBannerAdSlot(adService: _adService),
+          if (monetization.shouldShowBannerForTab(_tabIndex))
+            MainBannerAdSlot(adService: _adService),
           NavigationBarTheme(
             data: NavigationBarThemeData(
               backgroundColor: ui.surface,
