@@ -13,6 +13,7 @@ import '../presentation/home/home_status_presenter.dart';
 import '../presentation/state/ads_providers.dart';
 import '../presentation/state/app_providers.dart';
 import '../presentation/state/app_state.dart';
+import 'privacy_policy_screen.dart';
 import '../services/ads/ad_service.dart';
 import '../services/cost_stats_service.dart';
 import '../services/smoking_stats_service.dart';
@@ -180,6 +181,7 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
                 onEditCigarettesPerPack: () =>
                     _pickCigarettesPerPack(context, state),
                 onEditCurrency: () => _pickCurrencyCode(context, state),
+                onOpenPrivacyPolicy: () => _openPrivacyPolicy(context),
                 onResetData: () => _confirmReset(context),
               ),
             ),
