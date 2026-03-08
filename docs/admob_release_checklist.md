@@ -61,6 +61,8 @@
 - Prepare a public privacy policy URL for store listing submission
   - Google Play requires a valid privacy policy URL for apps that collect or handle sensitive user or device data
   - A PDF alone is not sufficient for the store listing requirement
+  - Recommended deployment for this repository: GitHub Pages static URL
+  - Expected URL after Pages deployment: `https://forevernewvie.github.io/smoketimer/privacy-policy/`
 - If consent flow is needed for your traffic, integrate it before release
 - Never tap your own real ads on test devices
 - Use test ads until store release is ready
