@@ -32,6 +32,7 @@ class _HomeSummarySection extends StatelessWidget {
 
     if (stacked) {
       return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _HomeTodaySummaryCard(todayCount: todayCount),
           const SizedBox(height: SmokeUiSpacing.sm),
@@ -64,6 +65,7 @@ class _HomeTodaySummaryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final ui = SmokeUiTheme.of(context);
     return SurfaceCard(
+      key: const Key('home_cost_summary_card'),
       padding: const EdgeInsets.all(SmokeUiSpacing.sm),
       cornerRadius: SmokeUiRadius.md,
       child: Column(
@@ -174,13 +176,53 @@ class _HomeCostSummaryCard extends StatelessWidget {
                 },
               ),
             ),
-          ] else ...[
-            _SpendMetric(label: '오늘 지출', value: todaySpendText),
-            const SizedBox(height: SmokeUiSpacing.xs),
-            _SpendMetric(label: '이번 달 지출', value: monthSpendText),
-            const SizedBox(height: SmokeUiSpacing.xs),
-            _SpendMetric(label: '누적 지출', value: lifetimeSpendText),
-          ],
+          ] else
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final canUseTwoColumns = constraints.maxWidth >= 240;
+                if (!canUseTwoColumns) {
+                  return Column(
+                    children: [
+                      _SpendMetric(label: '오늘 지출', value: todaySpendText),
+                      const SizedBox(height: SmokeUiSpacing.xs),
+                      _SpendMetric(label: '이번 달 지출', value: monthSpendText),
+                      const SizedBox(height: SmokeUiSpacing.xs),
+                      _SpendMetric(label: '누적 지출', value: lifetimeSpendText),
+                    ],
+                  );
+                }
+
+                return Column(
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _SpendMetric(
+                            label: '오늘 지출',
+                            value: todaySpendText,
+                          ),
+                        ),
+                        const SizedBox(width: SmokeUiSpacing.xs),
+                        Expanded(
+                          child: _SpendMetric(
+                            label: '이번 달 지출',
+                            value: monthSpendText,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: SmokeUiSpacing.xs),
+                    SizedBox(
+                      width: double.infinity,
+                      child: _SpendMetric(
+                        label: '누적 지출',
+                        value: lifetimeSpendText,
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
         ],
       ),
     );
