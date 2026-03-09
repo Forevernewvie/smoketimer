@@ -272,26 +272,22 @@ class _AlertWeekdaySection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  '요일',
-                  style: TextStyle(
-                    color: ui.textSecondary,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
+          ResponsiveHeaderRow(
+            leading: Text(
+              '요일',
+              style: TextStyle(
+                color: ui.textSecondary,
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
               ),
-              StatusChip(
-                text: presentation.weekdayCountText,
-                icon: Icons.calendar_month_outlined,
-                foregroundColor: tonePalette.foregroundColor,
-                backgroundColor: tonePalette.backgroundColor,
-                borderColor: tonePalette.borderColor,
-              ),
-            ],
+            ),
+            trailing: StatusChip(
+              text: presentation.weekdayCountText,
+              icon: Icons.calendar_month_outlined,
+              foregroundColor: tonePalette.foregroundColor,
+              backgroundColor: tonePalette.backgroundColor,
+              borderColor: tonePalette.borderColor,
+            ),
           ),
           const SizedBox(height: 10),
           Wrap(

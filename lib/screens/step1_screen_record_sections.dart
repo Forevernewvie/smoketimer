@@ -91,8 +91,10 @@ class _RecordSummarySection extends StatelessWidget {
     ];
 
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _SummaryItem(
+          cardKey: const Key('record_total_summary_card'),
           label: '총 개비',
           value: '$totalCount개비',
           detail: '선택한 기간 동안 남긴 총 기록 수예요.',

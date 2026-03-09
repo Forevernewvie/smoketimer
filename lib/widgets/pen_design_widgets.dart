@@ -549,20 +549,44 @@ class StatusChip extends StatelessWidget {
             Icon(icon, size: 14, color: foregroundColor),
             const SizedBox(width: SmokeUiSpacing.xxs),
           ],
-          Flexible(
-            child: Text(
-              text,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: foregroundColor,
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-              ),
+          Text(
+            text,
+            maxLines: 1,
+            style: TextStyle(
+              color: foregroundColor,
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
             ),
           ),
         ],
       ),
+    );
+  }
+}
+
+class ResponsiveHeaderRow extends StatelessWidget {
+  const ResponsiveHeaderRow({
+    required this.leading,
+    required this.trailing,
+    this.spacing = SmokeUiSpacing.xs,
+    this.runSpacing = SmokeUiSpacing.xxs,
+    super.key,
+  });
+
+  final Widget leading;
+  final Widget trailing;
+  final double spacing;
+  final double runSpacing;
+
+  /// Keeps header actions on one row when they fit and stacks them when not.
+  @override
+  Widget build(BuildContext context) {
+    return OverflowBar(
+      alignment: MainAxisAlignment.spaceBetween,
+      spacing: spacing,
+      overflowSpacing: runSpacing,
+      overflowAlignment: OverflowBarAlignment.end,
+      children: [leading, trailing],
     );
   }
 }
