@@ -66,13 +66,7 @@ class _SettingRow extends StatelessWidget {
                 maxLines: valueMaxLines,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.right,
-                style:
-                    valueStyle ??
-                    TextStyle(
-                      color: ui.textPrimary,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
+                style: valueStyle ?? _settingValueStyle(ui),
               ),
             ),
           if (value != null && showChevron)

@@ -92,9 +92,7 @@ extension _Step1ScreenSettingsActions on _Step1ScreenState {
       showDragHandle: true,
       useSafeArea: true,
       backgroundColor: SmokeUiTheme.of(context).surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
+      shape: _step1SheetCornerRadius,
       builder: (context) {
         final ui = SmokeUiTheme.of(context);
         return Padding(
@@ -105,14 +103,7 @@ extension _Step1ScreenSettingsActions on _Step1ScreenState {
             children: [
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: Text(
-                  '통화',
-                  style: TextStyle(
-                    color: ui.textPrimary,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
+                child: Text('통화', style: _sheetTitleTextStyle(ui)),
               ),
               const SizedBox(height: 8),
               ...AppDefaults.currencyCodeOptions.map((code) {
@@ -166,9 +157,7 @@ extension _Step1ScreenSettingsActions on _Step1ScreenState {
       useSafeArea: true,
       isScrollControlled: true,
       backgroundColor: SmokeUiTheme.of(context).surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
+      shape: _step1SheetCornerRadius,
       builder: (context) {
         final ui = SmokeUiTheme.of(context);
         return Padding(
@@ -185,22 +174,11 @@ extension _Step1ScreenSettingsActions on _Step1ScreenState {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      title,
-                      style: TextStyle(
-                        color: ui.textPrimary,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
+                    Text(title, style: _sheetTitleTextStyle(ui)),
                     const SizedBox(height: 6),
                     Text(
                       helperText,
-                      style: TextStyle(
-                        color: ui.textSecondary,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      ),
+                      style: _settingCaptionStyle(ui.textSecondary),
                     ),
                     const SizedBox(height: 12),
                     TextField(

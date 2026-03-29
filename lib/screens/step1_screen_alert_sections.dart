@@ -17,88 +17,53 @@ class _AlertBasicSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ui = SmokeUiTheme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SectionLabel(text: '기본'),
-        const SizedBox(height: SmokeUiSpacing.xs),
-        SurfaceCard(
-          child: Column(
-            children: [
-              _SettingRow(
-                height: 56,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 10,
-                ),
-                label: '반복 알림',
-                labelStyle: TextStyle(
-                  color: ui.textPrimary,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                ),
-                trailing: TogglePill(isOn: presentation.repeatEnabled),
-                onTap: onToggleRepeat,
+    return _buildSettingsSection(
+      title: '기본',
+      child: SurfaceCard(
+        child: Column(
+          children: [
+            _buildSettingRow(
+              label: '반복 알림',
+              ui: ui,
+              tone: _Step1SettingRowTone.primary,
+              height: _prominentSettingRowHeight,
+              trailing: TogglePill(isOn: presentation.repeatEnabled),
+              onTap: onToggleRepeat,
+            ),
+            _buildSettingRow(
+              label: '알림 권한',
+              ui: ui,
+              tone: _Step1SettingRowTone.secondary,
+              value: '요청',
+              withTopBorder: true,
+              showChevron: true,
+              onTap: onRequestPermission,
+            ),
+            _buildSettingRow(
+              label: '간격',
+              ui: ui,
+              tone: _Step1SettingRowTone.secondary,
+              value: presentation.intervalLabel,
+              withTopBorder: true,
+              showChevron: true,
+              onTap: onPickInterval,
+            ),
+            _buildSettingRow(
+              label: presentation.nextAlertRowLabel,
+              ui: ui,
+              tone: _Step1SettingRowTone.secondary,
+              value: presentation.nextAlertPreviewText,
+              valueMaxLines: 2,
+              valueStyle: TextStyle(
+                color: ui.textPrimary,
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
               ),
-              _SettingRow(
-                height: 52,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 10,
-                ),
-                label: '알림 권한',
-                labelStyle: TextStyle(
-                  color: ui.textSecondary,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-                value: '요청',
-                withTopBorder: true,
-                showChevron: true,
-                onTap: onRequestPermission,
-              ),
-              _SettingRow(
-                height: 52,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 10,
-                ),
-                label: '간격',
-                labelStyle: TextStyle(
-                  color: ui.textSecondary,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-                value: presentation.intervalLabel,
-                withTopBorder: true,
-                showChevron: true,
-                onTap: onPickInterval,
-              ),
-              _SettingRow(
-                height: 52,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 10,
-                ),
-                label: presentation.nextAlertRowLabel,
-                labelStyle: TextStyle(
-                  color: ui.textSecondary,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-                value: presentation.nextAlertPreviewText,
-                valueMaxLines: 2,
-                valueStyle: TextStyle(
-                  color: ui.textPrimary,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
-                ),
-                withTopBorder: true,
-              ),
-            ],
-          ),
+              withTopBorder: true,
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }
@@ -126,45 +91,33 @@ class _AlertScheduleSection extends StatelessWidget {
       presentation.weekdayTone,
     );
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SectionLabel(text: '시간과 요일'),
-        const SizedBox(height: SmokeUiSpacing.xs),
-        SurfaceCard(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _SettingRow(
-                height: 52,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 10,
-                ),
-                label: '허용 시간대',
-                labelStyle: TextStyle(
-                  color: ui.textSecondary,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-                value: presentation.rangeText,
-                showChevron: true,
-                onTap: onPickRange,
-              ),
-              _AlertPreAlertSliderSection(
-                presentation: presentation,
-                onSetPreAlertMinutes: onSetPreAlertMinutes,
-              ),
-              _AlertWeekdaySection(
-                presentation: presentation,
-                activeWeekdays: activeWeekdays,
-                tonePalette: weekdayTonePalette,
-                onToggleWeekday: onToggleWeekday,
-              ),
-            ],
-          ),
+    return _buildSettingsSection(
+      title: '시간과 요일',
+      child: SurfaceCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildSettingRow(
+              ui: ui,
+              label: '허용 시간대',
+              tone: _Step1SettingRowTone.secondary,
+              value: presentation.rangeText,
+              showChevron: true,
+              onTap: onPickRange,
+            ),
+            _AlertPreAlertSliderSection(
+              presentation: presentation,
+              onSetPreAlertMinutes: onSetPreAlertMinutes,
+            ),
+            _AlertWeekdaySection(
+              presentation: presentation,
+              activeWeekdays: activeWeekdays,
+              tonePalette: weekdayTonePalette,
+              onToggleWeekday: onToggleWeekday,
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }
@@ -198,10 +151,9 @@ class _AlertPreAlertSliderSection extends StatelessWidget {
               Expanded(
                 child: Text(
                   '미리 알림',
-                  style: TextStyle(
-                    color: ui.textSecondary,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
+                  style: _settingRowLabelStyle(
+                    ui,
+                    _Step1SettingRowTone.secondary,
                   ),
                 ),
               ),
@@ -275,11 +227,7 @@ class _AlertWeekdaySection extends StatelessWidget {
           ResponsiveHeaderRow(
             leading: Text(
               '요일',
-              style: TextStyle(
-                color: ui.textSecondary,
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
+              style: _settingRowLabelStyle(ui, _Step1SettingRowTone.secondary),
             ),
             trailing: StatusChip(
               text: presentation.weekdayCountText,
@@ -314,12 +262,7 @@ class _AlertWeekdaySection extends StatelessWidget {
             const SizedBox(height: SmokeUiSpacing.xs),
             Text(
               '반복할 요일을 하나 이상 선택해야 다음 알림을 만들 수 있어요.',
-              style: TextStyle(
-                color: ui.textMuted,
-                fontSize: 12,
-                height: 1.45,
-                fontWeight: FontWeight.w500,
-              ),
+              style: _settingCaptionStyle(ui.textMuted, height: 1.45),
             ),
           ],
         ],
@@ -345,81 +288,77 @@ class _AlertTestSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ui = SmokeUiTheme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SectionLabel(text: '테스트'),
-        const SizedBox(height: SmokeUiSpacing.xs),
-        if (compact) ...[
-          SecondaryButton(
-            text: '알림 권한',
-            icon: Icons.shield_outlined,
-            foregroundColor: ui.textPrimary,
-            backgroundColor: ui.surfaceAlt,
-            borderColor: ui.border,
-            onTap: () async {
-              await onRequestPermission();
-            },
-          ),
-          const SizedBox(height: SmokeUiSpacing.xs),
-          PrimaryButton(
-            text: '테스트 알림 보내기',
-            icon: Icons.notifications_active_rounded,
-            color: SmokeUiPalette.accent,
-            textStyle: const TextStyle(
-              color: Colors.black,
-              fontSize: _actionFontSize,
-              fontWeight: FontWeight.w700,
+    return _buildSettingsSection(
+      title: '테스트',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (compact) ...[
+            SecondaryButton(
+              text: '알림 권한',
+              icon: Icons.shield_outlined,
+              foregroundColor: ui.textPrimary,
+              backgroundColor: ui.surfaceAlt,
+              borderColor: ui.border,
+              onTap: () async {
+                await onRequestPermission();
+              },
             ),
-            onTap: () async {
-              await onSendTest();
-            },
-          ),
-        ] else ...[
-          Row(
-            children: [
-              Expanded(
-                child: SecondaryButton(
-                  text: '알림 권한',
-                  icon: Icons.shield_outlined,
-                  foregroundColor: ui.textPrimary,
-                  backgroundColor: ui.surfaceAlt,
-                  borderColor: ui.border,
-                  onTap: () async {
-                    await onRequestPermission();
-                  },
-                ),
+            const SizedBox(height: SmokeUiSpacing.xs),
+            PrimaryButton(
+              text: '테스트 알림 보내기',
+              icon: Icons.notifications_active_rounded,
+              color: SmokeUiPalette.accent,
+              textStyle: const TextStyle(
+                color: Colors.black,
+                fontSize: _actionFontSize,
+                fontWeight: FontWeight.w700,
               ),
-              const SizedBox(width: SmokeUiSpacing.xs),
-              Expanded(
-                child: PrimaryButton(
-                  text: '테스트 알림 보내기',
-                  icon: Icons.notifications_active_rounded,
-                  color: SmokeUiPalette.accent,
-                  textStyle: const TextStyle(
-                    color: Colors.black,
-                    fontSize: _actionFontSize,
-                    fontWeight: FontWeight.w700,
+              onTap: () async {
+                await onSendTest();
+              },
+            ),
+          ] else ...[
+            Row(
+              children: [
+                Expanded(
+                  child: SecondaryButton(
+                    text: '알림 권한',
+                    icon: Icons.shield_outlined,
+                    foregroundColor: ui.textPrimary,
+                    backgroundColor: ui.surfaceAlt,
+                    borderColor: ui.border,
+                    onTap: () async {
+                      await onRequestPermission();
+                    },
                   ),
-                  onTap: () async {
-                    await onSendTest();
-                  },
                 ),
-              ),
-            ],
+                const SizedBox(width: SmokeUiSpacing.xs),
+                Expanded(
+                  child: PrimaryButton(
+                    text: '테스트 알림 보내기',
+                    icon: Icons.notifications_active_rounded,
+                    color: SmokeUiPalette.accent,
+                    textStyle: const TextStyle(
+                      color: Colors.black,
+                      fontSize: _actionFontSize,
+                      fontWeight: FontWeight.w700,
+                    ),
+                    onTap: () async {
+                      await onSendTest();
+                    },
+                  ),
+                ),
+              ],
+            ),
+          ],
+          const SizedBox(height: SmokeUiSpacing.sm),
+          Text(
+            '알림이 예상과 다르면 권한, 요일, 허용 시간대 순서로 확인해 주세요.',
+            style: _settingCaptionStyle(ui.textMuted, height: 1.45),
           ),
         ],
-        const SizedBox(height: SmokeUiSpacing.sm),
-        Text(
-          '알림이 예상과 다르면 권한, 요일, 허용 시간대 순서로 확인해 주세요.',
-          style: TextStyle(
-            color: ui.textMuted,
-            fontSize: 12,
-            height: 1.45,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ],
+      ),
     );
   }
 }
