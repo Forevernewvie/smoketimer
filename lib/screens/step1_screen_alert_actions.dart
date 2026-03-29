@@ -5,167 +5,61 @@ extension _Step1ScreenAlertActions on _Step1ScreenState {
   Future<void> _openAlertSettings(BuildContext context) async {
     await Navigator.of(context).push<void>(
       MaterialPageRoute(
-        builder: (routeContext) {
-          final routeUi = SmokeUiTheme.of(routeContext);
-          return Scaffold(
-            backgroundColor: routeUi.background,
-            body: SafeArea(
-              child: Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 8, 24, 0),
-                    child: Align(
-                      alignment: Alignment.topCenter,
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(
-                          maxWidth: _Step1ScreenState._maxContentWidth,
-                        ),
-                        child: SizedBox(
-                          height: 44,
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: IconButton(
-                              tooltip: '뒤로',
-                              padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(
-                                minWidth: 30,
-                                minHeight: 30,
-                              ),
-                              visualDensity: VisualDensity.compact,
-                              splashRadius: 18,
-                              onPressed: () => Navigator.of(routeContext).pop(),
-                              icon: Icon(
-                                Icons.arrow_back_ios_new_rounded,
-                                size: 20,
-                                color: routeUi.textPrimary,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
-                      child: Align(
-                        alignment: Alignment.topCenter,
-                        child: ConstrainedBox(
-                          constraints: const BoxConstraints(
-                            maxWidth: _Step1ScreenState._maxContentWidth,
-                          ),
-                          child: Consumer(
-                            builder: (context, ref, _) {
-                              final appState = ref.watch(appControllerProvider);
-                              final controller = ref.read(
-                                appControllerProvider.notifier,
-                              );
-                              final resolvedLastSmokingAt =
-                                  SmokingStatsService.resolveLastSmokingAt(
-                                    appState.meta.lastSmokingAt,
-                                    appState.records,
-                                  );
-                              final presentation = AlertSettingsPresenter.build(
-                                AlertSettingsInput(
-                                  repeatEnabled:
-                                      appState.settings.repeatEnabled,
-                                  intervalMinutes:
-                                      appState.settings.intervalMinutes,
-                                  preAlertMinutes:
-                                      appState.settings.preAlertMinutes,
-                                  allowedStartMinutes:
-                                      appState.settings.allowedStartMinutes,
-                                  allowedEndMinutes:
-                                      appState.settings.allowedEndMinutes,
-                                  use24Hour: appState.settings.use24Hour,
-                                  hasRingBaseTime:
-                                      resolvedLastSmokingAt != null,
-                                  activeWeekdayCount:
-                                      appState.settings.activeWeekdays.length,
-                                  now: appState.now,
-                                  nextAlertAt: appState.nextAlertAt,
-                                ),
-                              );
+        builder: (_) => _Step1SubscreenScaffold(
+          child: Consumer(
+            builder: (context, ref, _) {
+              final ui = SmokeUiTheme.of(context);
+              final appState = ref.watch(appControllerProvider);
+              final controller = ref.read(appControllerProvider.notifier);
+              final presentation = _buildAlertPresentation(appState);
 
-                              return _AlertCard(
-                                presentation: presentation,
-                                activeWeekdays:
-                                    appState.settings.activeWeekdays,
-                                onToggleRepeat: () async {
-                                  final ok = await controller
-                                      .toggleRepeatEnabled();
-                                  if (!ok) {
-                                    _showFeedback(
-                                      '알림 권한을 허용해야 반복 알림을 사용할 수 있어요.',
-                                      backgroundColor: routeUi.criticalSoft,
-                                      foregroundColor: routeUi.textPrimary,
-                                    );
-                                    return;
-                                  }
-                                  await HapticFeedback.selectionClick();
-                                  _showFeedback(
-                                    appState.settings.repeatEnabled
-                                        ? '반복 알림을 껐어요.'
-                                        : '반복 알림을 켰어요.',
-                                  );
-                                },
-                                onPickInterval: () async {
-                                  await _pickIntervalMinutes(
-                                    context,
-                                    initialMinutes:
-                                        appState.settings.intervalMinutes,
-                                    onSelected: (minutes) =>
-                                        controller.setIntervalMinutes(minutes),
-                                  );
-                                },
-                                onSetPreAlertMinutes: (minutes) =>
-                                    controller.setPreAlertMinutes(minutes),
-                                onPickRange: () =>
-                                    _pickAllowedWindow(context, appState),
-                                onToggleWeekday: (weekday) =>
-                                    controller.toggleWeekday(weekday),
-                                onRequestPermission: () async {
-                                  final ok = await controller
-                                      .requestNotificationPermission();
-                                  if (ok) {
-                                    await HapticFeedback.selectionClick();
-                                  }
-                                  _showFeedback(
-                                    ok
-                                        ? '알림 권한이 허용되었습니다.'
-                                        : '알림 권한을 허용해주세요. (시스템 설정)',
-                                    backgroundColor: ok
-                                        ? null
-                                        : routeUi.criticalSoft,
-                                    foregroundColor: routeUi.textPrimary,
-                                  );
-                                },
-                                onSendTest: () async {
-                                  final ok = await controller
-                                      .sendTestNotification();
-                                  if (!ok) {
-                                    _showFeedback(
-                                      '알림 권한이 필요합니다. (시스템 설정)',
-                                      backgroundColor: routeUi.criticalSoft,
-                                      foregroundColor: routeUi.textPrimary,
-                                    );
-                                    return;
-                                  }
-                                  await HapticFeedback.lightImpact();
-                                  _showFeedback('테스트 알림을 보냈어요.');
-                                },
-                              );
-                            },
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
+              return _AlertCard(
+                presentation: presentation,
+                activeWeekdays: appState.settings.activeWeekdays,
+                onToggleRepeat: () => _handleToggleRepeat(
+                  controller: controller,
+                  appState: appState,
+                  ui: ui,
+                ),
+                onPickInterval: () => _pickIntervalMinutes(
+                  context,
+                  initialMinutes: appState.settings.intervalMinutes,
+                  onSelected: controller.setIntervalMinutes,
+                ),
+                onSetPreAlertMinutes: controller.setPreAlertMinutes,
+                onPickRange: () => _pickAllowedWindow(context, appState),
+                onToggleWeekday: controller.toggleWeekday,
+                onRequestPermission: () =>
+                    _handleRequestPermission(controller: controller, ui: ui),
+                onSendTest: () =>
+                    _handleSendTestNotification(controller: controller, ui: ui),
+              );
+            },
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Maps app state into the alert-settings presentation model.
+  AlertSettingsPresentation _buildAlertPresentation(AppState appState) {
+    final resolvedLastSmokingAt = SmokingStatsService.resolveLastSmokingAt(
+      appState.meta.lastSmokingAt,
+      appState.records,
+    );
+
+    return AlertSettingsPresenter.build(
+      AlertSettingsInput(
+        repeatEnabled: appState.settings.repeatEnabled,
+        intervalMinutes: appState.settings.intervalMinutes,
+        preAlertMinutes: appState.settings.preAlertMinutes,
+        allowedStartMinutes: appState.settings.allowedStartMinutes,
+        allowedEndMinutes: appState.settings.allowedEndMinutes,
+        use24Hour: appState.settings.use24Hour,
+        hasRingBaseTime: resolvedLastSmokingAt != null,
+        activeWeekdayCount: appState.settings.activeWeekdays.length,
+        now: appState.now,
+        nextAlertAt: appState.nextAlertAt,
       ),
     );
   }
@@ -185,9 +79,7 @@ extension _Step1ScreenAlertActions on _Step1ScreenState {
       showDragHandle: true,
       useSafeArea: true,
       backgroundColor: SmokeUiTheme.of(context).surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
+      shape: _step1SheetCornerRadius,
       builder: (context) {
         final ui = SmokeUiTheme.of(context);
         return StatefulBuilder(
@@ -200,22 +92,11 @@ extension _Step1ScreenAlertActions on _Step1ScreenState {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      '간격',
-                      style: TextStyle(
-                        color: ui.textPrimary,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
+                    Text('간격', style: _sheetTitleTextStyle(ui)),
                     const SizedBox(height: 6),
                     Text(
                       '$label (${minutes.toString()}분)',
-                      style: TextStyle(
-                        color: ui.textSecondary,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                      ),
+                      style: _sheetSubtitleTextStyle(ui),
                     ),
                     const SizedBox(height: 12),
                     SliderTheme(
@@ -244,19 +125,11 @@ extension _Step1ScreenAlertActions on _Step1ScreenState {
                       children: [
                         Text(
                           AlertSettingsPresenter.formatIntervalLabel(min),
-                          style: TextStyle(
-                            color: ui.textMuted,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
+                          style: _settingCaptionStyle(ui.textMuted),
                         ),
                         Text(
                           AlertSettingsPresenter.formatIntervalLabel(max),
-                          style: TextStyle(
-                            color: ui.textMuted,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
+                          style: _settingCaptionStyle(ui.textMuted),
                         ),
                       ],
                     ),
@@ -324,5 +197,57 @@ extension _Step1ScreenAlertActions on _Step1ScreenState {
     }
     await HapticFeedback.selectionClick();
     _showFeedback('허용 시간대를 저장했어요.');
+  }
+
+  Future<void> _handleToggleRepeat({
+    required AppController controller,
+    required AppState appState,
+    required SmokeUiTheme ui,
+  }) async {
+    final ok = await controller.toggleRepeatEnabled();
+    if (!ok) {
+      _showFeedback(
+        '알림 권한을 허용해야 반복 알림을 사용할 수 있어요.',
+        backgroundColor: ui.criticalSoft,
+        foregroundColor: ui.textPrimary,
+      );
+      return;
+    }
+    await HapticFeedback.selectionClick();
+    _showFeedback(
+      appState.settings.repeatEnabled ? '반복 알림을 껐어요.' : '반복 알림을 켰어요.',
+    );
+  }
+
+  Future<void> _handleRequestPermission({
+    required AppController controller,
+    required SmokeUiTheme ui,
+  }) async {
+    final ok = await controller.requestNotificationPermission();
+    if (ok) {
+      await HapticFeedback.selectionClick();
+    }
+    _showFeedback(
+      ok ? '알림 권한이 허용되었습니다.' : '알림 권한을 허용해주세요. (시스템 설정)',
+      backgroundColor: ok ? null : ui.criticalSoft,
+      foregroundColor: ui.textPrimary,
+    );
+  }
+
+  Future<void> _handleSendTestNotification({
+    required AppController controller,
+    required SmokeUiTheme ui,
+  }) async {
+    final ok = await controller.sendTestNotification();
+    if (!ok) {
+      _showFeedback(
+        '알림 권한이 필요합니다. (시스템 설정)',
+        backgroundColor: ui.criticalSoft,
+        foregroundColor: ui.textPrimary,
+      );
+      return;
+    }
+    await HapticFeedback.lightImpact();
+    _showFeedback('테스트 알림을 보냈어요.');
   }
 }

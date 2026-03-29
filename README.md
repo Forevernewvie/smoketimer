@@ -18,6 +18,34 @@
 - Splash → (최초 실행) Onboarding → Main
 - 온보딩 완료 여부는 로컬 저장소에 영속 저장
 
+## 아키텍처 개요
+
+앱은 Flutter + Riverpod 기반이며, 화면/상태/도메인 책임을 분리해 유지보수성을 높였습니다.
+
+- `data`
+  - `SharedPreferences` 기반 저장소 구현
+  - 흡연 기록 / 사용자 설정 / 메타 데이터 영속화
+- `domain`
+  - 모델, 기본 정책값(`AppDefaults`), 예외 정의
+- `presentation/state`
+  - 앱 상태(`AppState`)와 Riverpod provider
+  - `AppController`가 bootstrap / 기록 추가·되돌리기 / 설정 저장 / 알림 재스케줄을 조정
+  - 순수 정책은 `app_record_policy.dart`, `app_settings_policy.dart`에 분리
+- `presentation/alert`, `presentation/home`
+  - 화면 표시용 presenter 계층
+- `screens`
+  - 실제 UI 조합 계층
+  - 메인 3탭 화면은 `step1_screen.dart` + `part` 파일들로 구성
+  - 반복 UI 설정은 `step1_screen_shared.dart` helper로 정리
+- `services`
+  - 로컬 알림, 포맷터, 통계, 홈 위젯, 광고 연동
+
+흐름 예시:
+
+```text
+Repository -> Bootstrap Loader / Policy -> AppController -> Presenter -> Screen Widgets
+```
+
 ## 개발 환경
 
 - Flutter `3.41.1`
@@ -45,6 +73,27 @@ flutter run -d <device-id>
 open -a Simulator
 flutter devices
 flutter run -d <device-id>
+```
+
+## 로컬 빌드 팁
+
+### Java Runtime 인식 실패 시
+
+Android 빌드에서 Java를 찾지 못하면 Android Studio JBR을 지정하면 됩니다.
+
+```bash
+export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
+flutter build apk --debug
+```
+
+### Gradle 캐시가 꼬였거나 디스크 여유가 부족할 때
+
+로컬 전역 Gradle 캐시 대신 임시 격리 캐시를 사용하면 복구가 빠릅니다.
+
+```bash
+export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
+export GRADLE_USER_HOME="/tmp/smoketimer-gradle-home"
+flutter build apk --debug
 ```
 
 ## 테스트 / 품질
@@ -129,13 +178,16 @@ flutter build appbundle --release
 
 ## 디렉터리 구조
 
-- `lib/domain`: 모델/정책
+- `lib/domain`: 모델 / 기본 정책 / 예외
 - `lib/data`: 저장소
-- `lib/services`: 스케줄러/포맷터/알림/통계
-- `lib/presentation/state`: Riverpod 상태
-- `lib/screens`: 앱 화면
+- `lib/services`: 스케줄러 / 포맷터 / 알림 / 통계 / 광고
+- `lib/presentation/state`: Riverpod 상태, controller, app policy
+- `lib/presentation/alert`: 알림 설정 presenter
+- `lib/presentation/home`: 홈 상태/위젯 presenter
+- `lib/screens`: 앱 화면 및 Step1 part 파일
 - `lib/widgets`: 공용 위젯
 - `test/features`: 기능 단위 테스트
+- `test/presentation/state`: 상태 계층 회귀 테스트
 
 ## 참고 문서
 
