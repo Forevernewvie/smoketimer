@@ -3,7 +3,6 @@ part of 'step1_screen.dart';
 class _HomeStatusPanel extends StatelessWidget {
   const _HomeStatusPanel({required this.label, required this.presentation});
 
-  static const _headerMinHeight = 28.0;
   static const _panelPadding = 10.0;
   static const _titleSpacing = 6.0;
   static const _detailSpacing = 2.0;
@@ -24,33 +23,21 @@ class _HomeStatusPanel extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            width: double.infinity,
-            height: _headerMinHeight,
-            child: Stack(
-              children: [
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    label,
-                    style: TextStyle(
-                      color: ui.textMuted,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: StatusChip(
-                    text: presentation.chipText,
-                    icon: presentation.icon,
-                    foregroundColor: tonePalette.foregroundColor,
-                    backgroundColor: tonePalette.backgroundColor,
-                    borderColor: tonePalette.borderColor,
-                  ),
-                ),
-              ],
+          ResponsiveHeaderRow(
+            leading: Text(
+              label,
+              style: TextStyle(
+                color: ui.textMuted,
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            trailing: StatusChip(
+              text: presentation.chipText,
+              icon: presentation.icon,
+              foregroundColor: tonePalette.foregroundColor,
+              backgroundColor: tonePalette.backgroundColor,
+              borderColor: tonePalette.borderColor,
             ),
           ),
           const SizedBox(height: _titleSpacing),

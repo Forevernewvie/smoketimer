@@ -336,4 +336,46 @@ void main() {
       container.dispose();
     }
   });
+
+  testWidgets('Home and record summary cards stretch on compact screens', (
+    tester,
+  ) async {
+    setTestViewport(tester, size: const Size(390, 844));
+    SharedPreferences.setMockInitialValues(<String, Object>{});
+    final prefs = await SharedPreferences.getInstance();
+
+    final container = createTestContainer(
+      prefs: prefs,
+      now: () => DateTime(2026, 2, 17, 9, 0),
+      autoDispose: false,
+    );
+
+    await pumpApp(tester, container);
+    await tester.tap(find.text('건너뛰기'));
+    await tester.pumpAndSettle();
+
+    await container.read(appControllerProvider.notifier).setPackPrice(5000);
+    await container
+        .read(appControllerProvider.notifier)
+        .setCigarettesPerPack(20);
+    await tester.pumpAndSettle();
+
+    final homeCardRect = tester.getRect(
+      find.byKey(const Key('home_cost_summary_card')),
+    );
+    expect(homeCardRect.width, greaterThanOrEqualTo(300));
+
+    await tester.tap(find.text('Record'));
+    await tester.pumpAndSettle();
+
+    final recordCardRect = tester.getRect(
+      find.byKey(const Key('record_total_summary_card')),
+    );
+    expect(recordCardRect.width, greaterThanOrEqualTo(300));
+    expect(tester.takeException(), isNull);
+
+    await tester.pumpWidget(const SizedBox.shrink());
+    await tester.pumpAndSettle();
+    container.dispose();
+  });
 }

@@ -13,27 +13,18 @@ class _SettingsAlertSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ui = SmokeUiTheme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SectionLabel(text: '알림'),
-        const SizedBox(height: SmokeUiSpacing.xs),
-        SurfaceCard(
-          child: _SettingRow(
-            height: 52,
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            label: '알림 설정',
-            labelStyle: TextStyle(
-              color: ui.textPrimary,
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-            ),
-            value: alertSummary,
-            showChevron: true,
-            onTap: onOpenAlertSettings,
-          ),
+    return _buildSettingsSection(
+      title: '알림',
+      child: SurfaceCard(
+        child: _buildSettingRow(
+          label: '알림 설정',
+          ui: ui,
+          tone: _Step1SettingRowTone.primary,
+          value: alertSummary,
+          showChevron: true,
+          onTap: onOpenAlertSettings,
         ),
-      ],
+      ),
     );
   }
 }
@@ -61,84 +52,52 @@ class _SettingsCostSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ui = SmokeUiTheme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SectionLabel(text: '비용'),
-        const SizedBox(height: SmokeUiSpacing.xs),
-        SurfaceCard(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _SettingRow(
-                rowKey: const Key('cost_pack_price_row'),
-                height: 52,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 10,
+    return _buildSettingsSection(
+      title: '비용',
+      child: SurfaceCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildSettingRow(
+              rowKey: const Key('cost_pack_price_row'),
+              ui: ui,
+              label: '갑당 가격',
+              tone: _Step1SettingRowTone.secondary,
+              value: packPriceText,
+              showChevron: true,
+              onTap: onEditPackPrice,
+            ),
+            _buildSettingRow(
+              rowKey: const Key('cost_cigarettes_per_pack_row'),
+              ui: ui,
+              label: '한 갑 개비 수',
+              tone: _Step1SettingRowTone.secondary,
+              value: '${cigarettesPerPack.toString()}개비',
+              withTopBorder: true,
+              showChevron: true,
+              onTap: onEditCigarettesPerPack,
+            ),
+            _buildSettingRow(
+              rowKey: const Key('cost_currency_row'),
+              ui: ui,
+              label: '통화',
+              tone: _Step1SettingRowTone.secondary,
+              value: currencyLabel,
+              withTopBorder: true,
+              showChevron: true,
+              onTap: onEditCurrency,
+            ),
+            if (!isCostConfigured)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(14, 4, 14, 12),
+                child: Text(
+                  '가격 정보를 설정하면 지출을 계산할 수 있어요.',
+                  style: _settingCaptionStyle(ui.textSecondary),
                 ),
-                label: '갑당 가격',
-                labelStyle: TextStyle(
-                  color: ui.textSecondary,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-                value: packPriceText,
-                showChevron: true,
-                onTap: onEditPackPrice,
               ),
-              _SettingRow(
-                rowKey: const Key('cost_cigarettes_per_pack_row'),
-                height: 52,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 10,
-                ),
-                label: '한 갑 개비 수',
-                labelStyle: TextStyle(
-                  color: ui.textSecondary,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-                value: '${cigarettesPerPack.toString()}개비',
-                withTopBorder: true,
-                showChevron: true,
-                onTap: onEditCigarettesPerPack,
-              ),
-              _SettingRow(
-                rowKey: const Key('cost_currency_row'),
-                height: 52,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 10,
-                ),
-                label: '통화',
-                labelStyle: TextStyle(
-                  color: ui.textSecondary,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-                value: currencyLabel,
-                withTopBorder: true,
-                showChevron: true,
-                onTap: onEditCurrency,
-              ),
-              if (!isCostConfigured)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(14, 4, 14, 12),
-                  child: Text(
-                    '가격 정보를 설정하면 지출을 계산할 수 있어요.',
-                    style: TextStyle(
-                      color: ui.textSecondary,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ),
-            ],
-          ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }
@@ -166,66 +125,39 @@ class _SettingsDisplaySection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ui = SmokeUiTheme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SectionLabel(text: '표시'),
-        const SizedBox(height: SmokeUiSpacing.xs),
-        SurfaceCard(
-          child: Column(
-            children: [
-              _SettingRow(
-                height: 56,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 10,
-                ),
-                label: '24시간 표기',
-                labelStyle: TextStyle(
-                  color: ui.textPrimary,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                ),
-                trailing: TogglePill(isOn: use24Hour),
-                onTap: onToggle24Hour,
-              ),
-              _SettingRow(
-                height: 52,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 10,
-                ),
-                label: darkModeLabel,
-                labelStyle: TextStyle(
-                  color: ui.textSecondary,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-                withTopBorder: true,
-                trailing: TogglePill(isOn: darkModeEnabled),
-                onTap: onToggleDarkMode,
-              ),
-              _SettingRow(
-                height: 52,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 10,
-                ),
-                label: '홈 원형 기준',
-                labelStyle: TextStyle(
-                  color: ui.textSecondary,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-                value: ringReferenceLabel,
-                withTopBorder: true,
-                showChevron: true,
-                onTap: onCycleRingReference,
-              ),
-            ],
-          ),
+    return _buildSettingsSection(
+      title: '표시',
+      child: SurfaceCard(
+        child: Column(
+          children: [
+            _buildSettingRow(
+              ui: ui,
+              label: '24시간 표기',
+              tone: _Step1SettingRowTone.primary,
+              height: 56,
+              trailing: TogglePill(isOn: use24Hour),
+              onTap: onToggle24Hour,
+            ),
+            _buildSettingRow(
+              ui: ui,
+              label: darkModeLabel,
+              tone: _Step1SettingRowTone.secondary,
+              withTopBorder: true,
+              trailing: TogglePill(isOn: darkModeEnabled),
+              onTap: onToggleDarkMode,
+            ),
+            _buildSettingRow(
+              ui: ui,
+              label: '홈 원형 기준',
+              tone: _Step1SettingRowTone.secondary,
+              value: ringReferenceLabel,
+              withTopBorder: true,
+              showChevron: true,
+              onTap: onCycleRingReference,
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }
@@ -247,51 +179,31 @@ class _SettingsFeedbackSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ui = SmokeUiTheme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SectionLabel(text: '피드백'),
-        const SizedBox(height: SmokeUiSpacing.xs),
-        SurfaceCard(
-          child: Column(
-            children: [
-              _SettingRow(
-                height: 52,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 10,
-                ),
-                label: '진동',
-                labelStyle: TextStyle(
-                  color: ui.textSecondary,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-                withTopBorder: true,
-                trailing: TogglePill(isOn: vibrationEnabled),
-                onTap: onToggleVibration,
-              ),
-              _SettingRow(
-                height: 52,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 10,
-                ),
-                label: '소리',
-                labelStyle: TextStyle(
-                  color: ui.textSecondary,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-                value: soundTypeLabel,
-                withTopBorder: true,
-                showChevron: true,
-                onTap: onCycleSoundType,
-              ),
-            ],
-          ),
+    return _buildSettingsSection(
+      title: '피드백',
+      child: SurfaceCard(
+        child: Column(
+          children: [
+            _buildSettingRow(
+              ui: ui,
+              label: '진동',
+              tone: _Step1SettingRowTone.secondary,
+              withTopBorder: true,
+              trailing: TogglePill(isOn: vibrationEnabled),
+              onTap: onToggleVibration,
+            ),
+            _buildSettingRow(
+              ui: ui,
+              label: '소리',
+              tone: _Step1SettingRowTone.secondary,
+              value: soundTypeLabel,
+              withTopBorder: true,
+              showChevron: true,
+              onTap: onCycleSoundType,
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }
@@ -309,77 +221,49 @@ class _SettingsDataSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ui = SmokeUiTheme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SectionLabel(text: '데이터'),
-        const SizedBox(height: SmokeUiSpacing.xs),
-        SurfaceCard(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _SettingRow(
-                height: 52,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 10,
-                ),
-                label: '개인정보처리방침',
-                labelStyle: TextStyle(
-                  color: ui.textPrimary,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                ),
-                value: '광고 및 로컬 저장 정보 안내',
-                valueMaxLines: 2,
-                withTopBorder: false,
-                showChevron: true,
-                onTap: onOpenPrivacyPolicy,
+    return _buildSettingsSection(
+      title: '데이터',
+      child: SurfaceCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildSettingRow(
+              ui: ui,
+              label: '개인정보처리방침',
+              tone: _Step1SettingRowTone.primary,
+              value: '광고 및 로컬 저장 정보 안내',
+              valueMaxLines: 2,
+              withTopBorder: false,
+              showChevron: true,
+              onTap: onOpenPrivacyPolicy,
+            ),
+            _buildSettingRow(
+              ui: ui,
+              label: '데이터 초기화',
+              tone: _Step1SettingRowTone.danger,
+              withTopBorder: true,
+              onTap: onResetData,
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'AdMob 사용 시 공개 정책 문서가 필요할 수 있습니다.',
+                    style: _settingCaptionStyle(ui.textSecondary),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    '기록과 설정을 모두 지우는 작업입니다.',
+                    style: _settingCaptionStyle(ui.textMuted),
+                  ),
+                ],
               ),
-              _SettingRow(
-                height: 52,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 10,
-                ),
-                label: '데이터 초기화',
-                labelStyle: const TextStyle(
-                  color: Color(0xFFD95B57),
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                ),
-                withTopBorder: true,
-                onTap: onResetData,
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'AdMob 사용 시 공개 정책 문서가 필요할 수 있습니다.',
-                      style: TextStyle(
-                        color: ui.textSecondary,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      '기록과 설정을 모두 지우는 작업입니다.',
-                      style: TextStyle(
-                        color: ui.textMuted,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }

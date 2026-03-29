@@ -11,6 +11,7 @@ import '../l10n/app_localizations.dart';
 import '../presentation/alert/alert_settings_presenter.dart';
 import '../presentation/home/home_status_presenter.dart';
 import '../presentation/state/ads_providers.dart';
+import '../presentation/state/app_controller.dart';
 import '../presentation/state/app_providers.dart';
 import '../presentation/state/app_state.dart';
 import 'privacy_policy_screen.dart';
@@ -33,6 +34,7 @@ part 'step1_screen_record_components.dart';
 part 'step1_screen_alert.dart';
 part 'step1_screen_alert_overview.dart';
 part 'step1_screen_alert_sections.dart';
+part 'step1_screen_shared.dart';
 part 'step1_screen_settings.dart';
 part 'step1_screen_settings_sections.dart';
 part 'step1_screen_settings_components.dart';
@@ -210,9 +212,7 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
             ),
             child: NavigationBar(
               selectedIndex: _tabIndex,
-              onDestinationSelected: (value) {
-                setState(() => _tabIndex = value);
-              },
+              onDestinationSelected: _setTabIndex,
               destinations: const [
                 NavigationDestination(
                   icon: Icon(Icons.timer_outlined),
@@ -239,18 +239,19 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
 
   /// Switches the main shell back to the Home tab.
   Future<void> _openHomeTab() async {
-    if (!mounted) {
-      return;
-    }
-    setState(() => _tabIndex = 0);
+    _setTabIndex(0);
   }
 
   /// Switches the main shell to the settings tab so pricing can be edited.
   Future<void> _openCostSettingsTab() async {
-    if (!mounted) {
+    _setTabIndex(2);
+  }
+
+  void _setTabIndex(int value) {
+    if (!mounted || _tabIndex == value) {
       return;
     }
-    setState(() => _tabIndex = 2);
+    setState(() => _tabIndex = value);
   }
 
   Widget _scrollableTab({required Key key, required Widget child}) {

@@ -52,6 +52,7 @@ class _PeriodTab extends StatelessWidget {
 
 class _SummaryItem extends StatelessWidget {
   const _SummaryItem({
+    this.cardKey,
     required this.label,
     required this.value,
     this.detail,
@@ -59,6 +60,7 @@ class _SummaryItem extends StatelessWidget {
     this.emphasized = false,
   });
 
+  final Key? cardKey;
   final String label;
   final String value;
   final String? detail;
@@ -70,6 +72,7 @@ class _SummaryItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final ui = SmokeUiTheme.of(context);
     return SurfaceCard(
+      key: cardKey,
       cornerRadius: 12,
       strokeColor: ui.border,
       color: emphasized ? ui.surfaceAlt : ui.surface,
