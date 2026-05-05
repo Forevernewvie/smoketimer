@@ -6,16 +6,19 @@ class MainBannerAdSlotTokens {
   const MainBannerAdSlotTokens._();
 
   /// Fixed slot height that matches the current banner placeholder contract.
-  static const double placeholderHeight = 50;
+  static const double placeholderHeight = 66;
 
   /// Horizontal padding for placeholder content.
   static const double horizontalPadding = 16;
 
+  /// Vertical padding used to visually separate the slot from content.
+  static const double verticalPadding = 8;
+
+  /// Shared rounded corner treatment for the banner shell.
+  static const double shellRadius = 16;
+
   /// Font size used for the auxiliary placeholder label.
   static const double placeholderFontSize = 11;
-
-  /// Expand/collapse animation duration for slot height changes.
-  static const Duration expandAnimationDuration = Duration(milliseconds: 180);
 
   /// Copy shown while the banner lifecycle is still resolving.
   static const String placeholderMessage = '광고 영역 준비 중';
@@ -70,9 +73,6 @@ class MainBannerAdSlotPresentation {
 
   /// Rendered banner height when an ad is ready.
   final double bannerHeight;
-
-  /// Returns true when the slot should reserve visible space.
-  bool get isVisible => kind != MainBannerAdSlotKind.hidden;
 }
 
 /// Small render-mode enum that keeps UI branching explicit and testable.

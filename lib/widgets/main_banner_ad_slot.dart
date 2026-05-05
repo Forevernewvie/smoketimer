@@ -6,7 +6,7 @@ import '../services/logging/app_logger.dart';
 import 'pen_design_widgets.dart';
 import 'main_banner_ad_slot_presenter.dart';
 
-/// Bottom-slot banner renderer with graceful fallback behaviors.
+/// Bottom-slot banner renderer for the resolved ad lifecycle state.
 class MainBannerAdSlot extends StatelessWidget {
   /// Creates the banner slot widget.
   const MainBannerAdSlot({
@@ -24,27 +24,16 @@ class MainBannerAdSlot extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ui = SmokeUiTheme.of(context);
-    final reduceMotion =
-        MediaQuery.maybeOf(context)?.disableAnimations ?? false;
 
     return ValueListenableBuilder<BannerAdState>(
       valueListenable: adService.bannerState,
       builder: (context, state, child) {
         final presentation = MainBannerAdSlotPresenter.fromState(state);
-        final slot = _buildSlot(
+        return _buildSlot(
           context,
           state: state,
           presentation: presentation,
           ui: ui,
-        );
-
-        return AnimatedSize(
-          duration: reduceMotion
-              ? Duration.zero
-              : MainBannerAdSlotTokens.expandAnimationDuration,
-          curve: Curves.easeOutCubic,
-          alignment: Alignment.bottomCenter,
-          child: slot,
         );
       },
     );
@@ -61,21 +50,33 @@ class MainBannerAdSlot extends StatelessWidget {
       case MainBannerAdSlotKind.placeholder:
         return Container(
           key: const Key('main_banner_placeholder'),
-          height: presentation.height,
-          decoration: BoxDecoration(
-            color: ui.surfaceAlt,
-            border: Border(top: BorderSide(color: ui.border)),
+          color: ui.background,
+          padding: const EdgeInsets.fromLTRB(
+            MainBannerAdSlotTokens.horizontalPadding,
+            MainBannerAdSlotTokens.verticalPadding,
+            MainBannerAdSlotTokens.horizontalPadding,
+            MainBannerAdSlotTokens.verticalPadding,
           ),
-          padding: const EdgeInsets.symmetric(
-            horizontal: MainBannerAdSlotTokens.horizontalPadding,
-          ),
-          alignment: Alignment.centerLeft,
-          child: Text(
-            presentation.message ?? MainBannerAdSlotTokens.placeholderMessage,
-            style: TextStyle(
-              color: ui.textMuted,
-              fontSize: MainBannerAdSlotTokens.placeholderFontSize,
-              fontWeight: FontWeight.w600,
+          child: Container(
+            height: presentation.height,
+            decoration: BoxDecoration(
+              color: ui.surfaceAlt,
+              borderRadius: BorderRadius.circular(
+                MainBannerAdSlotTokens.shellRadius,
+              ),
+              border: Border.all(color: ui.border),
+            ),
+            padding: const EdgeInsets.symmetric(
+              horizontal: MainBannerAdSlotTokens.horizontalPadding,
+            ),
+            alignment: Alignment.centerLeft,
+            child: Text(
+              presentation.message ?? MainBannerAdSlotTokens.placeholderMessage,
+              style: TextStyle(
+                color: ui.textMuted,
+                fontSize: MainBannerAdSlotTokens.placeholderFontSize,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         );
@@ -90,15 +91,35 @@ class MainBannerAdSlot extends StatelessWidget {
         }
         return Container(
           key: const Key('main_banner_slot'),
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: ui.surfaceAlt,
-            border: Border(top: BorderSide(color: ui.border)),
+          color: ui.background,
+          padding: const EdgeInsets.fromLTRB(
+            MainBannerAdSlotTokens.horizontalPadding,
+            MainBannerAdSlotTokens.verticalPadding,
+            MainBannerAdSlotTokens.horizontalPadding,
+            MainBannerAdSlotTokens.verticalPadding,
           ),
-          child: SizedBox(
-            width: presentation.bannerWidth,
-            height: presentation.bannerHeight,
-            child: AdWidget(key: const Key('main_banner_loaded'), ad: banner),
+          child: Container(
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: ui.surfaceAlt,
+              borderRadius: BorderRadius.circular(
+                MainBannerAdSlotTokens.shellRadius,
+              ),
+              border: Border.all(color: ui.border),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(
+                MainBannerAdSlotTokens.shellRadius - 2,
+              ),
+              child: SizedBox(
+                width: presentation.bannerWidth,
+                height: presentation.bannerHeight,
+                child: AdWidget(
+                  key: const Key('main_banner_loaded'),
+                  ad: banner,
+                ),
+              ),
+            ),
           ),
         );
       case MainBannerAdSlotKind.hidden:

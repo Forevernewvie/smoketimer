@@ -41,15 +41,13 @@ class AppBootstrapLoader {
 
   /// Loads records, settings, and metadata, then reconciles stale last-smoking state.
   Future<AppBootstrapSnapshot> load() async {
-    final results = await Future.wait<dynamic>([
-      _smokingRepository.loadRecords(),
-      _settingsRepository.loadSettings(),
-      _settingsRepository.loadMeta(),
-    ]);
+    final recordsFuture = _smokingRepository.loadRecords();
+    final settingsFuture = _settingsRepository.loadSettings();
+    final metaFuture = _settingsRepository.loadMeta();
 
-    final loadedRecords = results[0] as List<SmokingRecord>;
-    final loadedSettings = results[1] as UserSettings;
-    var loadedMeta = results[2] as AppMeta;
+    final loadedRecords = await recordsFuture;
+    final loadedSettings = await settingsFuture;
+    var loadedMeta = await metaFuture;
 
     final normalizedLastSmokingAt = SmokingStatsService.resolveLastSmokingAt(
       loadedMeta.lastSmokingAt,

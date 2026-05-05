@@ -1,5 +1,7 @@
 import '../../domain/models/home_widget_snapshot.dart';
 import '../../domain/models/record_period.dart';
+import '../../domain/models/smoking_record.dart';
+import '../../domain/models/user_settings.dart';
 import '../../presentation/state/app_state.dart';
 import '../../services/cost_stats_service.dart';
 import '../../services/smoking_stats_service.dart';
@@ -53,9 +55,6 @@ class HomeWidgetPresenter {
       state.now,
     );
     final todayCount = SmokingStatsService.totalCount(todayRecords);
-    final todaySpendLabel = CostStatsService.isConfigured(state.settings)
-        ? '지출 ${CostStatsService.formatCurrency(CostStatsService.computeSpendForRecords(records: todayRecords, settings: state.settings), state.settings)}'
-        : '가격 설정 필요';
 
     return HomeWidgetSnapshot(
       hasRecord: hasRecord,
@@ -65,10 +64,26 @@ class HomeWidgetPresenter {
       nextAlertLabel: alertPresentation.chipText,
       nextAlertValue: alertPresentation.title,
       todayCountLabel: '오늘 $todayCount개비',
-      todaySpendLabel: todaySpendLabel,
+      todaySpendLabel: _formatTodaySpend(todayRecords, state.settings),
       lastSmokingAtIso: lastSmokingAt?.toIso8601String() ?? '',
       nextAlertAtIso: state.nextAlertAt?.toIso8601String() ?? '',
       updatedAtIso: state.now.toIso8601String(),
     );
+  }
+
+  /// Formats today's spend summary for native widget storage.
+  static String _formatTodaySpend(
+    List<SmokingRecord> records,
+    UserSettings settings,
+  ) {
+    if (!CostStatsService.isConfigured(settings)) {
+      return '가격 설정 필요';
+    }
+
+    final spend = CostStatsService.computeSpendForRecords(
+      records: records,
+      settings: settings,
+    );
+    return '지출 ${CostStatsService.formatCurrency(spend, settings)}';
   }
 }

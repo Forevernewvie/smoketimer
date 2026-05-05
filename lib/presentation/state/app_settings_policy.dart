@@ -14,10 +14,12 @@ class AppSettingsPolicy {
 
   /// Returns settings with the next configured interval option selected.
   static UserSettings cycleIntervalMinutes(UserSettings current) {
-    final index = AppDefaults.intervalOptions.indexOf(current.intervalMinutes);
-    final next = AppDefaults
-        .intervalOptions[(index + 1) % AppDefaults.intervalOptions.length];
-    return current.copyWith(intervalMinutes: next);
+    return current.copyWith(
+      intervalMinutes: _nextOption(
+        AppDefaults.intervalOptions,
+        current.intervalMinutes,
+      ),
+    );
   }
 
   /// Returns normalized interval settings or null when no effective change exists.
@@ -33,10 +35,12 @@ class AppSettingsPolicy {
 
   /// Returns settings with the next configured pre-alert option selected.
   static UserSettings cyclePreAlertMinutes(UserSettings current) {
-    final index = AppDefaults.preAlertOptions.indexOf(current.preAlertMinutes);
-    final next = AppDefaults
-        .preAlertOptions[(index + 1) % AppDefaults.preAlertOptions.length];
-    return current.copyWith(preAlertMinutes: next);
+    return current.copyWith(
+      preAlertMinutes: _nextOption(
+        AppDefaults.preAlertOptions,
+        current.preAlertMinutes,
+      ),
+    );
   }
 
   /// Returns normalized pre-alert settings or null when no effective change exists.
@@ -105,10 +109,9 @@ class AppSettingsPolicy {
 
   /// Returns settings with the next available sound type selected.
   static UserSettings cycleSoundType(UserSettings current) {
-    final index = AppDefaults.soundTypeOptions.indexOf(current.soundType);
-    final next = AppDefaults
-        .soundTypeOptions[(index + 1) % AppDefaults.soundTypeOptions.length];
-    return current.copyWith(soundType: next);
+    return current.copyWith(
+      soundType: _nextOption(AppDefaults.soundTypeOptions, current.soundType),
+    );
   }
 
   /// Returns settings with explicit dark mode toggled.
@@ -144,10 +147,7 @@ class AppSettingsPolicy {
     UserSettings current,
     String currencyCode,
   ) {
-    final normalized = currencyCode.trim().toUpperCase();
-    final nextCode = normalized.isEmpty
-        ? AppDefaults.defaultCurrencyCode
-        : normalized;
+    final nextCode = _normalizeCurrencyCode(currencyCode);
     final nextSymbol = CostStatsService.resolveCurrencySymbol(nextCode);
 
     if (nextCode == current.currencyCode &&
@@ -155,5 +155,17 @@ class AppSettingsPolicy {
       return null;
     }
     return current.copyWith(currencyCode: nextCode, currencySymbol: nextSymbol);
+  }
+
+  /// Returns the next configured option, wrapping unknown values to the first.
+  static T _nextOption<T>(List<T> options, T current) {
+    final index = options.indexOf(current);
+    return options[(index + 1) % options.length];
+  }
+
+  /// Normalizes display currency input into the supported app default policy.
+  static String _normalizeCurrencyCode(String currencyCode) {
+    final normalized = currencyCode.trim().toUpperCase();
+    return normalized.isEmpty ? AppDefaults.defaultCurrencyCode : normalized;
   }
 }

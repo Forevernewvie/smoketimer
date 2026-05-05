@@ -17,6 +17,18 @@ void main() {
     expect(updated!.intervalMinutes, AppDefaults.maxIntervalMinutes);
   });
 
+  test('cycle settings advance through configured options', () {
+    final current = createSettings();
+
+    final interval = AppSettingsPolicy.cycleIntervalMinutes(current);
+    final preAlert = AppSettingsPolicy.cyclePreAlertMinutes(current);
+    final sound = AppSettingsPolicy.cycleSoundType(current);
+
+    expect(interval.intervalMinutes, 60);
+    expect(preAlert.preAlertMinutes, 10);
+    expect(sound.soundType, 'silent');
+  });
+
   test('updateAllowedTimeWindow rejects invalid ranges', () {
     final current = createSettings();
 

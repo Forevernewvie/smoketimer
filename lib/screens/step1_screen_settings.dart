@@ -79,6 +79,8 @@ class _SettingsCard extends StatelessWidget {
           onOpenAlertSettings: onOpenAlertSettings,
         ),
         const SizedBox(height: 16),
+        _SettingsPassiveAccessSection(alertSummary: alertSummary),
+        const SizedBox(height: 16),
         _SettingsCostSection(
           isCostConfigured: isCostConfigured,
           packPriceText: packPriceText,
