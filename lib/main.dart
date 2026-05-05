@@ -87,7 +87,7 @@ class SmokeTimerApp extends ConsumerWidget {
           primary: SmokeUiPalette.accent,
           secondary: SmokeUiPalette.mint,
           tertiary: SmokeUiPalette.info,
-          surface: Color(0xFF211912),
+          surface: Color(0xFF191C1F),
         ),
       ),
       home: const RootStageScreen(),

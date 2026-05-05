@@ -158,6 +158,7 @@
   - 병원식 민트/시안 톤: 깨끗하지만 현재 앱의 “흡연 간격 타이머” 물성과 약함.
   - 담배를 직접 연상시키는 짙은 회색/연기 효과: 흡연을 미화할 수 있어 배경 질감 대신 절제된 웜 뉴트럴만 사용.
 - **적용 결과**: 공용 `SmokeUiPalette`/`SmokeUiTheme` 토큰을 warm amber + ivory + charcoal로 교체해 홈, 온보딩, 설정, 알림, 공통 버튼/칩/슬라이더가 같은 톤을 공유하도록 했다.
+- **2차 정제**: warm charcoal을 더 중립적인 graphite로 올리고, amber는 타이머 링/CTA/핵심 포인트에만 남겼다. 담배색으로 읽히는 브라운 면적을 줄여 스토어 썸네일에서 더 현대적인 도구 앱처럼 보이도록 조정했다.
 
 ## 기획 적용 내역
 
@@ -177,7 +178,7 @@
 
 ## UI 톤 재수정 파일
 
-- `lib/widgets/pen_design_widgets.dart`: 앱 공통 팔레트를 cyan/mint에서 warm amber/ivory/charcoal 기반으로 교체하고 tone border 토큰을 추가.
+- `lib/widgets/pen_design_widgets.dart`: 앱 공통 팔레트를 cyan/mint에서 graphite/ivory/amber 기반으로 교체하고 tone border 토큰을 추가.
 - `lib/main.dart`: Material `ColorScheme`을 새 warm timer 토큰에 맞춰 조정.
 - `lib/screens/step1_screen_home*.dart`: 홈 타이머 링 중심부와 상태/요약 칩을 warm ritual timer 톤으로 정리.
 - `lib/screens/step1_screen_alert_overview.dart`: 알림 상태 칩을 새 semantic border 토큰으로 정리.

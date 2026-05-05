@@ -68,8 +68,8 @@ class _HomeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ringCenterFill = Theme.of(context).brightness == Brightness.dark
-        ? const Color(0xFF4A2D1A)
-        : const Color(0xFF3A2417);
+        ? const Color(0xFF1F2327)
+        : const Color(0xFF24272B);
     final textScale = MediaQuery.textScalerOf(context).scale(1);
     final intervalPresentation = HomeStatusPresenter.buildIntervalStatus(
       HomeIntervalStatusInput(

@@ -12,8 +12,8 @@ class _RingHero extends StatelessWidget {
   Widget build(BuildContext context) {
     final ui = SmokeUiTheme.of(context);
     final centerFill = Theme.of(context).brightness == Brightness.dark
-        ? const Color(0xFF4A2D1A)
-        : const Color(0xFF3A2417);
+        ? const Color(0xFF1F2327)
+        : const Color(0xFF24272B);
     return SurfaceCard(
       padding: const EdgeInsets.all(16),
       strokeColor: ui.border,

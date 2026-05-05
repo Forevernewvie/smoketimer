@@ -5,29 +5,29 @@ import 'package:flutter/material.dart';
 class SmokeUiPalette {
   const SmokeUiPalette._();
 
-  static const background = Color(0xFFF7F1E8);
-  static const backgroundElevated = Color(0xFFF0E6D8);
+  static const background = Color(0xFFF6F4EF);
+  static const backgroundElevated = Color(0xFFECE8DF);
   static const surface = Color(0xFFFFFDF8);
-  static const surfaceBorder = Color(0xFFE0D3C1);
-  static const textPrimary = Color(0xFF251C15);
-  static const textSecondary = Color(0xFF6D5D4E);
-  static const accent = Color(0xFFD58A3A);
-  static const accentDark = Color(0xFF8F4B1E);
-  static const accentSoft = Color(0xFFF8E6CF);
-  static const accentBorder = Color(0xFFE6BA85);
-  static const mint = Color(0xFF3F7D5D);
-  static const mintSoft = Color(0xFFE5F0E8);
-  static const mintBorder = Color(0xFFA6C8B2);
-  static const info = Color(0xFF547083);
-  static const infoSoft = Color(0xFFE7EEF2);
-  static const infoBorder = Color(0xFFB8CBD5);
-  static const warning = Color(0xFF9B5B1F);
-  static const warningSoft = Color(0xFFF5E1C8);
-  static const warningBorder = Color(0xFFD9B177);
-  static const risk = Color(0xFFB94A43);
-  static const riskSoft = Color(0xFFF6DEDA);
-  static const riskBorder = Color(0xFFDFA49E);
-  static const neutralSoft = Color(0xFFEFE6D8);
+  static const surfaceBorder = Color(0xFFD8D2C7);
+  static const textPrimary = Color(0xFF202124);
+  static const textSecondary = Color(0xFF66625A);
+  static const accent = Color(0xFFD88A2D);
+  static const accentDark = Color(0xFF9A561C);
+  static const accentSoft = Color(0xFFF6E3CA);
+  static const accentBorder = Color(0xFFE4B67B);
+  static const mint = Color(0xFF4F7F65);
+  static const mintSoft = Color(0xFFE7F0E9);
+  static const mintBorder = Color(0xFFB5CFBE);
+  static const info = Color(0xFF5D7280);
+  static const infoSoft = Color(0xFFE9EEF1);
+  static const infoBorder = Color(0xFFBBC8D0);
+  static const warning = Color(0xFFA2621D);
+  static const warningSoft = Color(0xFFF3E0C6);
+  static const warningBorder = Color(0xFFD9B37A);
+  static const risk = Color(0xFFB85A50);
+  static const riskSoft = Color(0xFFF4DEDB);
+  static const riskBorder = Color(0xFFD9A6A0);
+  static const neutralSoft = Color(0xFFECE7DD);
 }
 
 class SmokeUiSpacing {
@@ -80,29 +80,29 @@ class SmokeUiTheme {
   static const SmokeUiTheme light = SmokeUiTheme._(
     background: SmokeUiPalette.background,
     surface: SmokeUiPalette.surface,
-    surfaceAlt: Color(0xFFFBF4EA),
+    surfaceAlt: Color(0xFFFAF7F1),
     border: SmokeUiPalette.surfaceBorder,
     textPrimary: SmokeUiPalette.textPrimary,
     textSecondary: SmokeUiPalette.textSecondary,
-    textMuted: Color(0xFF8A7864),
+    textMuted: Color(0xFF827B70),
     neutralSoft: SmokeUiPalette.neutralSoft,
     criticalSoft: SmokeUiPalette.riskSoft,
     criticalBorder: SmokeUiPalette.riskBorder,
-    ringTrack: Color(0xFFE7D9C7),
+    ringTrack: Color(0xFFE4DED3),
   );
 
   static const SmokeUiTheme dark = SmokeUiTheme._(
-    background: Color(0xFF15100C),
-    surface: Color(0xFF211912),
-    surfaceAlt: Color(0xFF2A2119),
-    border: Color(0xFF463728),
-    textPrimary: Color(0xFFF8EFE3),
-    textSecondary: Color(0xFFCDBEA8),
-    textMuted: Color(0xFFA99379),
-    neutralSoft: Color(0xFF352A20),
-    criticalSoft: Color(0xFF3A201C),
-    criticalBorder: Color(0xFF884A40),
-    ringTrack: Color(0xFF3B2D21),
+    background: Color(0xFF101214),
+    surface: Color(0xFF191C1F),
+    surfaceAlt: Color(0xFF202428),
+    border: Color(0xFF363C42),
+    textPrimary: Color(0xFFF4F1EC),
+    textSecondary: Color(0xFFC6C0B8),
+    textMuted: Color(0xFF99928A),
+    neutralSoft: Color(0xFF2A2E33),
+    criticalSoft: Color(0xFF3A211F),
+    criticalBorder: Color(0xFF884D47),
+    ringTrack: Color(0xFF30343A),
   );
 
   static SmokeUiTheme of(BuildContext context) {
