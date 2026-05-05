@@ -77,4 +77,47 @@ void main() {
     expect(adapter.storedValues['status_detail'], '간격 60분 기준');
     expect(adapter.updateCalls, 1);
   });
+
+  test(
+    'syncSnapshot skips payloads that only differ by updatedAtIso',
+    () async {
+      final adapter = FakeHomeWidgetPlatformAdapter();
+      final service = HomeScreenWidgetService(
+        platformAdapter: adapter,
+        config: const AppConfig(),
+      );
+      const initialSnapshot = HomeWidgetSnapshot(
+        hasRecord: true,
+        primaryValue: '45분',
+        statusTitle: '15분 남았어요',
+        statusDetail: '간격 60분 기준',
+        nextAlertLabel: '다음 알림',
+        nextAlertValue: '오전 10:00 예정',
+        todayCountLabel: '오늘 2개비',
+        todaySpendLabel: '지출 ₩600',
+        lastSmokingAtIso: '2026-03-08T08:15:00.000',
+        nextAlertAtIso: '2026-03-08T10:00:00.000',
+        updatedAtIso: '2026-03-08T09:00:00.000',
+      );
+      const secondTickSnapshot = HomeWidgetSnapshot(
+        hasRecord: true,
+        primaryValue: '45분',
+        statusTitle: '15분 남았어요',
+        statusDetail: '간격 60분 기준',
+        nextAlertLabel: '다음 알림',
+        nextAlertValue: '오전 10:00 예정',
+        todayCountLabel: '오늘 2개비',
+        todaySpendLabel: '지출 ₩600',
+        lastSmokingAtIso: '2026-03-08T08:15:00.000',
+        nextAlertAtIso: '2026-03-08T10:00:00.000',
+        updatedAtIso: '2026-03-08T09:00:01.000',
+      );
+
+      await service.syncSnapshot(initialSnapshot);
+      await service.syncSnapshot(secondTickSnapshot);
+
+      expect(adapter.updateCalls, 1);
+      expect(adapter.storedValues['updated_at_iso'], '2026-03-08T09:00:00.000');
+    },
+  );
 }

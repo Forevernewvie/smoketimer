@@ -68,8 +68,8 @@ class _HomeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final ringCenterFill = Theme.of(context).brightness == Brightness.dark
-        ? const Color(0xFF0F1318)
-        : const Color(0xFF121417);
+        ? const Color(0xFF10211D)
+        : const Color(0xFF17312B);
     final textScale = MediaQuery.textScalerOf(context).scale(1);
     final intervalPresentation = HomeStatusPresenter.buildIntervalStatus(
       HomeIntervalStatusInput(
@@ -128,6 +128,15 @@ class _HomeCard extends StatelessWidget {
               onUndoRecord: onUndoRecord,
               onOpenAlertSettings: onOpenAlertSettings,
             ),
+            const SizedBox(height: SmokeUiSpacing.md),
+            _HomeRhythmCoachCard(
+              hasRingBaseTime: hasRingBaseTime,
+              elapsedMinutes: elapsedMinutes,
+              intervalMinutes: intervalMinutes,
+              todayCount: todayCount,
+            ),
+            const SizedBox(height: SmokeUiSpacing.sm),
+            const _CravingPauseCard(),
             const SizedBox(height: SmokeUiSpacing.lg),
             const SectionLabel(text: '오늘 요약'),
             const SizedBox(height: SmokeUiSpacing.xs),
