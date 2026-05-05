@@ -5,24 +5,24 @@ import 'package:flutter/material.dart';
 class SmokeUiPalette {
   const SmokeUiPalette._();
 
-  static const background = Color(0xFFF4F6FA);
-  static const backgroundElevated = Color(0xFFECEFF4);
+  static const background = Color(0xFFECFEFF);
+  static const backgroundElevated = Color(0xFFDDF7FB);
   static const surface = Color(0xFFFFFFFF);
-  static const surfaceBorder = Color(0xFFD8DEE8);
-  static const textPrimary = Color(0xFF111827);
-  static const textSecondary = Color(0xFF5A6472);
-  static const accent = Color(0xFFFF8A3D);
-  static const accentDark = Color(0xFFE7792F);
-  static const accentSoft = Color(0xFFFFE9D8);
-  static const mint = Color(0xFF14B88F);
-  static const mintSoft = Color(0xFFDDF8F0);
-  static const info = Color(0xFF0891B2);
-  static const infoSoft = Color(0xFFDDF4FA);
-  static const warning = Color(0xFFB45309);
-  static const warningSoft = Color(0xFFFFEDD5);
+  static const surfaceBorder = Color(0xFFB8E2E8);
+  static const textPrimary = Color(0xFF14363D);
+  static const textSecondary = Color(0xFF52727A);
+  static const accent = Color(0xFF22D3EE);
+  static const accentDark = Color(0xFF0891B2);
+  static const accentSoft = Color(0xFFDDF7FB);
+  static const mint = Color(0xFF059669);
+  static const mintSoft = Color(0xFFDDF7EC);
+  static const info = Color(0xFF4C7FA7);
+  static const infoSoft = Color(0xFFE0EEF8);
+  static const warning = Color(0xFFC07A33);
+  static const warningSoft = Color(0xFFF8E8D8);
   static const risk = Color(0xFFD95B57);
   static const riskSoft = Color(0xFFFEE2E2);
-  static const neutralSoft = Color(0xFFEEF2F7);
+  static const neutralSoft = Color(0xFFEAF1EE);
 }
 
 class SmokeUiSpacing {
@@ -73,31 +73,31 @@ class SmokeUiTheme {
   final Color ringTrack;
 
   static const SmokeUiTheme light = SmokeUiTheme._(
-    background: Color(0xFFF5F6F8),
+    background: Color(0xFFECFEFF),
     surface: Color(0xFFFFFFFF),
-    surfaceAlt: Color(0xFFF8FAFC),
-    border: Color(0xFFD8DEE8),
-    textPrimary: Color(0xFF121417),
-    textSecondary: Color(0xFF5A6472),
-    textMuted: Color(0xFF6B7280),
-    neutralSoft: Color(0xFFEEF2F7),
+    surfaceAlt: Color(0xFFF5FDFF),
+    border: Color(0xFFB8E2E8),
+    textPrimary: Color(0xFF14363D),
+    textSecondary: Color(0xFF52727A),
+    textMuted: Color(0xFF6B8A91),
+    neutralSoft: Color(0xFFE6F6F8),
     criticalSoft: Color(0xFFFEE2E2),
     criticalBorder: Color(0xFFFCA5A5),
-    ringTrack: Color(0xFFD8DEE8),
+    ringTrack: Color(0xFFC6E9EE),
   );
 
   static const SmokeUiTheme dark = SmokeUiTheme._(
-    background: Color(0xFF111315),
-    surface: Color(0xFF1B1F24),
-    surfaceAlt: Color(0xFF192028),
-    border: Color(0xFF2D3540),
-    textPrimary: Color(0xFFF2F4F8),
-    textSecondary: Color(0xFFA2ACBA),
-    textMuted: Color(0xFF8994A3),
-    neutralSoft: Color(0xFF27313C),
+    background: Color(0xFF0F1715),
+    surface: Color(0xFF16211E),
+    surfaceAlt: Color(0xFF1B2A26),
+    border: Color(0xFF294039),
+    textPrimary: Color(0xFFF1F6F4),
+    textSecondary: Color(0xFF9EB3AD),
+    textMuted: Color(0xFF839892),
+    neutralSoft: Color(0xFF22332E),
     criticalSoft: Color(0xFF3B1F23),
     criticalBorder: Color(0xFF8A3A44),
-    ringTrack: Color(0xFF2D3540),
+    ringTrack: Color(0xFF294039),
   );
 
   static SmokeUiTheme of(BuildContext context) {
@@ -549,13 +549,16 @@ class StatusChip extends StatelessWidget {
             Icon(icon, size: 14, color: foregroundColor),
             const SizedBox(width: SmokeUiSpacing.xxs),
           ],
-          Text(
-            text,
-            maxLines: 1,
-            style: TextStyle(
-              color: foregroundColor,
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
+          Flexible(
+            child: Text(
+              text,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: foregroundColor,
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ),
         ],

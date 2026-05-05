@@ -69,6 +69,9 @@ class HomeWidgetSnapshot {
     if (identical(this, other)) {
       return true;
     }
+    // Ignore updatedAtIso so reactive widget sync does not treat every
+    // one-second app ticker update as a new payload when the rendered content
+    // is otherwise unchanged.
     return other is HomeWidgetSnapshot &&
         other.hasRecord == hasRecord &&
         other.primaryValue == primaryValue &&
@@ -79,8 +82,7 @@ class HomeWidgetSnapshot {
         other.todayCountLabel == todayCountLabel &&
         other.todaySpendLabel == todaySpendLabel &&
         other.lastSmokingAtIso == lastSmokingAtIso &&
-        other.nextAlertAtIso == nextAlertAtIso &&
-        other.updatedAtIso == updatedAtIso;
+        other.nextAlertAtIso == nextAlertAtIso;
   }
 
   @override
@@ -95,6 +97,5 @@ class HomeWidgetSnapshot {
     todaySpendLabel,
     lastSmokingAtIso,
     nextAlertAtIso,
-    updatedAtIso,
   );
 }

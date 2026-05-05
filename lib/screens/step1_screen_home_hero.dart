@@ -207,7 +207,7 @@ class _HomeHeroHeader extends StatelessWidget {
               ),
               const SizedBox(height: SmokeUiSpacing.xxs),
               Text(
-                '지금 상태를 빠르게 확인하고 바로 기록하세요.',
+                '카운터보다 간격에 집중하는 저압박 기록 홈입니다.',
                 style: TextStyle(
                   color: ui.textSecondary,
                   fontSize: 13,
@@ -274,6 +274,8 @@ class _HomeHeroStatusArea extends StatelessWidget {
       return Column(
         children: [
           actions,
+          const SizedBox(height: SmokeUiSpacing.xs),
+          const _HomeSoftResetCaption(),
           SizedBox(height: tightHeight ? SmokeUiSpacing.sm : SmokeUiSpacing.md),
           _HomeStatusPanel(label: '지금 상태', presentation: intervalPresentation),
           const SizedBox(height: SmokeUiSpacing.sm),
@@ -290,6 +292,8 @@ class _HomeHeroStatusArea extends StatelessWidget {
           _HomeStatusPanel(label: '다음 알림', presentation: alertPresentation),
           SizedBox(height: tightHeight ? SmokeUiSpacing.sm : SmokeUiSpacing.md),
           actions,
+          const SizedBox(height: SmokeUiSpacing.xs),
+          const _HomeSoftResetCaption(),
         ],
       );
     }
@@ -316,7 +320,29 @@ class _HomeHeroStatusArea extends StatelessWidget {
         ),
         SizedBox(height: tightHeight ? SmokeUiSpacing.sm : SmokeUiSpacing.md),
         actions,
+        const SizedBox(height: SmokeUiSpacing.xs),
+        const _HomeSoftResetCaption(),
       ],
+    );
+  }
+}
+
+class _HomeSoftResetCaption extends StatelessWidget {
+  const _HomeSoftResetCaption();
+
+  /// Frames correction as a normal adjustment rather than a failure state.
+  @override
+  Widget build(BuildContext context) {
+    final ui = SmokeUiTheme.of(context);
+    return Text(
+      '잘못 누른 기록은 바로 취소할 수 있어요. 실패가 아니라 리듬 조정입니다.',
+      textAlign: TextAlign.center,
+      style: TextStyle(
+        color: ui.textMuted,
+        fontSize: 11,
+        height: 1.35,
+        fontWeight: FontWeight.w500,
+      ),
     );
   }
 }

@@ -29,6 +29,50 @@ class _SettingsAlertSection extends StatelessWidget {
   }
 }
 
+class _SettingsPassiveAccessSection extends StatelessWidget {
+  const _SettingsPassiveAccessSection({required this.alertSummary});
+
+  final String alertSummary;
+
+  /// Explains already-available passive check surfaces without new settings.
+  @override
+  Widget build(BuildContext context) {
+    final ui = SmokeUiTheme.of(context);
+    return _buildSettingsSection(
+      title: '앱 밖 확인',
+      child: SurfaceCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildSettingRow(
+              ui: ui,
+              label: '알림 상태',
+              tone: _Step1SettingRowTone.secondary,
+              value: alertSummary,
+              valueMaxLines: 2,
+            ),
+            _buildSettingRow(
+              ui: ui,
+              label: '홈 위젯',
+              tone: _Step1SettingRowTone.secondary,
+              value: '경과 시간, 오늘 기록, 지출 요약을 빠르게 확인',
+              valueMaxLines: 2,
+              withTopBorder: true,
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
+              child: Text(
+                '계정 가입 없이 로컬 기록을 확인하는 흐름만 유지합니다.',
+                style: _settingCaptionStyle(ui.textMuted, height: 1.35),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _SettingsCostSection extends StatelessWidget {
   const _SettingsCostSection({
     required this.isCostConfigured,

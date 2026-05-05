@@ -149,7 +149,7 @@ class CostStatsService {
 
   /// Sanitizes invalid numeric values into safe non-negative amount.
   static double _sanitizeAmount(double value) {
-    if (!value.isFinite || value.isNaN || value.isNegative) {
+    if (!value.isFinite || value.isNegative) {
       return 0;
     }
     return value;
