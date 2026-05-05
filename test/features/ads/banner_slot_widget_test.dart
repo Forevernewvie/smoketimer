@@ -125,7 +125,7 @@ void main() {
     adService.disposeService();
   });
 
-  testWidgets('banner is suppressed on home and shown on settings by policy', (
+  testWidgets('banner is shown on main tabs but omitted on alert settings', (
     WidgetTester tester,
   ) async {
     setTestViewport(tester, size: const Size(390, 844));
@@ -144,11 +144,7 @@ void main() {
       config: const AppConfig(
         splashDuration: Duration.zero,
         scheduleCount: 3,
-        monetization: MonetizationConfig(
-          showBannerOnHomeTab: false,
-          showBannerOnRecordTab: true,
-          showBannerOnSettingsTab: true,
-        ),
+        monetization: MonetizationConfig(),
       ),
     );
 
@@ -156,13 +152,23 @@ void main() {
     await tester.tap(find.text('건너뛰기'));
     await tester.pumpAndSettle();
 
-    expect(find.byKey(const Key('main_banner_placeholder')), findsNothing);
-    expect(find.byKey(const Key('main_banner_hidden')), findsNothing);
+    expect(find.byKey(const Key('main_banner_placeholder')), findsOneWidget);
+
+    await tester.tap(find.text('Record'));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('main_banner_placeholder')), findsOneWidget);
 
     await tester.tap(find.text('Settings'));
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('main_banner_placeholder')), findsOneWidget);
+
+    await tester.tap(find.text('알림 설정'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('알림 설정'), findsWidgets);
+    expect(find.byKey(const Key('main_banner_placeholder')), findsNothing);
 
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pumpAndSettle();

@@ -1,10 +1,9 @@
 part of 'step1_screen.dart';
 
 class _AlertOverviewCard extends StatelessWidget {
-  const _AlertOverviewCard({required this.presentation, required this.compact});
+  const _AlertOverviewCard({required this.presentation});
 
   final AlertSettingsPresentation presentation;
-  final bool compact;
 
   /// Renders the alert overview header with summary chips and next schedule.
   @override
@@ -57,44 +56,7 @@ class _AlertOverviewCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: SmokeUiSpacing.sm),
-          if (compact) ...[
-            _AlertOverviewMetric(
-              label: '간격',
-              value: presentation.intervalLabel,
-            ),
-            const SizedBox(height: SmokeUiSpacing.xs),
-            _AlertOverviewMetric(label: '시간대', value: presentation.rangeText),
-            const SizedBox(height: SmokeUiSpacing.xs),
-            _AlertOverviewMetric(
-              label: '활성 요일',
-              value: presentation.weekdayCountText,
-            ),
-          ] else ...[
-            Row(
-              children: [
-                Expanded(
-                  child: _AlertOverviewMetric(
-                    label: '간격',
-                    value: presentation.intervalLabel,
-                  ),
-                ),
-                const SizedBox(width: SmokeUiSpacing.xs),
-                Expanded(
-                  child: _AlertOverviewMetric(
-                    label: '시간대',
-                    value: presentation.rangeText,
-                  ),
-                ),
-                const SizedBox(width: SmokeUiSpacing.xs),
-                Expanded(
-                  child: _AlertOverviewMetric(
-                    label: '활성 요일',
-                    value: presentation.weekdayCountText,
-                  ),
-                ),
-              ],
-            ),
-          ],
+          _AlertOverviewMetricsGrid(presentation: presentation),
         ],
       ),
     );
@@ -182,6 +144,48 @@ class _AlertOverviewMetric extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _AlertOverviewMetricsGrid extends StatelessWidget {
+  const _AlertOverviewMetricsGrid({required this.presentation});
+
+  final AlertSettingsPresentation presentation;
+
+  /// Keeps summary metrics visually balanced on narrow alert-setting screens.
+  @override
+  Widget build(BuildContext context) {
+    final metrics = [
+      _AlertOverviewMetric(label: '간격', value: presentation.intervalLabel),
+      _AlertOverviewMetric(label: '시간대', value: presentation.rangeText),
+      _AlertOverviewMetric(
+        label: '활성 요일',
+        value: presentation.weekdayCountText,
+      ),
+    ];
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final maxWidth = constraints.maxWidth;
+        final columns = maxWidth >= 300
+            ? 3
+            : maxWidth >= 210
+            ? 2
+            : 1;
+        final spacing = SmokeUiSpacing.xs;
+        final itemWidth = columns == 1
+            ? maxWidth
+            : (maxWidth - spacing * (columns - 1)) / columns;
+
+        return Wrap(
+          spacing: spacing,
+          runSpacing: spacing,
+          children: metrics
+              .map((metric) => SizedBox(width: itemWidth, child: metric))
+              .toList(growable: false),
+        );
+      },
     );
   }
 }

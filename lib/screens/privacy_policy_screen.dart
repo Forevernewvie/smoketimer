@@ -1,14 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../services/ads/ad_service.dart';
+import '../widgets/main_banner_ad_slot.dart';
 import '../widgets/pen_design_widgets.dart';
 
 /// Full-screen reader that exposes the app privacy policy from the bundled document.
 class PrivacyPolicyScreen extends StatelessWidget {
   /// Creates the privacy policy screen.
-  const PrivacyPolicyScreen({super.key});
+  const PrivacyPolicyScreen({
+    super.key,
+    this.adService,
+    this.showBanner = false,
+  });
 
   static const String assetPath = 'docs/privacy_policy_ko.md';
+
+  final AdService? adService;
+  final bool showBanner;
 
   /// Builds the scrollable privacy policy document viewer.
   @override
@@ -63,6 +72,9 @@ class PrivacyPolicyScreen extends StatelessWidget {
           );
         },
       ),
+      bottomNavigationBar: showBanner && adService != null
+          ? MainBannerAdSlot(adService: adService!)
+          : null,
     );
   }
 }

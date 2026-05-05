@@ -52,7 +52,7 @@ class _AlertCard extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 16),
-        _AlertOverviewCard(presentation: presentation, compact: compact),
+        _AlertOverviewCard(presentation: presentation),
         const SizedBox(height: 16),
         _AlertBasicSection(
           presentation: presentation,

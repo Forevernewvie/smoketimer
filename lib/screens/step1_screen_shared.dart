@@ -104,9 +104,15 @@ TextStyle _sheetSubtitleTextStyle(SmokeUiTheme ui) {
 }
 
 class _Step1SubscreenScaffold extends StatelessWidget {
-  const _Step1SubscreenScaffold({required this.child});
+  const _Step1SubscreenScaffold({
+    required this.child,
+    required this.adService,
+    required this.showBanner,
+  });
 
   final Widget child;
+  final AdService adService;
+  final bool showBanner;
 
   /// Reuses the app shell spacing for secondary full-screen routes.
   @override
@@ -152,6 +158,9 @@ class _Step1SubscreenScaffold extends StatelessWidget {
           ],
         ),
       ),
+      bottomNavigationBar: showBanner
+          ? MainBannerAdSlot(adService: adService)
+          : const SizedBox.shrink(),
     );
   }
 }

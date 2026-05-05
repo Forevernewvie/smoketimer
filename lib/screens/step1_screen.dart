@@ -63,6 +63,7 @@ class Step1Screen extends ConsumerStatefulWidget {
 
 class _Step1ScreenState extends ConsumerState<Step1Screen> {
   int _tabIndex = 0;
+  bool _showMainShellBanner = true;
   late final AdService _adService;
 
   static const _pagePadding = EdgeInsets.fromLTRB(20, 20, 20, 24);
@@ -193,7 +194,8 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
       bottomNavigationBar: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          if (monetization.shouldShowBannerForTab(_tabIndex))
+          if (_showMainShellBanner &&
+              monetization.shouldShowBannerForTab(_tabIndex))
             MainBannerAdSlot(adService: _adService),
           NavigationBarTheme(
             data: NavigationBarThemeData(
@@ -252,6 +254,28 @@ class _Step1ScreenState extends ConsumerState<Step1Screen> {
       return;
     }
     setState(() => _tabIndex = value);
+  }
+
+  Future<T?> _pushSubscreenWithBanner<T>({
+    required BuildContext context,
+    required WidgetBuilder builder,
+  }) async {
+    final navigator = Navigator.of(context);
+    if (mounted && _showMainShellBanner) {
+      setState(() => _showMainShellBanner = false);
+      await WidgetsBinding.instance.endOfFrame;
+      if (!mounted) {
+        return null;
+      }
+    }
+
+    try {
+      return await navigator.push<T>(MaterialPageRoute<T>(builder: builder));
+    } finally {
+      if (mounted && !_showMainShellBanner) {
+        setState(() => _showMainShellBanner = true);
+      }
+    }
   }
 
   Widget _scrollableTab({required Key key, required Widget child}) {

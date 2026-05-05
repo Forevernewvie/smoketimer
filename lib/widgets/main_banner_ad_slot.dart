@@ -98,22 +98,22 @@ class MainBannerAdSlot extends StatelessWidget {
             MainBannerAdSlotTokens.horizontalPadding,
             MainBannerAdSlotTokens.verticalPadding,
           ),
-          child: Container(
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: ui.surfaceAlt,
-              borderRadius: BorderRadius.circular(
-                MainBannerAdSlotTokens.shellRadius,
+          child: Center(
+            child: Container(
+              width: presentation.bannerWidth,
+              height: presentation.bannerHeight,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: ui.surfaceAlt,
+                borderRadius: BorderRadius.circular(
+                  MainBannerAdSlotTokens.shellRadius,
+                ),
+                border: Border.all(color: ui.border),
               ),
-              border: Border.all(color: ui.border),
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(
-                MainBannerAdSlotTokens.shellRadius - 2,
-              ),
-              child: SizedBox(
-                width: presentation.bannerWidth,
-                height: presentation.bannerHeight,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(
+                  MainBannerAdSlotTokens.shellRadius - 2,
+                ),
                 child: AdWidget(
                   key: const Key('main_banner_loaded'),
                   ad: banner,

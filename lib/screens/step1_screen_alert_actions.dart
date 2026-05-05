@@ -6,6 +6,8 @@ extension _Step1ScreenAlertActions on _Step1ScreenState {
     await Navigator.of(context).push<void>(
       MaterialPageRoute(
         builder: (_) => _Step1SubscreenScaffold(
+          adService: _adService,
+          showBanner: false,
           child: Consumer(
             builder: (context, ref, _) {
               final ui = SmokeUiTheme.of(context);

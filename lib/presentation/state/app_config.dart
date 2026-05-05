@@ -17,15 +17,17 @@ class HomeWidgetConfig {
 class MonetizationConfig {
   const MonetizationConfig({
     this.enableBannerAds = true,
-    this.showBannerOnHomeTab = false,
+    this.showBannerOnHomeTab = true,
     this.showBannerOnRecordTab = true,
     this.showBannerOnSettingsTab = true,
+    this.showBannerOnSubscreens = true,
   });
 
   final bool enableBannerAds;
   final bool showBannerOnHomeTab;
   final bool showBannerOnRecordTab;
   final bool showBannerOnSettingsTab;
+  final bool showBannerOnSubscreens;
 
   /// Returns whether the banner should be shown for the selected main tab.
   bool shouldShowBannerForTab(int tabIndex) {
@@ -36,6 +38,10 @@ class MonetizationConfig {
       _ => false,
     };
   }
+
+  /// Returns whether secondary pushed screens should keep the banner visible.
+  bool get shouldShowBannerForSubscreen =>
+      enableBannerAds && showBannerOnSubscreens;
 }
 
 class AppConfig {

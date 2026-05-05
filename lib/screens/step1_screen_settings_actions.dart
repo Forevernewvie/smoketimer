@@ -285,9 +285,12 @@ extension _Step1ScreenSettingsActions on _Step1ScreenState {
 
   /// Opens the bundled privacy policy document in a dedicated reader screen.
   Future<void> _openPrivacyPolicy(BuildContext context) async {
-    await Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (context) => const PrivacyPolicyScreen(),
+    final monetization = ref.read(appConfigProvider).monetization;
+    await _pushSubscreenWithBanner<void>(
+      context: context,
+      builder: (context) => PrivacyPolicyScreen(
+        adService: _adService,
+        showBanner: monetization.shouldShowBannerForSubscreen,
       ),
     );
   }
