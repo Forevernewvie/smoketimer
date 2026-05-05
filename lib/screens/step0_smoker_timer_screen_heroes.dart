@@ -12,8 +12,8 @@ class _RingHero extends StatelessWidget {
   Widget build(BuildContext context) {
     final ui = SmokeUiTheme.of(context);
     final centerFill = Theme.of(context).brightness == Brightness.dark
-        ? const Color(0xFF0F1318)
-        : const Color(0xFF121417);
+        ? const Color(0xFF4A2D1A)
+        : const Color(0xFF3A2417);
     return SurfaceCard(
       padding: const EdgeInsets.all(16),
       strokeColor: ui.border,
@@ -60,7 +60,7 @@ class _RingHero extends StatelessWidget {
                         Text(
                           '42',
                           style: TextStyle(
-                            color: Color(0xFFF8FAFC),
+                            color: Color(0xFFFFF7EA),
                             fontFamily: 'Sora',
                             fontSize: 42,
                             fontWeight: FontWeight.w700,
@@ -70,7 +70,7 @@ class _RingHero extends StatelessWidget {
                         Text(
                           '분 경과',
                           style: TextStyle(
-                            color: Color(0xFFD0D7E2),
+                            color: Color(0xFFEBD6BC),
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
                           ),
@@ -119,9 +119,9 @@ class _BarHero extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: const [
-                  _BarChartPillar(height: 62, color: Color(0xFFFFD8B8)),
-                  _BarChartPillar(height: 94, color: Color(0xFFFFB67E)),
-                  _BarChartPillar(height: 52, color: Color(0xFFFFE4CE)),
+                  _BarChartPillar(height: 62, color: Color(0xFFECCDA8)),
+                  _BarChartPillar(height: 94, color: Color(0xFFE2A864)),
+                  _BarChartPillar(height: 52, color: Color(0xFFF3DDC1)),
                   _BarChartPillar(height: 112, color: SmokeUiPalette.accent),
                   _BarChartPillar(height: 74, color: SmokeUiPalette.mint),
                 ],

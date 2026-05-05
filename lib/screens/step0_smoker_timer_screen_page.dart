@@ -142,8 +142,8 @@ class _OnboardingPage extends StatelessWidget {
   /// Maps page index to its supporting accent color.
   Color _resolveAccentColor(int index) {
     return switch (index) {
-      0 => const Color(0xFF1D4ED8),
-      1 => SmokeUiPalette.accentDark,
+      0 => SmokeUiPalette.accentDark,
+      1 => SmokeUiPalette.info,
       _ => SmokeUiPalette.mint,
     };
   }
@@ -166,7 +166,7 @@ class _OnboardingHeader extends StatelessWidget {
         Text(
           '${pageIndex + 1}/3',
           style: const TextStyle(
-            color: Color(0xFF1D4ED8),
+            color: SmokeUiPalette.accentDark,
             fontSize: 12,
             fontWeight: FontWeight.w700,
           ),

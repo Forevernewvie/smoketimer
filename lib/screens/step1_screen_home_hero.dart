@@ -112,7 +112,7 @@ class _HomeHeroSection extends StatelessWidget {
                           Text(
                             elapsedMinutes.toString(),
                             style: const TextStyle(
-                              color: Color(0xFFF8FAFC),
+                              color: Color(0xFFFFF7EA),
                               fontFamily: 'Sora',
                               fontSize: _ringValueFontSize,
                               fontWeight: FontWeight.w700,
@@ -122,7 +122,7 @@ class _HomeHeroSection extends StatelessWidget {
                           const Text(
                             '분 경과',
                             style: TextStyle(
-                              color: Color(0xFFD0D7E2),
+                              color: Color(0xFFEBD6BC),
                               fontSize: _ringLabelFontSize,
                               fontWeight: FontWeight.w600,
                             ),

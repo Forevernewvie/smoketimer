@@ -75,6 +75,8 @@ class SmokeTimerApp extends ConsumerWidget {
           seedColor: SmokeUiPalette.accent,
           primary: SmokeUiPalette.accentDark,
           secondary: SmokeUiPalette.mint,
+          tertiary: SmokeUiPalette.info,
+          surface: SmokeUiTheme.light.surface,
         ),
       ),
       darkTheme: ThemeData(
@@ -83,8 +85,9 @@ class SmokeTimerApp extends ConsumerWidget {
         scaffoldBackgroundColor: SmokeUiTheme.dark.background,
         colorScheme: const ColorScheme.dark(
           primary: SmokeUiPalette.accent,
-          secondary: SmokeUiPalette.info,
-          surface: Color(0xFF16211E),
+          secondary: SmokeUiPalette.mint,
+          tertiary: SmokeUiPalette.info,
+          surface: Color(0xFF211912),
         ),
       ),
       home: const RootStageScreen(),

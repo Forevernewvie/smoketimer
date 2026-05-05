@@ -15,12 +15,12 @@ private enum SmokeTimerWidgetKeys {
 }
 
 private enum SmokeTimerWidgetPalette {
-    static let surface = Color(red: 17 / 255, green: 24 / 255, blue: 39 / 255)
-    static let surfaceBorder = Color(red: 35 / 255, green: 48 / 255, blue: 68 / 255)
-    static let textPrimary = Color.white
-    static let textSecondary = Color(red: 226 / 255, green: 232 / 255, blue: 240 / 255)
-    static let textMuted = Color(red: 148 / 255, green: 163 / 255, blue: 184 / 255)
-    static let accent = Color(red: 45 / 255, green: 212 / 255, blue: 191 / 255)
+    static let surface = Color(red: 33 / 255, green: 25 / 255, blue: 18 / 255)
+    static let surfaceBorder = Color(red: 70 / 255, green: 55 / 255, blue: 40 / 255)
+    static let textPrimary = Color(red: 248 / 255, green: 239 / 255, blue: 227 / 255)
+    static let textSecondary = Color(red: 205 / 255, green: 190 / 255, blue: 168 / 255)
+    static let textMuted = Color(red: 169 / 255, green: 147 / 255, blue: 121 / 255)
+    static let accent = Color(red: 213 / 255, green: 138 / 255, blue: 58 / 255)
 }
 
 struct SmokeTimerWidgetEntry: TimelineEntry {

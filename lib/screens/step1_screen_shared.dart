@@ -63,7 +63,7 @@ TextStyle _settingRowLabelStyle(SmokeUiTheme ui, _Step1SettingRowTone tone) {
       fontWeight: FontWeight.w500,
     ),
     _Step1SettingRowTone.danger => const TextStyle(
-      color: Color(0xFFD95B57),
+      color: SmokeUiPalette.risk,
       fontSize: 14,
       fontWeight: FontWeight.w600,
     ),

@@ -58,8 +58,8 @@ class _HomeRhythmCoachCard extends StatelessWidget {
                     ? SmokeUiPalette.mintSoft
                     : SmokeUiPalette.accentSoft,
                 borderColor: isBeyondTarget
-                    ? const Color(0xFF94E3CF)
-                    : const Color(0xFF8CE3F1),
+                    ? SmokeUiPalette.mintBorder
+                    : SmokeUiPalette.accentBorder,
               ),
             ),
             const SizedBox(height: SmokeUiSpacing.sm),
@@ -206,7 +206,7 @@ class _CravingPauseCard extends StatelessWidget {
                 icon: Icons.lock_outline_rounded,
                 foregroundColor: SmokeUiPalette.accentDark,
                 backgroundColor: SmokeUiPalette.accentSoft,
-                borderColor: const Color(0xFF8CE3F1),
+                borderColor: SmokeUiPalette.accentBorder,
               ),
             ),
             const SizedBox(height: SmokeUiSpacing.sm),

@@ -5,24 +5,29 @@ import 'package:flutter/material.dart';
 class SmokeUiPalette {
   const SmokeUiPalette._();
 
-  static const background = Color(0xFFECFEFF);
-  static const backgroundElevated = Color(0xFFDDF7FB);
-  static const surface = Color(0xFFFFFFFF);
-  static const surfaceBorder = Color(0xFFB8E2E8);
-  static const textPrimary = Color(0xFF14363D);
-  static const textSecondary = Color(0xFF52727A);
-  static const accent = Color(0xFF22D3EE);
-  static const accentDark = Color(0xFF0891B2);
-  static const accentSoft = Color(0xFFDDF7FB);
-  static const mint = Color(0xFF059669);
-  static const mintSoft = Color(0xFFDDF7EC);
-  static const info = Color(0xFF4C7FA7);
-  static const infoSoft = Color(0xFFE0EEF8);
-  static const warning = Color(0xFFC07A33);
-  static const warningSoft = Color(0xFFF8E8D8);
-  static const risk = Color(0xFFD95B57);
-  static const riskSoft = Color(0xFFFEE2E2);
-  static const neutralSoft = Color(0xFFEAF1EE);
+  static const background = Color(0xFFF7F1E8);
+  static const backgroundElevated = Color(0xFFF0E6D8);
+  static const surface = Color(0xFFFFFDF8);
+  static const surfaceBorder = Color(0xFFE0D3C1);
+  static const textPrimary = Color(0xFF251C15);
+  static const textSecondary = Color(0xFF6D5D4E);
+  static const accent = Color(0xFFD58A3A);
+  static const accentDark = Color(0xFF8F4B1E);
+  static const accentSoft = Color(0xFFF8E6CF);
+  static const accentBorder = Color(0xFFE6BA85);
+  static const mint = Color(0xFF3F7D5D);
+  static const mintSoft = Color(0xFFE5F0E8);
+  static const mintBorder = Color(0xFFA6C8B2);
+  static const info = Color(0xFF547083);
+  static const infoSoft = Color(0xFFE7EEF2);
+  static const infoBorder = Color(0xFFB8CBD5);
+  static const warning = Color(0xFF9B5B1F);
+  static const warningSoft = Color(0xFFF5E1C8);
+  static const warningBorder = Color(0xFFD9B177);
+  static const risk = Color(0xFFB94A43);
+  static const riskSoft = Color(0xFFF6DEDA);
+  static const riskBorder = Color(0xFFDFA49E);
+  static const neutralSoft = Color(0xFFEFE6D8);
 }
 
 class SmokeUiSpacing {
@@ -73,31 +78,31 @@ class SmokeUiTheme {
   final Color ringTrack;
 
   static const SmokeUiTheme light = SmokeUiTheme._(
-    background: Color(0xFFECFEFF),
-    surface: Color(0xFFFFFFFF),
-    surfaceAlt: Color(0xFFF5FDFF),
-    border: Color(0xFFB8E2E8),
-    textPrimary: Color(0xFF14363D),
-    textSecondary: Color(0xFF52727A),
-    textMuted: Color(0xFF6B8A91),
-    neutralSoft: Color(0xFFE6F6F8),
-    criticalSoft: Color(0xFFFEE2E2),
-    criticalBorder: Color(0xFFFCA5A5),
-    ringTrack: Color(0xFFC6E9EE),
+    background: SmokeUiPalette.background,
+    surface: SmokeUiPalette.surface,
+    surfaceAlt: Color(0xFFFBF4EA),
+    border: SmokeUiPalette.surfaceBorder,
+    textPrimary: SmokeUiPalette.textPrimary,
+    textSecondary: SmokeUiPalette.textSecondary,
+    textMuted: Color(0xFF8A7864),
+    neutralSoft: SmokeUiPalette.neutralSoft,
+    criticalSoft: SmokeUiPalette.riskSoft,
+    criticalBorder: SmokeUiPalette.riskBorder,
+    ringTrack: Color(0xFFE7D9C7),
   );
 
   static const SmokeUiTheme dark = SmokeUiTheme._(
-    background: Color(0xFF0F1715),
-    surface: Color(0xFF16211E),
-    surfaceAlt: Color(0xFF1B2A26),
-    border: Color(0xFF294039),
-    textPrimary: Color(0xFFF1F6F4),
-    textSecondary: Color(0xFF9EB3AD),
-    textMuted: Color(0xFF839892),
-    neutralSoft: Color(0xFF22332E),
-    criticalSoft: Color(0xFF3B1F23),
-    criticalBorder: Color(0xFF8A3A44),
-    ringTrack: Color(0xFF294039),
+    background: Color(0xFF15100C),
+    surface: Color(0xFF211912),
+    surfaceAlt: Color(0xFF2A2119),
+    border: Color(0xFF463728),
+    textPrimary: Color(0xFFF8EFE3),
+    textSecondary: Color(0xFFCDBEA8),
+    textMuted: Color(0xFFA99379),
+    neutralSoft: Color(0xFF352A20),
+    criticalSoft: Color(0xFF3A201C),
+    criticalBorder: Color(0xFF884A40),
+    ringTrack: Color(0xFF3B2D21),
   );
 
   static SmokeUiTheme of(BuildContext context) {
@@ -155,7 +160,7 @@ class RingGauge extends StatelessWidget {
     required this.sweepAngle,
     required this.value,
     required this.label,
-    this.trackColor = const Color(0xFFCDD6E2),
+    this.trackColor = SmokeUiPalette.neutralSoft,
     this.arcColor = SmokeUiPalette.accent,
     this.valueStyle = const TextStyle(
       color: SmokeUiPalette.textPrimary,
@@ -279,6 +284,7 @@ class PageDots extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ui = SmokeUiTheme.of(context);
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: List.generate(3, (index) {
@@ -288,7 +294,7 @@ class PageDots extends StatelessWidget {
           height: 8,
           margin: EdgeInsets.only(right: index == 2 ? 0 : 6),
           decoration: BoxDecoration(
-            color: active ? SmokeUiPalette.accent : const Color(0xFFCBD5E1),
+            color: active ? SmokeUiPalette.accentDark : ui.neutralSoft,
             borderRadius: BorderRadius.circular(99),
           ),
         );
@@ -311,7 +317,7 @@ class TogglePill extends StatelessWidget {
       width: 44,
       height: 24,
       decoration: BoxDecoration(
-        color: isOn ? SmokeUiPalette.accent : ui.neutralSoft,
+        color: isOn ? SmokeUiPalette.accentDark : ui.neutralSoft,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Stack(
@@ -351,7 +357,7 @@ class DayChip extends StatelessWidget {
       height: 32,
       alignment: Alignment.center,
       decoration: BoxDecoration(
-        color: active ? const Color(0xFF1D4ED8) : ui.neutralSoft,
+        color: active ? SmokeUiPalette.accentDark : ui.neutralSoft,
         borderRadius: BorderRadius.circular(8),
         border: active ? null : Border.all(color: ui.border),
       ),

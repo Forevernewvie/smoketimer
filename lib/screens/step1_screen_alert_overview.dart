@@ -119,25 +119,25 @@ class _AlertTonePalette {
         return const _AlertTonePalette(
           foregroundColor: SmokeUiPalette.info,
           backgroundColor: SmokeUiPalette.infoSoft,
-          borderColor: Color(0xFF9BD9E8),
+          borderColor: SmokeUiPalette.infoBorder,
         );
       case AlertSettingsTone.warning:
         return const _AlertTonePalette(
           foregroundColor: SmokeUiPalette.warning,
           backgroundColor: SmokeUiPalette.warningSoft,
-          borderColor: Color(0xFFF3C58F),
+          borderColor: SmokeUiPalette.warningBorder,
         );
       case AlertSettingsTone.success:
         return const _AlertTonePalette(
           foregroundColor: SmokeUiPalette.mint,
           backgroundColor: SmokeUiPalette.mintSoft,
-          borderColor: Color(0xFF94E3CF),
+          borderColor: SmokeUiPalette.mintBorder,
         );
       case AlertSettingsTone.risk:
         return const _AlertTonePalette(
           foregroundColor: SmokeUiPalette.risk,
           backgroundColor: SmokeUiPalette.riskSoft,
-          borderColor: Color(0xFFF4B6B3),
+          borderColor: SmokeUiPalette.riskBorder,
         );
     }
   }

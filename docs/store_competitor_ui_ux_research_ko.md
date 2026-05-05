@@ -140,7 +140,24 @@
 
 - 기존 기능 보존: 상태, 저장소, 알림 스케줄러, 기록 정책은 변경하지 않았다.
 - 베낀 티 방지: 경쟁 앱의 배지/미션/커뮤니티/AI 구조를 따라 하지 않고, 현재 앱 고유의 “리듬 코치” 카드로 타이머·목표 간격·오늘 개비 수를 연결했다.
-- 시각 시스템: 기존 녹색 중심을 cyan/mint 계열로 조정해 건강 앱의 일반적 초록 배지 느낌을 줄이고, 조용한 물결형 톤을 사용했다.
+- 시각 시스템: 1차 수정에서는 cyan/mint 계열로 조용한 물결형 톤을 사용했다. 이후 타이머 맥락과 더 잘 맞도록 아래 `UI 톤 재분석`의 warm ritual timer 톤으로 재조정했다.
+
+## UI 톤 재분석 및 최종 적용 방향
+
+- **문제 인식**: cyan/mint는 깨끗하고 건강 앱처럼 보이지만, `흡연 타이머`의 중심 행동인 “시간 간격을 조용히 확인하고 다음 선택을 늦추는 일”과는 다소 차갑고 물성 없는 톤이었다.
+- **스토어 레퍼런스 요약**:
+  - Focus/Timer 계열은 “단순함, 원탭, 방해 없음, 차분함”을 반복 강조한다. 예: Dvala는 복잡한 설정 없이 바로 시작하는 미니멀 타이머를 내세우고, Zonein은 warm material palette와 시간 숨김/의식 같은 경험을 설명한다.
+  - Smoking tracker 계열은 진행률, 절약 금액, 기록, 크레이빙 대응을 명확한 카드/지표로 보여준다. Smoke Free와 QUIT Smoking SOS 모두 기록·절약·진행·짧은 행동 플로우를 핵심 가치로 노출한다.
+- **채택 톤**: `Warm Ritual Timer`
+  - 배경: 차가운 시안 대신 아이보리/종이색.
+  - 핵심 액션/타이머 링: 따뜻한 앰버/토바코 톤.
+  - 정보/성공: 채도를 낮춘 slate/sage.
+  - 위험/주의: 강한 빨강 대신 muted clay/red.
+- **제외한 톤**:
+  - 네온/게임화 톤: 타이머 집중성보다 흥분감이 강해 부적합.
+  - 병원식 민트/시안 톤: 깨끗하지만 현재 앱의 “흡연 간격 타이머” 물성과 약함.
+  - 담배를 직접 연상시키는 짙은 회색/연기 효과: 흡연을 미화할 수 있어 배경 질감 대신 절제된 웜 뉴트럴만 사용.
+- **적용 결과**: 공용 `SmokeUiPalette`/`SmokeUiTheme` 토큰을 warm amber + ivory + charcoal로 교체해 홈, 온보딩, 설정, 알림, 공통 버튼/칩/슬라이더가 같은 톤을 공유하도록 했다.
 
 ## 기획 적용 내역
 
@@ -158,6 +175,17 @@
 - `lib/screens/step1_screen_settings.dart`: 설정 화면에 앱 밖 확인 섹션 배치.
 - `lib/screens/step1_screen_settings_sections.dart`: 알림/홈 위젯 가치 노출 섹션 추가.
 
+## UI 톤 재수정 파일
+
+- `lib/widgets/pen_design_widgets.dart`: 앱 공통 팔레트를 cyan/mint에서 warm amber/ivory/charcoal 기반으로 교체하고 tone border 토큰을 추가.
+- `lib/main.dart`: Material `ColorScheme`을 새 warm timer 토큰에 맞춰 조정.
+- `lib/screens/step1_screen_home*.dart`: 홈 타이머 링 중심부와 상태/요약 칩을 warm ritual timer 톤으로 정리.
+- `lib/screens/step1_screen_alert_overview.dart`: 알림 상태 칩을 새 semantic border 토큰으로 정리.
+- `lib/screens/step0_smoker_timer_screen_*.dart`, `lib/screens/step0_splash_screen.dart`: 온보딩/스플래시의 차가운 파랑 포인트를 제거하고 새 앰버 톤으로 통일.
+- `assets/icon/*`, `android/app/src/main/res/*`, `ios/Runner/Assets.xcassets/AppIcon.appiconset/*`: 첫 실행/런처에서 보이던 파란 아이콘 배경을 warm charcoal로 교체.
+- `android/app/src/main/res/values/colors.xml`, `ios/SmokeTimerWidget/SmokeTimerWidget.swift`: 홈 위젯도 앱 내부와 같은 warm dark surface + amber accent로 정렬.
+- `test/features/home/home_status_header_regression_test.dart`: 상태 칩 회귀 테스트의 레퍼런스 색을 새 공용 토큰으로 갱신.
+
 ## 주요 출처
 
 - App Store Search API: https://itunes.apple.com/search?term=quit%20smoking%20timer&entity=software&country=us&limit=50
@@ -166,3 +194,7 @@
 - Smoke Free App Store: https://apps.apple.com/us/app/smoke-free-quit-smoking-now/id577767592
 - SWay Google Play: https://play.google.com/store/apps/details?id=com.stopsmoke.metodshamana&hl=en&gl=US
 - Next15 App Store: https://apps.apple.com/us/app/next15-quit-smoking-timer/id6759535590
+- Dvala Focus Timer App Store: https://apps.apple.com/us/app/dvala-focus-timer/id6758199675
+- Zonein Timer App Store: https://apps.apple.com/us/app/zonein-timer/id6761676487
+- Focus Timer – Deep Work Mode Google Play: https://play.google.com/store/apps/details?id=com.cartplayer.focustimer
+- QUIT Smoking SOS Google Play: https://play.google.com/store/apps/details?id=com.quitapp.quitsmoking

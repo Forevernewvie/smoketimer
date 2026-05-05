@@ -83,25 +83,25 @@ class _StatusTonePalette {
         return const _StatusTonePalette(
           foregroundColor: SmokeUiPalette.info,
           backgroundColor: SmokeUiPalette.infoSoft,
-          borderColor: Color(0xFF9BD9E8),
+          borderColor: SmokeUiPalette.infoBorder,
         );
       case HomeStatusTone.warning:
         return const _StatusTonePalette(
           foregroundColor: SmokeUiPalette.warning,
           backgroundColor: SmokeUiPalette.warningSoft,
-          borderColor: Color(0xFFF3C58F),
+          borderColor: SmokeUiPalette.warningBorder,
         );
       case HomeStatusTone.success:
         return const _StatusTonePalette(
           foregroundColor: SmokeUiPalette.mint,
           backgroundColor: SmokeUiPalette.mintSoft,
-          borderColor: Color(0xFF94E3CF),
+          borderColor: SmokeUiPalette.mintBorder,
         );
       case HomeStatusTone.risk:
         return const _StatusTonePalette(
           foregroundColor: SmokeUiPalette.risk,
           backgroundColor: SmokeUiPalette.riskSoft,
-          borderColor: Color(0xFFF4B6B3),
+          borderColor: SmokeUiPalette.riskBorder,
         );
     }
   }

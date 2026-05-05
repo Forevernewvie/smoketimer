@@ -59,7 +59,7 @@ class _SplashA3Card extends StatelessWidget {
                 icon: Icons.timer_outlined,
                 foregroundColor: SmokeUiPalette.accentDark,
                 backgroundColor: SmokeUiPalette.accentSoft,
-                borderColor: Color(0xFFFFC89E),
+                borderColor: SmokeUiPalette.accentBorder,
               ),
               const SizedBox(height: 16),
               Row(
