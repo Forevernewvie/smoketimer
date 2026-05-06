@@ -1,4 +1,4 @@
-package com.forevernewvie.smoketimer
+package com.forervernewvie.smoketimer
 
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager

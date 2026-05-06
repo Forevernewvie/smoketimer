@@ -51,7 +51,7 @@ class AppConfig {
     this.homeWidget = const HomeWidgetConfig(
       androidProviderName: 'SmokeTimerHomeWidgetProvider',
       androidQualifiedProviderName:
-          'com.forevernewvie.smoketimer.SmokeTimerHomeWidgetProvider',
+          'com.forervernewvie.smoketimer.SmokeTimerHomeWidgetProvider',
       iOSWidgetKind: 'SmokeTimerWidget',
       iOSAppGroupId: 'group.com.example.smokeTimer.widget',
     ),

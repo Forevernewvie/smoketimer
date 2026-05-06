@@ -9,7 +9,7 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
-val productionApplicationId = "com.forevernewvie.smoketimer"
+val productionApplicationId = "com.forervernewvie.smoketimer"
 val defaultAndroidTestAppId = "ca-app-pub-3940256099942544~3347511713"
 val androidAdmobAppIdEnv = System.getenv("ADMOB_ANDROID_APP_ID")?.trim().orEmpty()
 val keystoreProperties = Properties()
