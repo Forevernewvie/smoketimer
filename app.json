@@ -1,0 +1,30 @@
+{
+  "expo": {
+    "name": "Smoke Timer",
+    "slug": "smoke-timer",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "scheme": "smoketimer",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#F6F4EF"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.smoketimer.app"
+    },
+    "android": {
+      "package": "com.smoketimer.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#F6F4EF",
+        "foregroundImage": "./assets/adaptive-icon.png"
+      }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    }
+  }
+}

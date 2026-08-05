@@ -1,198 +1,48 @@
-# Smoke Timer (흡연 타이머)
+# 📱 Smoke Timer (Warm Ritual Timer) - React Native Expo
 
-[![CI](https://github.com/Forevernewvie/smoketimer/actions/workflows/ci.yml/badge.svg)](https://github.com/Forevernewvie/smoketimer/actions/workflows/ci.yml)
+Smoke Timer는 강박적인 단번에 끊기 대신, **자신의 흡연 간격 리듬과 지출 금액을 객관적으로 관찰**함으로써 자연스러운 흡연 조율을 돕는 **Warm Ritual Timer** 모바일 애플리케이션입니다.
 
-흡연 기록을 빠르게 남기고, 마지막 기록 기준 타이머와 로컬 알림으로 루틴을 관리하는 Flutter 앱입니다.
+---
 
-## 한눈에 보기
+## 🎨 핵심 디자인 & 제품 철학
 
-- 3탭 구조: `Home` / `Record` / `Settings`
-- 실시간 원형 타이머 + 빠른 기록/되돌리기
-- 알림 스케줄(반복, 간격, 미리 알림, 요일, 허용 시간대)
-- 비용 설정 기반 지출 요약
-- 다크모드 토글(영속 저장)
-- `ko/en` 로컬라이제이션
+- **Warm Neutral & Minimal**: 아이보리 베이스 (`#F6F4EF`), 차분한 그래파이트 (`#202124`), 앰버 토바코 포인트 (`#D88A2D`)
+- **비심판적 어조 (Non-judgmental Tone)**: 죄책감을 주는 팝업이나 게이미케이션을 배제하고 실시간 경과 시간과 지출 금액을 있는 그대로 제시
+- **되돌리기 (Soft Relapse Undo)**: 실수로 기록을 남겼을 때 원터치 롤백 가능
+- **100% 온디바이스 개인정보 보호**: 회원가입/서버 수집 0%, `@react-native-async-storage/async-storage` 기반 기기 내부 저장
 
-## 앱 플로우
+---
 
-- Splash → (최초 실행) Onboarding → Main
-- 온보딩 완료 여부는 로컬 저장소에 영속 저장
+## 🛠️ 기술 스택 (Tech Stack)
 
-## 아키텍처 개요
+- **Framework**: React Native 0.86 (Expo SDK 57 / Expo Router v4)
+- **Language**: TypeScript (Zero Error Strict Mode)
+- **Navigation**: Expo Router (File-based Routing)
+- **State Management**: React Context (`AppStateContext`) + AsyncStorage Persistence
+- **Haptics**: `expo-haptics` (iOS / Android / Web Safe-guarded)
+- **Graphics**: `react-native-svg` (Circular Hero Timer Arc Gauge)
 
-앱은 Flutter + Riverpod 기반이며, 화면/상태/도메인 책임을 분리해 유지보수성을 높였습니다.
+---
 
-- `data`
-  - `SharedPreferences` 기반 저장소 구현
-  - 흡연 기록 / 사용자 설정 / 메타 데이터 영속화
-- `domain`
-  - 모델, 기본 정책값(`AppDefaults`), 예외 정의
-- `presentation/state`
-  - 앱 상태(`AppState`)와 Riverpod provider
-  - `AppController`가 bootstrap / 기록 추가·되돌리기 / 설정 저장 / 알림 재스케줄을 조정
-  - 순수 정책은 `app_record_policy.dart`, `app_settings_policy.dart`에 분리
-- `presentation/alert`, `presentation/home`
-  - 화면 표시용 presenter 계층
-- `screens`
-  - 실제 UI 조합 계층
-  - 메인 3탭 화면은 `step1_screen.dart` + `part` 파일들로 구성
-  - 반복 UI 설정은 `step1_screen_shared.dart` helper로 정리
-- `services`
-  - 로컬 알림, 포맷터, 통계, 홈 위젯, 광고 연동
-
-흐름 예시:
-
-```text
-Repository -> Bootstrap Loader / Policy -> AppController -> Presenter -> Screen Widgets
-```
-
-## 개발 환경
-
-- Flutter `3.41.1`
-- Dart `3.11.0`
-
-## 빠른 실행
+## 🚀 시작하기 (Getting Started)
 
 ```bash
-flutter pub get
-flutter run
+# 1. 의존성 패키지 설치
+npm install
+
+# 2. 로컬 개발 서버 구동 (Web)
+npm run web
+
+# 3. iOS 시뮬레이터 구동
+npm run ios
+
+# 4. 안드로이드 에뮬레이터 구동
+npm run android
 ```
 
-### Android Emulator
+---
 
-```bash
-flutter emulators
-flutter emulators --launch <emulator-id>
-flutter devices
-flutter run -d <device-id>
-```
+## ⚙️ CI/CD 파이프라인 (GitHub Actions)
 
-### iOS Simulator
-
-```bash
-open -a Simulator
-flutter devices
-flutter run -d <device-id>
-```
-
-## 로컬 빌드 팁
-
-### Java Runtime 인식 실패 시
-
-Android 빌드에서 Java를 찾지 못하면 Android Studio JBR을 지정하면 됩니다.
-
-```bash
-export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
-flutter build apk --debug
-```
-
-### Gradle 캐시가 꼬였거나 디스크 여유가 부족할 때
-
-로컬 전역 Gradle 캐시 대신 임시 격리 캐시를 사용하면 복구가 빠릅니다.
-
-```bash
-export JAVA_HOME="/Applications/Android Studio.app/Contents/jbr/Contents/Home"
-export GRADLE_USER_HOME="/tmp/smoketimer-gradle-home"
-flutter build apk --debug
-```
-
-## 테스트 / 품질
-
-```bash
-dart format --output=none --set-exit-if-changed lib test
-flutter analyze
-flutter test
-```
-
-## 릴리즈 준비 (Android)
-
-릴리즈 빌드는 다음 설정이 **필수**입니다.
-
-1. `android/key.properties` 구성
-   - 예시: `android/key.properties.example`
-2. `ADMOB_ANDROID_APP_ID` 환경변수 주입
-
-릴리즈 AAB 빌드:
-
-```bash
-export ADMOB_ANDROID_APP_ID="ca-app-pub-xxxxxxxxxxxxxxxx~yyyyyyyyyy"
-flutter build appbundle --release
-```
-
-## 주요 화면 기능
-
-### Home
-
-- 마지막 기록 기준 원형 타이머
-- `지금 흡연 기록`: 기록 1건 추가
-- `되돌리기`: 직전 기록 롤백
-- 다음 알림 상태/카운트다운 표시
-
-### Record
-
-- 필터: `오늘` / `주간` / `월간`
-- 요약: 총 개비, 평균 간격, 최장 간격
-- 최근 기록 리스트 표시
-
-### Settings
-
-- 알림 설정 진입
-- 비용 설정(갑당 가격, 한 갑 개비 수, 통화)
-- 24시간 표기
-- 다크 모드
-- 홈 원형 기준
-- 진동/소리
-- 데이터 초기화
-
-### Alert Settings (Settings 내부)
-
-- 반복 알림 on/off
-- 간격: 30분~4시간
-- 미리 알림: 0~15분 슬라이더
-- 허용 시간대(RangeSlider)
-- 요일 선택(월~일)
-- 권한 요청, 테스트 알림 보내기
-
-## 로컬라이제이션
-
-- 지원 locale: `ko`, `en`
-- 앱 locale이 `ko`면 한국어, `en`이면 영어 표시
-- 지원하지 않는 locale은 `ko`로 fallback
-- 번역 키 누락 시 키 문자열 반환으로 안전 fallback
-
-## 기술 스택
-
-- Flutter / Dart
-- Riverpod (상태관리)
-- SharedPreferences (로컬 저장)
-- flutter_local_notifications (알림)
-- google_mobile_ads (광고)
-
-## CI
-
-워크플로: `.github/workflows/ci.yml`
-
-- `pull_request` to `main`
-- `push` to `main`, `codex/**`
-- 분석/테스트 + Android 빌드 + (수동) iOS 빌드
-
-## 디렉터리 구조
-
-- `lib/domain`: 모델 / 기본 정책 / 예외
-- `lib/data`: 저장소
-- `lib/services`: 스케줄러 / 포맷터 / 알림 / 통계 / 광고
-- `lib/presentation/state`: Riverpod 상태, controller, app policy
-- `lib/presentation/alert`: 알림 설정 presenter
-- `lib/presentation/home`: 홈 상태/위젯 presenter
-- `lib/screens`: 앱 화면 및 Step1 part 파일
-- `lib/widgets`: 공용 위젯
-- `test/features`: 기능 단위 테스트
-- `test/presentation/state`: 상태 계층 회귀 테스트
-
-## 참고 문서
-
-- 알림 정책/플랫폼 이슈: `docs/notifications.md`
-
-## License
-
-MIT. See `LICENSE`.
+- **`CI (ci.yml)`**: Node.js 20 환경에서 `npx tsc --noEmit` 타입 검수, ESLint 린트 검수 및 `npx expo export --platform web` 빌드 자동 수행
+- **`Privacy Policy Pages (privacy-policy-pages.yml)`**: `site/` 디렉터리의 개인정보 처리방침을 GitHub Pages로 자동 배포
